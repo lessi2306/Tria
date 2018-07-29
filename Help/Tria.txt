@@ -1,0 +1,783 @@
+; Text Pop-ups für Tria
+.topic IDH_Home
+Für dieses Element ist kein Hilfethema vorhanden.
+
+.topic IDH_Hilfe
+Zeigt eine Beschreibung dieses Dialogfensters.
+
+.topic IDH_Abbr
+Schließt das Dialogfenster, ohne die vorgenommenen Änderungen zu speichern.
+
+.topic IDH_Ok
+Speichert die vorgenommenen Änderungen und schließt das Dialogfenster.
+
+.topic IDH_Aend
+Speichert die vorgenommenen Änderungen ohne das Dialogfenster zu schließen.
+
+.topic IDH_Neu
+Erstellt einen neuen Eintrag in der Liste
+
+.topic IDH_Loesch
+Löscht den markierten Eintrag aus der Liste. 
+
+.topic IDH_Up
+Verschiebt den Eintrag in der Liste um eine Position nach oben.
+
+.topic IDH_Down
+Verschiebt den Eintrag in der Liste um eine Position nach unten.
+
+.topic IDH_VeranstName
+Der Name der Veranstaltung erscheint in den Kopfzeilen der ausgedruckten Listen.
+
+.topic IDH_VeranstArt
+Wählen sie einen einmaligen Wettbewerb oder eine Serie von 2 bis 20 Wettbewerben, die an verschiedenen Orten und zu verschiedenen Terminen durchgeführt werden.
+
+.topic IDH_OrtName
+Zeigt den Namen des in der Liste markierten Austragungsortes.
+
+.topic IDH_OrtList
+Klicken Sie auf einen Ortsnamen, um diese im Feld "Ortsname" zu ändern.
+
+.topic IDH_WkLst
+Klicken Sie auf einen Wettkampf, um die zugeordneten Einstellungen in den übrigen Feldern an zu zeigen.
+
+.topic IDH_WkName
+Der Name des markierten Wettkampfes erscheint als Überschrift auf den ausgedruckten Listen.
+
+.topic IDH_WkDatum
+Das Datum des Wettkampfes erscheint in den Überschriften der ausgedruckten Listen. Zusätzlich wird aus diesem Datum und dem eingegebenen Geburtsjahr das Alter und die Altersklasse der Teilnehmer ermittelt.
+
+.topic IDH_WkArt
+Neben einem normalen Einzelwettkampf, bei dem eine Einzelwertung und optional eine Mannschaftswertung durchgeführt wird, können auch spezielle Mannschaftswettkämpfe gewählt werden, bei denen die Mannschaftswertung im Vordergrund steht.
+
+Klicken Sie auf den Schalter "Hilfe" für weitere Details.
+
+.topic IDH_WkAbschnZahl
+Sie können eine Anzahl von 1 bis 8 Wettkampfdisziplinen definieren, die nacheinander durchgeführt werden. Beim Einzelwettkampf wird für jeden Abschnitt eine eigene Teilnehmerwertung durchgeführt.
+
+.topic IDH_WkAbschnName
+Wenn mindestens zwei Abschnitte definiert sind, erscheinen die Abschnittsnamen als Spaltenüberschrift auf den ausgedruckten Listen. Es kann eine Bezeichnung aus der Liste augewählt oder frei definiert werden.
+
+.topic IDH_WkAbschnRunden
+Für jeden Abschnitt kann eine beliebige Anzahl Runden definiert werden. Der Abschnitt wird nur gewertet, wenn für jede Runde eine Rundenzeit eingelesen wird.  
+
+.topic IDH_WkStrecke
+Bei Stundenrennen muss die Länge einer Runde in Metern definiert werden. Daraus wird die insgesamt zurückgelegte Strecke errechnet.   
+
+.topic IDH_WkSondWrtg
+Bei der Sonderwertung werden nur Teilnehmer berücksichtigt, die gesondert für diese Wertung angemeldet werden. Damit kann zusätzlich zur Gesamtwertung z.B. eine Stadt- oder Kreismeisterschaft gewertet werden
+
+.topic IDH_WkTlnTxt
+Das optionale Eingabefeld für Teilnehmerdaten kann hier mit einer beliebigen Bezeichnung versehen werden (z.B. zur Angabe von Nation, Bundesland oder T-Shirt-Größe). 
+Diese Daten können in einer entsprechenden Spalte auf den Start- und Ergebnislisten für Teilnehmer ausgedruckt werden. Die relativ geringe Spaltenbreite erlaubt einen Text bestehend aus 3 Groß- oder 4 Kleinbuchstaben.
+
+.topic IDH_WkStartgeld
+Das hier eingetragene Startgeld wird bei der Neuanmeldung von Teilnehmern voreingestellt. Der Betrag kann im Teilnehmerdialog individuell angepasst werden.
+
+.topic IDH_WkDisqTxt
+Die hier eingetragene Bezeichnung wird für disqualifizierte Teilnehmer voreingestellt. Sie kann im Teilnehmerdialog individuell angepasst werden.
+
+.topic IDH_WkMschZahl
+Wenn keine Mannschaftswertung gewünscht wird, kann das hier eingestellt werden. Andernfalls wird für alle Teilnehmer, für die ein Mannschaftsname eingetragen wurde, eine Mannschaftswertung durchgeführt. Dabei werden alle Teilnehmer mit gleichem Mannschaftsnamen automatisch in einer oder mehreren Mannschaften zusammengefasst.
+
+Klicken Sie auf den Schalter "Hilfe" für weitere Details.
+
+.topic IDH_WkMschModus
+Die Wertung der Mannschaften geschieht entweder durch Addition der Endzeiten oder Platzierungen der Teilnehmer. Ein zusätzlicher Modus ist für Veranstaltungen im Rahmen der DTU Schultour vorgesehen 
+
+Klicken Sie auf den Schalter "Hilfe" für weitere Details.
+
+.topic IDH_WkMschGroesse
+Eine Mannschaft wird nur gewertet, wenn mindestens die hier für die Klasse eingestellte Anzahl von Mannschaftsteilnehmern das Ziel erreicht. Es können Mannschaftsgrößen von 2 bis 16 Teilnehmer definiert werden. 
+
+.topic IDH_WkSchwDist
+Hier kann die Anzahl der Bahnen, die geschwommen werden müssen, definiert werden (max. 30). Diese Angabe wird für die Erstellung einer Checkliste für Bahnenzähler verwendet. Diese Liste kann in der Ansicht "Checkliste Schwimmbahnen" ausgedruckt werden.
+
+.topic IDH_WkSchwBahn
+Wenn die Teilnehmer in Startbahnen eingeteilt werden sollen, kann hier die Anzahl der verfügbaren Schwimmbahnen definiert werden (max. 16). Jedem Teilnehmer muss dann eine spezifische Startbahn zugeordnet werden. Diese wird in der Startliste in einer zusätzlichen Spalte dargestellt.
+
+.topic IDH_WkSerName
+Der Wettkampfnamen wird hier einheitlich für alle Austragungsorte definiert. Dieser Name wird nur für die verschiedenen Wettkampf-Auswahllisten im Programm verwendet. Auf den ausgedruckten Listen erscheint der unten definierte, orts-spezifische Wettkampfname.
+
+.topic IDH_WkKuerzel
+Bei Liga-Veranstaltungen kann zusätzlich zum Name ein Kürzel für den Wettkampf festgelegt werden, das in der Liga-Spalte auf der "Ergebnisliste Teilnehmer" verwendet wird.
+
+.topic IDH_SGrpLst
+Klicken Sie auf eine Startgruppe, um die zugeordneten Einstellungen in den übrigen Feldern an zu zeigen.
+
+.topic IDH_SGrpName
+Sie können für jede Startgruppe einen unterschiedlichen Namen festlegen. Die Startgruppen werden nach Name sortiert in der Liste dargestellt.
+
+.topic IDH_SGrpWettk
+Die markierte Startgruppe wird einem der definierten Wettkämpfen zugeordnet. Für jeden Wettkampf muss mindestens eine Startgruppe definiert werden.
+
+.topic IDH_SGrpSnr
+Aus dem definierten Nummernbereich können die Startnummern der in dieser Startgruppe eingeteilten Teilnehmern ausgewählt werden.
+
+.topic IDH_SGrpTlnMax
+Die maximale Anzahl der Teilnehmer, die in der markierten Startgruppe eingeteilt werden können, wird aus dem Startnummernbereich errechnet. Sie dient lediglich zur Information.
+
+.topic IDH_SGrpTlnIst
+Die Anzahl der in der markierten Startgruppe eingeteilten Teilnehmer dient lediglich zur Information.
+
+.topic IDH_SGrpAbs1
+Die Startzeit des ersten Abschnitts gilt für alle Teilnehmer, die in dieser Startgruppe eingeteilt werden.
+In der Regel wird der erste Abschnitt als Massenstart durchgeführt. Alternativ können ein Jagdstart oder Einzelstart definiert werden. Beim Jagdstart starten die Teilnehmer nacheinander mit einem gleichen, unten festgelegten Zeitabstand. Beim Einzelstart wird die Startzeit für jeden Teilnehmer einzeln eingelesen.
+
+Klicken Sie auf den Schalter "Hilfe" für weitere Details.
+ 
+.topic IDH_SGrpAbs2
+In der Regel werden die weiteren Abschnitten ohne Unterbrechung, unmittelbar in Anschluss am vorangegangenen Abschnitt, gestartet. Alternativ kann eine Pause und dazu eine neue Startzeit festgelegt werden. Nach einer solchen Unterbrechung kann der Start entweder als Massenstart, oder als Jagdstart definiert werden. Die Zeitabstände beim Jagdstart entsprechen den Zeitabständen am Ende des vorigen Abschnitts.
+
+Klicken Sie auf den Schalter "Hilfe" für weitere Details.
+
+.topic IDH_TlnName
+Name und Vorname müssen für jeden Teilnehmer eingetragen werden. Teilnehmer mit gleichem Namen und Vornamen sind erlaubt, wenn sie an verschiedenen Wettkämpfen teilnehmen oder im gleichen Wettkampf, wenn sie verschiedenen Mannschaften angehören.
+
+.topic IDH_TlnSex
+Das Geschlecht muss für jeden Teilnehmer eingestellt werden. Es kann sowohl das männliche, das weibliche als auch kein Geschlecht unter dem Menüpunkt "Extras/Optionen" als Voreinstellung gewählt werden.
+
+.topic IDH_TlnJg
+Das Geburtsjahr des Teilnehmers kann hier eingetragen werden. Wenn dieses fehlt, wird der Teilnehmer bei den Altersklassenwertungen nicht berücksichtigt.
+
+.topic IDH_TlnAlter
+Das Alter des Teilnehmers wird aus dem Wettkampf-Datum und dem Geburtsjahr errechnet. Diese Angabe dient nur zur Information.
+
+.topic IDH_TlnAk
+Die Einteilung in Altersklasse und Sonderklasse wird aus dem Wettkampfdatum und dem Geburtsjahr des Teilnehmers ermittelt. Dabei werden nur die für den Wettkampf definierten Altersklassen und ggf. Sonderklassen benutzt. Diese Angabe dient nur zur Information.
+
+.topic IDH_TlnMsch
+Der hier eingetragene Vereins- oder Ortsname wird in allen Teilnehmerlisten in einer eigenen Spalte dargestellt. Wird ein Name eingetragen und die Teilnahme an der Mannschaftswertung im Bereich "Optionen" definiert (Voreinstellung), dann wird dieser Name auch als Mannschaftsname für die Mannschaftswertung verwendet.
+
+Der Vereins- oder Ortsname kann entweder direkt eingetragen oder aus einer Liste aller bereits eingegebenen Namen ausgewählt werden. Es ist zu empfehlen, nach Möglichkeit die Auswahlliste zu verwenden um unterschiedliche Schreibweisen der Mannschaftsnamen und damit eine inkorrekte Mannschaftswertung zu vermeiden.
+
+.topic IDH_TlnWettk
+Durch auswahl aus der Liste, wird der Teilnehmer einem der definierten Wettkämpfen zugeordnet.
+ 
+.topic IDH_TlnNext
+Speichert die eingegebenen Daten und erzeugt ein neues Anmelde-Fenster.
+
+.topic IDH_TlnNav
+Mit diesen Navigations-Schaltern können andere Teilnehmer aus der Liste ausgewählt werden, ohne das Dialogfenster zu verlassen.
+
+.topic IDH_SMldLst
+Klicken Sie auf einen Vereinsmelder, um die zugeordneten Einstellungen in den übrigen Feldern und die gemeldeten Teilnehmer in der Tabelle an zu zeigen.
+
+.topic IDH_SMldSort
+Die Vereinsmelder können nach Name oder nach Verein sortiert in der Liste dargestellt werden.
+
+.topic IDH_SMldName
+Name und Vorname müssen eingetragen werden. Sie können für die Erstellung von Adressetiketten verwendet werden.
+
+.topic IDH_SMldMsch
+Der Mannschaftsname kann eingetragen oder aus einer Liste aller bereits eingegebenen Mannschaften ausgewählt werden. Er wird als Vorgabe bei den gemeldeten Teilnehmern eingetragen.
+
+.topic IDH_SMldLand
+Das Land wird als Vorgabe bei den gemeldeten Teilnehmern eingetragen.
+
+.topic IDH_SMldAdr
+Die Angabe von Adresse und E-Mail ist optional. Die Adresse kann für die Erstellung von Adressetiketten verwendet werden.
+
+.topic IDH_SMldDelAll
+Alle Sammelmelder in der Liste werden gelöscht.
+
+.topic IDH_TlnSMld
+Dem Teilnehmer kann einen Vereinsmelder zugeordnet werden. In der Ansicht "Anmeldung-Verein" ist dieser fest vorgegeben. 
+
+.topic IDH_TlnAdr
+Die Angabe von Adresse und E-Mail ist optional. Die Adresse kann für die Erstellung von Adressetiketten verwendet werden.
+
+.topic IDH_TlnSchw
+Es kann eine Meldezeit, z.B. eine voraussichtliche Schwimmzeit eingetragen werden. Diese kann benutzt werden, um bei einem Start im Schwimmbad die Teilnehmer entsprechend ihrer Schwimmleistung in Startgruppen und Bahnen einzuteilen.
+
+.topic IDH_TlnLand
+Dieses optionales Eingabefeld ist nur vorhanden, wenn es im Wettkampf-Dialog auf der Registerkarte "Teilnehmer" freigegeben wurde. Dort wird auch die Bezeichnung des Feldes definiert. Die Daten können in einer zusätzlichen Spalte auf Start- und Ergebnislisten für Teilnehmer dargestellt werden. Die Spaltenbreite ist begrenzt und erlaubt einen Text bestehend aus 3 Groß- oder 4 Kleinbuchstaben. Mögliche Anwendungen sind z.B. die Angabe von Nationalität oder Bundesland oder die Größe eines T-Shirts.
+
+.topic IDH_TlnStGeld
+Die Angabe eines Startgeldes is optional. Der Wert wird nur in der Anmelde-Ansicht angezeigt. Die Liste kann dabei auch nach dieser Wert sortiert werden.
+
+.topic IDH_TlnRfid
+Wenn die Zeitnahme mittels RFID-Code als Option gewählt wurde, kann hier ein RFID-Code eingetragen werden.  
+
+.topic IDH_TlnKomm
+Das Feld "Kommentar" steht für beliebige Einträge zur freien Verfügung. Der Inhalt dieses Feldes wird beim Export in Excel- und Textdateien und in den Seriendruckdateien für Etiketten und Urkunden ausgegeben, hat in Tria aber keine weitere Funktion.
+
+Klicken Sie auf den Schalter "Hilfe" für weitere Details.
+
+.topic IDH_TlnMschWrtg
+Teilnahme an der Mannschaftswertung ist nur möglich, wenn das Feld "Verein/Ort" ausgefüllt wurde und der Teilnehmer nicht außer Konkurrenz startet und an der Serienwertung teilnimmt (bei Serienveranstaltungen).
+
+.topic IDH_TlnMixMsch
+Wenn eine Mannschaftswertung eingestellt ist, kann der Teilnehmer für eine Mixed-Mannschaftswertung angemeldet werden. Er wird dann bei den nach Geschlecht oder Altersklassen gewerteten Mannschaften nicht berücksichtigt.
+ 
+.topic IDH_TlnSondWrtg
+Teilnahme an der Sonderwertung kann nur eingetragen werden, wenn für den Wettkampf eine Sonderwertung definiert ist und der Teilnehmer nicht außer Konkurrenz startet.
+
+.topic IDH_TlnAusKonk
+Es ist möglich, Teilnehmer außer Konkurrenz teilnehmen zu lassen. Diese Teilnehmer erscheinen in der Ergebnisliste an einer ihrer Gesamtzeit entsprechenden Position, sie werden jedoch bei der Berechnung der Platzierungen nicht berücksichtigt. Anstelle der Platzierung wird das Kürzel "a.K." eingetragen.
+
+.topic IDH_TlnSerWrtg
+Teilnahme an der Serienwertung kann nur eingetragen werden, wenn die Veranstaltung als Serienveranstaltung definiert ist und der Teilnehmer nicht außer Konkurrenz startet. Teilnehmer, die nicht an der Serienwertung teilnehmen, sind auch von der Mannschaftswertung ausgeschlossen.
+
+.topic IDH_TlnUrk
+Nur wenn diese Option eingestellt ist, wird ein Teilnehmer bei der Erstellung der Seriendruckdatei für Urkunden berücksichtigt.
+
+.topic IDH_TlnStfName1
+Der Hauptteilnehmer ist als Starter für den 1. Wettkampfabschnitt vorgegeben.
+
+.topic IDH_TlnStfName2
+Hier werden die übrigen Staffelteilnehmer definiert. Der Name muss eingetragen werden, der Vorname ist optional.  
+
+.topic IDH_TlnSGrp
+Klicken Sie auf eine Startgruppe, um den Teilnehmer in diese Startgruppe einzuteilen. Es stehen nur die für den gewählten Wettkampf definierten Startgruppen zur Auswahl. Zur besseren Übersicht wird die Anzahl der bereits eingeteilten Teilnehmer für jede Startgruppe in der Liste angezeigt.
+
+.topic IDH_TlnSBhn
+Wenn für diesen Wettkampf Startbahnen definiert wurden, können Sie dem Teilnehmer eine Startbahn aus der Liste zuordnen. Zur besseren Übersicht wird die Anzahl der bereits eingeteilten Teilnehmer für jede Startbanh in der Liste angezeigt. Wenn für die Anzahl der Startbahnen die Zahl null definiert wurde, dann wird diese Liste gesperrt.
+
+.topic IDH_TlnSnr
+Die Startnummer kann entweder manuell in das Feld eingetragen werden, oder aus der Liste der verfügbaren Startnummern in der gewählten Startgruppe ausgewählt werden.
+
+.topic IDH_TlnStZt1
+Dieses Feld zeigt die Startzeit des ersten Abschnitts. Wenn für die gewählte Startgruppe einen Massenstart definiert wurde (Normalfall), entspricht sie die für die Startgruppe definierten Startzeit. Beim Jagdstart wird sie aus Startzeit und Zeitabstand abgeleitet. Beim Einzelstart wird die Startzeit bei der Zeitnahme gemeinsam für alle Teilnehmer aus einer Datei eingelesen. Sie kann in diesem Fall hier auch manuell eingetragen und modifiziert werden, diese Möglichkeit ist aber nur für Ausnahmefälle vorgesehen.
+ 
+.topic IDH_TlnStZt2
+Die Startzeit des Abschnitts wird aus der gestoppten Uhrzeit des vorangegangenen Abschnitts und dem Startmodus dieses Abschnitts abgeleitet. Bei einem Start ohne Unterbrechung ist sie identisch mit der Stoppzeit des vorangegangenen Abschnitts.
+
+.topic IDH_TlnUhrZt
+Die für diesen Abschnitt gestoppte Uhrzeit wird bei der Zeitnahme gemeinsam für alle Teilnehmer aus einer Datei eingelesen. Sie kann hier auch manuell eingetragen und modifiziert werden, diese Möglichkeit ist aber nur für Ausnahmefälle vorgesehen.
+ 
+Es ist jede Uhrzeit erlaubt, auch 00:00:00[,00] ist eine gültige Uhrzeit. Eine nicht erfasste Zeit wird durch ein leeres Feld gekennzeichnet. Dies kann manuell erreicht werden durch Löschen der Uhrzeit mit der Leertaste oder der Entf-Taste.
+
+.topic IDH_TlnZtGtSchr
+Die errechnete Endzeit kann auch eine Zeitgutschrift beinhalten. Diese wird auf der Registerkarte "Gutschrift/Strafe" definiert.
+
+.topic IDH_TlnStrafZt
+Die errechnete Endzeit kann auch eine Strafzeit beinhalten. Diese wird auf der Registerkarte "Gutschrift/Strafe" definiert.
+
+.topic IDH_TlnAbsZt
+Die für diesen Abschnitt gebrauchte Zeit entspricht der Differenz der oben gezeigten Start- und Stoppzeit.
+
+.topic IDH_TlnEndZt
+Die Endzeit des Teilnehmers entspricht der Summe von Abschnittszeiten und Strafzeit, vermindert mit der Zeitgutschrift.   
+
+.topic IDH_TlnAbsRnd
+Wenn für den Abschnitt mehr als eine Runde definiert wurde, werden die Rundenzeiten in einem zusätzlichen Fenster angezeigt. In dem benachbarten Feld kann die ausgewählte Rundenzeit bearbeitet werden.
+
+.topic IDH_TlnAbsRndLst
+Wenn für den Abschnitt mehr als eine Runde definiert wurde, werden die Rundenzeiten in diesem Fenster angezeigt. In dem darüber liegenden Feld kann die ausgewählte Rundenzeit bearbeitet werden.
+
+.topic IDH_TlnGesRng
+Zeigt die Platzierung in der Gesamtwertung über alle Abschnitte.
+
+.topic IDH_TlnGesAbs
+Zeigt die Platzierung in der Gesamtwertung über diesen Abschnitt.
+
+.topic IDH_TlnSexRng
+Zeigt die Platzierung in der Wertung pro Geschlecht über alle Abschnitte.
+
+.topic IDH_TlnSexAbs
+Zeigt die Platzierung in der Wertung pro Geschlecht über diesen Abschnitt.
+
+.topic IDH_TlnAkRng
+Zeigt die Platzierung in der Altersklassenwertung über alle Abschnitte.
+
+.topic IDH_TlnAkAbs
+Zeigt die Platzierung in der Altersklassenwertung über diesen Abschnitt.
+
+.topic IDH_TlnZusRng
+Zeigt die Platzierung in der Sonderklassenwertung über alle Abschnitte.
+
+.topic IDH_TlnZusAbs
+Zeigt die Platzierung in der Sonderklassenwertung über diesen Abschnitt.
+
+.topic IDH_TlnSerTag
+Zeigt die Tagesplatzierung im aktuellen Austragungsort, die für die Serienwertung verwendet wird.
+
+.topic IDH_TlnSerPkt
+Zeigt die Gesamtpunktzahl in der Serienwertung über alle Austragungsorte.
+
+.topic IDH_TlnSerRng
+Zeigt die Platzierung in der Serienwertung über alle Austragungsorte.
+
+.topic IDH_TlnStrZt
+Bei einer Zeitstrafe wird die eingetragene Zeit zu der Gesamtzeit hinzugezählt. Es kann auch die Zeit 00:00 als Strafe eingetragen werden, wenn die Zeitstrafe schon während des Wettkampfes "abgesessen" wurde. In der Ergebnisliste wird eine Zeitstrafe, auch wenn diese gleich null ist, durch ein *-Zeichen nach der Endzeit gekennzeichnet.
+
+.topic IDH_TlnDisq
+Disqualifizierte Teilnehmer können, wenn gewünscht, in die Ergebnisliste aufgenommen werden. Dies wird über das Auswahlfeld "Status" auf der Ansichtsleiste bestimmt. Wenn sie gelistet werden, dann werden disqualifizierte Teilnehmer am Ende der Ergebnisliste angehängt. Statt der Platzierung wird die hier definierte Bezeichnung (Vorgabe "disq") eingetragen.
+Bei einer Disqualifikation kann zusätzlich eine Begründung eingetragen werden. Dies hat lediglich einen informativen Zweck. 
+
+.topic IDH_TlnGutschr
+Bei einer Zeitgutschrift wird die eingetragene Zeit von der Gesamtzeit abgezogen.
+
+.topic IDH_TlnRestStr
+Bei Stundenrennen kann hier die Reststrecke, die nach dem letzten Zieldurchlauf zurückgelegt wurde, in Metern eingetragen werden. Diese wird bei der Berechnung der Gesamtstrecke berücksichtigt. 
+
+.topic IDH_RfidEinlDat
+Zeigt die vorher gewählte Textdatei.
+
+.topic IDH_RfidEinlForm
+Heir kann das Format der Textdatei flexibel definiert werden.
+
+.topic IDH_RfidEinlLoesch
+Wählen Sie ob vorher eingelesene RFID-Codes beibehalten oder gelöscht und mit den neu eingelesenen Codes überschrieben werden.
+
+.topic IDH_RfidEinlOk
+Importiert die RFID-Codes und schließt das Dialogfenster.
+
+.topic IDH_RfidEinlAbbr
+Schließt das Dialogfenster, ohne die RFID-Codes zu importieren.
+
+.topic IDH_ZtEinlDatTyp
+Wählen einen Dateityp aus der Liste.
+
+.topic IDH_ZtEinlDatei
+Wählen Sie aus welcher Datei die Zeiterfassungsdaten eingelesen werden.
+
+.topic IDH_ZtEinlDatOeffnen
+Öffnen Sie eine neue Zeiterfassungsdatei.
+
+.topic IDH_ZtEinlFormat
+Wenn den DateiTyp "Sonstige" gewählt wurde, kann hier das Format der Textdatei flexibel definiert werden.
+
+.topic IDH_ZtEinlWk
+Wählen Sie ob die Zeiterfassungsdaten getrennt pro Wettkampf oder für alle Wettkämpfe gemeinsam eingelesen werden. 
+
+.topic IDH_ZtEinlStrt
+Hier können Sie im Einzelstart-Modus angeben, ob aus der Datei Startzeiten eingelesen werden sollen. Die Startzeiten können mit Abschnittszeiten gemeinsam eingelesen werden und auch auf mehreren Dateien verteilt werden.
+
+.topic IDH_ZtEinlAbs
+Wählen Sie welche Abschnittszeiten eingelesen werden. Mehrere Abschnitte können in einer Datei gespeichert und gemeinsam eingelesen werden. Auch können die Zeiten eines Abschnitts auf mehrere Dateien verteilt werden.
+
+.topic IDH_ZtEinlTlnFocus
+Wählen Sie ob nach jedem Einlesevorgang der Teilnehmer mit der zuletzt erfassten Zeit fokussiert werden soll.
+
+.topic IDH_ZtEinlBehalten
+Wählen Sie ob vorher eingelesene Zeiten beibehalten oder gelöscht und mit den neu eingelesenen Zeiten überschrieben werden.
+
+.topic IDH_ZtEinlAbbr
+Schließt das Dialogfenster, ohne die Zeiten ein zu lesen.
+
+.topic IDH_ZtEinlOk
+Liest die Zeiten ein und blendet im Anschluss ein Dialog ein, in dem die eingelesenen und die ignorierten Einträge (mit Begründung) aufgelistet werden.
+
+.topic IDH_ZtLiveOk
+Startet das Einlesen der Zeiten und schließt das Dialogfenster.
+
+.topic IDH_ZtLoeschWk
+Wählen Sie ob die bereits eingelesenen Zeiterfassungsdaten getrennt pro Wettkampf oder für alle Wettkämpfe gemeinsam gelöscht werden. 
+
+.topic IDH_ZtLoeschStrt
+Hier können Sie im Einzelstart-Modus angeben, ob bereits eingelesen Startzeiten gelöscht werden sollen. 
+
+.topic IDH_ZtLoeschAbs
+Wählen Sie für welche Abschnitte die bereits einegelesenen Zeiterfassungsdaten gelöscht werden.
+
+.topic IDH_ZtLoeschAbbr
+Schließt das Dialogfenster, ohne die Zeiten ein zu löschen.
+
+.topic IDH_ZtLoeschOk
+Löscht die Zeiten und schließt das Dialogfenster.
+
+.topic IDH_AusgWettk
+Wählen Sie einen oder mehrere Wettkämpfe.
+
+.topic IDH_AusgKlassen
+Wählen Sie eine oder mehrere Klassen.
+
+.topic IDH_AusgAlleKlassen
+Mit einem Klick wählen Sie alle Wertungsklassen in der Liste. 
+
+.topic IDH_AusgWkSeite
+Falls mehr als einen Wettkampf gewählt wird, kann hier eingestellt werden, ob jede Liste auf einer neuen Seite anfängt.
+
+.topic IDH_AusgAkSeite
+Falls mehr als eine Klasse gewählt wird, kann hier eingestellt werden, ob jede Liste auf einer neuen Seite anfängt.
+
+.topic IDH_AusgOptSpalte
+Wenn für den Wettkampf ein optionales Eingabefeld für Teilnehmerdaten definiert wurde, kann hier festgelegt werden ob eine entsprechende Spalte ausgegeben wird. Diese Option steht nur bei Start- und Ergebnislisten für Teilnehmer zur Verfügung.
+
+.topic IDH_AusgDrBereich
+Sie können entweder alle Seiten oder einen bestimmten Seitenbereich der Liste drucken.
+
+.topic IDH_AusgDrExempl
+Geben Sie die Anzahl der zu druckenden Exemplare ein. Aktivieren Sie das Kontrollkästchen "Sortieren", wenn Sie nacheinander vollständige Exemplare der Liste drucken möchten. 
+
+.topic IDH_AusgPlatz
+Wählen Sie welche Platzierungen ausgegeben werden.
+
+.topic IDH_AusgSnr
+Wählen Sie welche Teilnehmer-Startnummern ausgegeben werden.
+
+.topic IDH_AusgExpAnz
+Als Option kann die Datei nach der Erstellung auf dem Bildschirm angezeigt werden.
+
+.topic IDH_AusgDrEig
+Klicken Sie hier, um einen anderen Drucker zu wählen oder die Druckereigenschaften zu ändern.
+
+.topic IDH_AusgDrucker
+Zeigt den für den Ausdruck gewählten Drucker.
+
+.topic IDH_AusgUrkDr
+Wählen Sie ob Urkunden mit MS Word erstellt werden oder eine Seriendruckdatei erstellt wird.
+
+.topic IDH_AusgUrkAnz
+Wählen Sie ob die Seriendruckdatei nach der Erstellung mit dem standard Texteditor angezeigt wird.
+
+.topic IDH_AusgVorsch
+Zeigt einen Vorschau der Liste und schließt das Dialogfenster.
+
+.topic IDH_AusgAbbr
+Schließt das Dialogfenster, ohne die Daten auszugeben.
+
+.topic IDH_AusgOk
+Gibt die Daten aus und schließt das Dialogfenster.
+
+.topic IDH_SerDrWk
+Zeigt den für die Urkunden auf der Ansichtsleiste gewählten Wettkampf.
+
+.topic IDH_SerDrAk
+Wählen Sie die Wertungsklasse für die Urkunden.
+
+.topic IDH_SerDrDok
+Wählen Sie ein bestehendes Hauptdokument (Vorlage) für die Urkunden oder erstellen Sie ein neues Hauptdokument.
+
+.topic IDH_SerDrAbbr
+Schließt das Dialogfenster, ohne Urkunden oder Urkunde-Hauptdokument zu erstellen.
+
+.topic IDH_SerDrOk
+Erstellt die Urkunden oder ein neues Urkunde-Hauptdokument.
+Je nach Einstellung werden diese ausgedruckt oder in Word geöffnet. Anschließend wird das Dialogfenster geschlossen.
+
+.topic IDH_SerDrDruck
+Wählen Sie ob die Urkunden ausgedruckt oder in Word geöffnet werden. Ein neues Hauptdokument wird grundsätzlich zur weiteren Bearbeitung in Word geöffnet.
+
+.topic IDH_UrkDrWk
+Zeigt den für die Urkunde auf der Ansichtsleiste gewählten Wettkampf.
+
+.topic IDH_UrkDrAk
+Wählen Sie die Wertungsklasse für die Urkunde.
+
+.topic IDH_UrkDok
+Wählen Sie ein bestehendes Hauptdokument (Vorlage) für die Urkunde oder erstellen Sie ein neues Hauptdokument.
+
+.topic IDH_UrkDrAbbr
+Schließt das Dialogfenster, ohne Urkunde oder Urkunde-Hauptdokument zu erstellen.
+
+.topic IDH_UrkDrOk
+Erstellt die Urkunde oder ein neues Urkunde-Hauptdokument.
+Je nach Einstellung wird dieses ausgedruckt oder in Word geöffnet. Anschließend wird das Dialogfenster geschlossen.
+
+.topic IDH_UrkDrName
+Zeigt den für die Urkunde gewählten Teilnehmer oder Mannschaft.
+
+.topic IDH_UrkDrSnr
+Zeigt die Startnummer des gewählten Teilnehmers.
+
+.topic IDH_UrkDrPlatz
+Zeigt die Platzierung des gewählten Teilnehmers oder Mannschaft.
+
+.topic IDH_UrkDruck
+Wählen Sie ob die Urkunde ausgedruckt oder in Word geöffnet wird. Ein neues Hauptdokument wird grundsätzlich zur weiteren Bearbeitung in Word geöffnet.
+
+.topic IDH_OptVorg
+Die empfohlene Optionen werden eingestellt.
+
+.topic IDH_OptUpdate
+Wenn Sie das Kontrollkästchen aktivieren, wird beim Programmstart automatisch überprüft ob eine neuere Programmversion auf www.selten.de verfügbar ist.
+
+.topic IDH_OptStart
+Wenn Sie das Kontrollkästchen aktivieren, wird beim Programmstart die zuletzt benutzte Datei geöffnet. Andernfalls wird eine neue leere Datei erstellt.
+
+.topic IDH_OptSex
+Wenn Sie das Kontrollkästchen aktivieren, wird im Teilnehmer-Anmeldedialog das hier ausgewählte Geschlecht voreingestellt. Andernfalls bleibt das Auswahlfeld leer und muss das Geschlecht in jedem Fall eingestellt werden.
+
+.topic IDH_OptZeitFmt
+In der Regel werden Zeiten in Sekunden dargestellt (hh:mm:ss). Sie können aber auch in Zehntel- oder Hundertstelsekunden dargestellt werden. Bei der Zeiterfassung werden die Zeiten auch im gewählten Format eingelesen.
+
+.topic IDH_OptTrennZchn
+Wenn Zeiten in Zehntel- oder Hundertstelsekunden dargestellt werden, kann das Trennzeichen für die Dezimalen hier ausgewählt werden. Die Auswahl des Trennzeichens hat beim Einlesen der Zeiten keine Bedeutung.   
+
+.topic IDH_OptFilter
+Bei manchen Transpondersystemen kann es vorkommen, dass Teilnehmer in kurzen Zeitabständen mehrfach erfasst werden. Diese Doppeleinträge können optional ausgefiltert werden. Das Zeitfenster kann dabei beliebig definiert werden.
+
+.topic IDH_OptSnrUeberlapp
+Wenn Sie das Kontrollkästchen aktivieren, werden im Startgruppen-Dialog überlappende Startnummern-Bereiche zugelassen. Das ermöglicht z.B. einen gemeinsamen Startnummernblock für alle Teilnehmer.
+     
+.topic IDH_OptBer
+Die Platzierungen von Teilnehmern und Mannschaften werden entweder sofort nach jeder Änderung oder erst nach dem Schliessen des Dialogs berechnet.
+
+.topic IDH_OptBerSchalt
+Die Platzierungen aller Teilnehmer und Mannschaften werden komplett neu berechnet.
+
+.topic IDH_OptAutoSpeich
+Wenn Sie das Kontrollkästchen aktivieren, wird die aktuelle Datei bei Änderung automatisch nach einem hier festgelegten Zeitabstand gespeichert. Das Intervall kann von 1 bis 99 Minuten eingestellt werden.
+
+.topic IDH_OptSpeich
+Wenn Sie das Kontrollkästchen aktivieren, wird bei jedem Speichervorgang automatisch ein Backup (Sicherungskopie) mit der Dateierweiterung *.~tri angelegt.
+
+.topic IDH_OptZeitModus
+Beim Einlesen der Zeiterfassungsdatei werden die Teilnehmer entweder mittels Startnummer oder RFID-Code identifiziert (Option auch in TriaZeit).
+  
+.topic IDH_OptRfidZeichen
+Wenn der RFID-Zeitnahmemodus gewählt wird, muss die Länge der Chipnummern festgelegt werden (2 bis 24) und es können beliebige Zeichen oder nur Hex-Zeichen zugelassen werden.
+
+.topic IDH_ImpDat
+Zeigt den vollständigen Pfad der Quelldatei, aus dem die Daten importiert werden.
+
+.topic IDH_ImpVst
+Zeigt den Namen der Veranstaltung in der Quelldatei.
+
+.topic IDH_ImpOrt
+Wählen Sie den Veranstaltungsort, aus dem die Daten importiert werden (nur bei Serienveranstaltungen).
+
+.topic IDH_ImpWk
+Wählen Sie den Wettkampf, aus dem die Daten importiert werden. 
+
+.topic IDH_ImpTln
+Wählen Sie, welche Teilnehmerdaten importiert werden. Die Wettkampf- und Startgruppeneinstellungen werden nur nach Bestätigung einer entsprechenden Abfrage übernommen.  
+
+.topic IDH_ImpStrt
+Startet den Importvorgang. Klicken Sie auf den Schalter "Hilfe" für weitere Details.
+
+.topic IDH_ImpNam
+Zeigt den Namen des zu importierenden Teilnehmers. Die Hintergrundfarbe zeigt ob dieser sich von dem des markierten Ziel-Teilnehmers unterscheidet (rot) oder ob beide identisch sind (grün). 
+
+.topic IDH_ImpVNam
+Zeigt den Vornamen des zu importierenden Teilnehmers. Die Hintergrundfarbe zeigt ob dieser sich von dem des markierten Ziel-Teilnehmers unterscheidet (rot) oder ob beide identisch sind (grün).
+
+.topic IDH_ImpSex
+Zeigt das Geschlecht des zu importierenden Teilnehmers. Die Hintergrundfarbe zeigt ob dieses sich von dem des markierten Ziel-Teilnehmers unterscheidet (rot) oder ob beide identisch sind (grün).
+
+.topic IDH_ImpJg
+Zeigt das Geburtsjahr des zu importierenden Teilnehmers. Die Hintergrundfarbe zeigt ob dieses sich von dem des markierten Ziel-Teilnehmers unterscheidet (rot) oder ob beide identisch sind (grün).
+
+.topic IDH_ImpLnd
+Zeigt das Land des zu importierenden Teilnehmers. Die Hintergrundfarbe zeigt ob dieses sich von dem des markierten Ziel-Teilnehmers unterscheidet (rot) oder ob beide identisch sind (grün).
+
+.topic IDH_ImpMsch
+Zeigt den Mannschaftsnamen des zu importierenden Teilnehmers. Die Hintergrundfarbe zeigt ob dieser sich von dem des markierten Ziel-Teilnehmers unterscheidet (rot) oder ob beide identisch sind (grün).
+
+.topic IDH_ImpSMld
+Zeigt den Vereinsmelder des zu importierenden Teilnehmers. Die Hintergrundfarbe zeigt ob dieser sich von dem des markierten Ziel-Teilnehmers unterscheidet (rot) oder ob beide identisch sind (grün).
+
+.topic IDH_ImpMod
+Wählen Sie, ob der Import-Teilnehmer als zusätzlicher Teilnehmer zur Zieldatei hinzugefügt wird, oder ob der markierte Ziel-Teilnehmer die Daten des Import-Teilnehmers übernimmt.   
+
+.topic IDH_ImpWeit
+Setzt den Importvorgang fort, beginnend mit dem angezeigten Import-Teilnehmer.
+
+.topic IDH_ImpAbbr
+Bricht den Importvorgang ab. Die bisher importierten Daten sind in der Datei enthalten.
+
+.topic IDH_PrevSeite
+Wählen Sie die Seite der Liste, die Sie anzeigen möchten.
+
+.topic IDH_PrevMax
+Zeigt die Gesamtzahl der Seiten der Liste.
+
+.topic IDH_PrevStart
+Wechselt zur ersten Seite.
+
+.topic IDH_PrevBack
+Wechselt zur vorigen Seite. 
+
+.topic IDH_PrevNext
+Wechselt zur nächsten Seite.
+
+.topic IDH_PrevLast
+Wechselt zur letzten Seite.
+
+.topic IDH_PrevDruck
+Druckt die angezeigte Liste.
+
+.topic IDH_PrevPDF
+Erstellt eine PDF-Datei der angezeigten Liste.
+
+.topic IDH_PrevClose
+Beendet die Vorschau und wechselt zurück in die vorige Ansicht.
+
+.topic IDH_KlWk
+Wählen Sie für welchen Wettkampf Sie die Klassen definieren möchten.
+
+.topic IDH_KlLst
+Liste aller für den gewählten Wettkampf und den über die Registerkarten gewählten Wertungsbereich definierten Klassen.
+Klicken Sie auf eine Zeile, um die Einstellungen zu bearbeiten.
+
+.topic IDH_KlName
+Der Bezeichnung der Klasse erscheint in den verschiedenen Auswahlfeldern für Altersklassen und in den Überschriften auf Start- und Ergebnislisten. 
+
+.topic IDH_KlVon
+Für die untere Altersgrenze der Klasse können Werte von 1 bis 99 eingetragen werden.
+
+.topic IDH_KlBis
+Für die obere Altersgrenze der Klasse können Werte von 1 bis 99 eingetragen werden.
+
+.topic IDH_KlKop
+Erstellt eine Kopie der angezeigten Klassenliste, die mit dem Schalter "Liste einfügen" für einen anderen Wettkampf oder Wertungsbereich übernommen werden kann. 
+
+.topic IDH_KlEinf
+Ersetzt die angezeigte Klassenliste durch die mit dem Schalter "Liste kopieren" erzeugte Liste.
+
+.topic IDH_KlDTU
+Ersetzt die angezeigte Klassenliste durch die von der Deutschen Triathlon Union (DTU) vorgegebenen Altersklassen.
+
+.topic IDH_KlDLV
+Ersetzt die angezeigte Klassenliste durch die vom Deutschen Leichtathletik Verband (DLV) vorgegebenen Altersklassen. Wegen der Länge der Kürzeln ist dies nur für Wettkämpfe mit einem Abschnitt möglich.
+
+.topic IDH_KlUeb
+Speichert die angezeigte Klassenliste mit allen vorgenommenen Änderungen ohne das Dialogfenster zu schließen.
+
+.topic IDH_KlAend
+Übernimmt die vorgenommenen Änderungen der Klasse in der angezeigten Klassenliste ohne die Liste zu speichern oder das Dialogfenster zu schliessen.
+
+.topic IDH_KlKuerz
+Das Kürzel wird aus Platzgründen in der Altersklassenspalte der Listen verwendet und kann auch nur für die Altersklassenwertung von Teilnehmern definiert werden. Bei Wettkämpfen mit nur einem Abschnitt sind 6 Zeichen erlaubt, sonst ist die Länge beschränkt auf 3 Zeichen. 
+
+.topic IDH_ImpExcDat
+Zeigt den Namen der Quelldatei, aus dem die Daten importiert werden.
+
+.topic IDH_ImpExcZuo
+An der linken Seite dieser Tabelle sind alle Teilnehmerdaten aufgelistet, die für den gewählten Wettkampf importiert werden können. Zu jedem dieser Tria-Datenfelder kann auf der rechten Tabellenseite einen Feldnamen aus einer Drop-Down Liste mit allen in der Importdatei vorhandenen Feldnamen ausgewählt werden. Für die optionalen Datenfelder kann auch kein Feldname zugeordnet werden, wenn keine Daten importiert werden sollen.
+
+Klicken Sie auf den Schalter "Hilfe" für weitere Details.  
+
+.topic IDH_ImpExcVor
+Zeigt einen Vorschau der importierten Daten, abhängig von der eingestellten Zuordnung der Datenfelder. 
+
+.topic IDH_ImpExcPru
+Prüft alle Teilnehmerdaten. Klicken Sie auf den Schalter "Hilfe" für weitere Details.
+
+.topic IDH_ImpExcImp
+Importiert die Teilnehmerdaten. Ein Import findet nur statt, wenn alle Daten korrekt sind.
+
+Klicken Sie auf den Schalter "Hilfe" für weitere Details. 
+
+.topic IDH_ImpExcAbb
+Schließt das Dialogfenster, ohne die Daten zu importieren.
+
+.topic IDH_ImpTxtTrn
+Wählen Sie das in der Importdatei verwendete Trennzeichen. Automatisch erkannt werden Semikolon, Tabstopp, Komma und Leerzeichen. Andere Zeichen können im Feld "Anderes" definiert werden.
+
+.topic IDH_ImpExcPag
+Wählen Sie welche Seite der Tabelle Sie importieren möchten.
+
+.topic IDH_ImpExcForm
+Wählen Sie das Format der Queldatei.
+
+.topic IDH_ImpPrueName
+Zeigt den Namen des Option-Datenfeldes.
+
+.topic IDH_ImpPrueInh
+Zeigt den Inhalt des Option-Datenfeldes.
+
+.topic IDH_ImpPrueOpt
+Wähle den zugehörigen Status der Option.
+
+.topic IDH_SWrtgWk
+Wählen Sie für welchen Wettkampf Sie die Seriewertung definieren möchten.
+ 
+.topic IDH_SWrtgStreichErg
+Für die Serienwertung müssen nicht alle Tagesergebnisse berücksichtigt werden. Hier kann eine beliebige Anzahl von Streichergebnissen definiert werden. Es werden grundsätzlich die schlechtesten Ergebnisse gestrichen.
+
+.topic IDH_SWrtgPflichtWk
+Es können hier 1, 2 oder 1 von 2 Orte als Pflichtwettkampf eingetragen werden. Diese Wettkämpfe müssen erfolgreich beendet werden um in die Wertung zu gelangen und werden auch nicht als Streichergebnis berücksichtigt.
+
+.topic IDH_SWrtgMindestWk
+Es muss mindestens die hier eingetragene Zahl an Wettkämpfen erfolgreich beendet werden, um für die Serie gewertet zu werden. 
+
+.topic IDH_SWrtgAkJahrWk
+In der Regel werden die Altersklassen den Teilnehmern in Abhängigkeit vom Kalenderjahr des Wettkampfes zugeordnet. Wenn jedoch bei einer Serienveranstaltung die Wettkämpfe nicht alle im gleichen Kalenderjahr stattfinden, muss hier das Jahr für die Definition der Altersklassen festgelegt werden.
+
+.topic IDH_SWrtgZeit
+Bei dieser Berechnungsoption werden die Endzeiten über alle Orte addiert.
+
+.topic IDH_SWrtgPktUp
+Wenn die Punkte der Platzierung entsprechen, erhalten nicht platzierte Teilnehmer / Mannschaften einen Punkt mehr als der Letztplatzierte und in der Regel also für jeden Austragungsort (abhängig von der Teilnehmerzahl) eine unterschiedliche Punktzahl. Durch Setzen der entsprechenden Option, kann stattdessen für alle Austragungsorte die gleiche und zwar höchste Punktzahl vergeben werden.
+
+.topic IDH_SWrtgPktDwn
+Wenn die Punkte umgekehrt zur Platzierung definiert werden, erhalten die Erstplatzierten in der Regel je nach Austragungsort unterschiedliche Punkte. Durch Setzen der entsprechenden Option, kann alternativ der Höchstwert als einheitlicher Punktzahl für die Erstplatzierten festgelegt werden.  Nicht gewertete Teilnehmer erhalten hier grundsätzlich keine Punkte. 
+
+.topic IDH_SWrtgPktFlex
+Bei dieser Wertungsoption können den Platzierungen flexibel Punkte zugeordnet werden.
+
+.topic IDH_SWrtgOrtWrtg
+Bei Punktgleichheit kann das Ergebnis an einem der Austragungsorte als maßgeblich für das Gesamtergebnis definiert werden. Ansonsten wird bei Punktgleichheit die gleiche Platzziffer vergeben.
+
+.topic IDH_SWrtgLst
+Liste aller für den gewählten Wettkampf und die gewählte Wertung definierten Wertungspunktbereiche.
+Klicken Sie auf eine Zeile, um die Einstellungen zu bearbeiten.
+
+.topic IDH_SWrtgPlatz
+Für den Platzierungsbereich können Werte von 1 bis 9.999 eingetragen werden. Die Bereiche werden ab Platz 1 in aufsteigender Reihenfolge und lückenlos bis zu einem beliebigen Endwert definiert. 
+
+.topic IDH_SWrtgPunkt
+Für den Punktebereich können Werte von 1 bis 9.999 eingetragen werden. Für jeden Bereich werden Anfangswert und Differenz zur nächsten Platzierung entweder aufsteigend oder absteigend definiert. 
+
+.topic IDH_SWrtgKop
+Erstellt eine Kopie der angezeigten Liste, die mit dem Schalter "Liste einfügen" für einen anderen Wettkampf oder eine andere Wertung übernommen werden kann. 
+
+.topic IDH_SWrtgEinf
+Ersetzt die angezeigte Wertungspunktliste durch die mit dem Schalter "Liste kopieren" erzeugte Liste.
+
+.topic IDH_SWrtgStand
+Ersetzt die angezeigte Wertungspunktliste durch die vorgegebene Standardliste.
+
+.topic IDH_SWrtgUeb
+Speichert alle Änderungen ohne das Dialogfenster zu schließen.
+
+.topic IDH_SWrtgAend
+Übernimmt die im Wertungspunktebereich vorgenommenen Änderungen in der angezeigten Liste ohne die Änderungen zu speichern oder das Dialogfenster zu schliessen.
+
+.topic  IDH_EintWk
+Wählen Sie für welchen Wettkampf Sie Teilnehmer einteilen möchten.
+
+.topic IDH_EintSGrpMod
+Wählen Sie ob alle Startgruppen des gewählten Wettkampfes oder nur die markierte Startgruppe den Teilnehmern zugeteilt werden soll.
+
+.topic IDH_EintSGrpLst
+Zeigt die Liste aller für den gewählten Wettkampf definierten Startgruppen.
+
+.topic IDH_EintSBhnMod
+Falls nur eine Startgruppe gewählt wurde, können Sie hier wählen ob alle oder nur die markierte Startbahn den Teilnehmern zugeteilt werden soll. 
+
+Zusätzlich können Sie angeben, wieviele Teilnehmer auf einer Startbahn gleichzeitig starten dürfen. 
+
+.topic IDH_EintSBhnLst
+Zeigt die Liste aller für den Wettkampf definierten Startbahnen.
+
+.topic IDH_EintSnrBer
+Wählen Sie welche Startnummern den Teilnehmern zugeteilt werden sollen. Voreingestellt ist der für die Startgruppe(n) definierte Nummernbereich.
+
+.topic IDH_EintBeibeh
+Wählen Sie ob die Einteilungsdaten bereits eingeteilter Teilnehmer beibehalten oder überschrieben werden sollen.
+
+.topic IDH_EintButton
+Die eingestellten Startgruppe(n), Startbahn(en) und Startnummer(n) werden den gelisteten und für den Wettkampf definierten Teilnehmern der Reihe nach zugeordnet.
+
+Die Änderungen werden gespeichert ohne das Dialogfenster zu schließen.
+
+.topic IDH_EintUebers
+Zeigt der Stand der Einteilung für Teilnehmer im gewählten Wettkampf.
+
+.topic  IDH_EintLoeschWk
+Wählen Sie für welchen Wettkampf Sie die Einteilung von Teilnehmern löschen möchten.
+
+.topic IDH_EintLoeschSGrpMod
+Wählen Sie ob alle Startgruppen des gewählten Wettkampfes oder nur die markierte Startgruppe der Teilnehmer gelöscht werden soll.
+
+.topic IDH_EintLoeschSGrpLst
+Zeigt die Liste aller für den gewählten Wettkampf definierten Startgruppen.
+
+.topic IDH_EintLoeschSBhnMod
+Falls nur eine Startgruppe gewählt wurde, können Sie hier wählen ob alle oder nur die markierte Startbahn der Teilnehmer gelöscht werden soll. 
+
+.topic IDH_EintLoeschSBhnLst
+Zeigt die Liste aller für den Wettkampf definierten Startbahnen.
+
+.topic IDH_EintLoeschSnrBer
+Wählen Sie welche Startnummern der Teilnehmer gelöscht werden sollen. Voreingestellt ist der für die Startgruppe(n) definierte Nummernbereich.
+
+.topic IDH_EintLoeschButton
+Die eingestellten Startgruppe(n), Startbahn(en) und Startnummer(n) werden bei den gelisteten und für den Wettkampf definierten Teilnehmern gelöscht.
+
+Die Änderungen werden gespeichert ohne das Dialogfenster zu schließen.

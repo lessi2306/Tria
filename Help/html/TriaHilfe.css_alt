@@ -1,0 +1,39 @@
+/* DATEI: selfhtml.css */
+
+/* Wenn die Schriftgroessen von SELFHTML fuer Sie schwer lesbar sind */
+/* und Sie SELFHTML lokal lesen, benennen Sie diese Datei */
+/* um in selfnormal.css */
+/* und benennen Sie die Datei selfnosize.css im src-Verzeichnis */
+/* um in selfhtml.css */
+
+h1,h2,h3,h4,p,ul,ol,li,div,td,th,address,blockquote,nobr,b,i {
+ font-family:Arial,sans-serif; }
+
+h1 { font-size:26px; margin-bottom:18px; }
+
+h2 { font-size:21px; margin-bottom:18px; }
+
+h2.sh2 { font-size:21px; }
+
+h3,h3.xmp,h3.xpl,h3.inf,h3.tip,h3.akt { font-size:16px; }
+
+h4 { font-size:13px; }
+
+p,ul,ol,li,div,td,th,address,blockquote { font-size:13px; }
+
+li { margin-top:3px; }
+
+
+a:link { color:#0000FF; }
+a:visited { color:#800080; }
+a:active { color:#FF0000; }
+
+/* a:link { color:#0000A0; font-weight:600; } */
+/* a:visited { color:#A00000; font-weight:600; } */
+/* a:active { color:#FF0000; font-weight:600; } */
+
+
+/* a:link { color:#AA5522; text-decoration:underline; } */
+/* a:visited { color:#772200; text-decoration:underline; } */
+/* a:active { color:#000000; text-decoration:none; } */
+

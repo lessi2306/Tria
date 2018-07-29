@@ -1,0 +1,613 @@
+unit ToDo;
+
+interface
+
+implementation
+
+{
+
+################################################################################
+################################################################################
+#                                                                              #
+#                                                                              #
+#                             ToDo Liste:                                      #
+#                                                                              #
+#                                                                              #
+################################################################################
+################################################################################
+
+sortieren nach Vereinsgröße
+
+tria hängt beim schliessen nach dem alle Tln gelöscht wurden
+
+Bei Summe Mannsch zählen mehr teilnehmer als Msch-Größe   ??
+
+Graustreifen in Liste zu hell
+
+Farbige Badekappen
+
+Editfelder ohne Maske, wie TriaZeit?
+
+Skoff:
+Ich möchte Sie fragen ob es beim Programm eine Möglichkeit gibt das der Vereinsnamen
+und der Mannschaftsname verschieden sind.
+Wir haben Z.B. einen Tourenschilauf wo verschiedene Teilnehmer von versch.
+Vereinen sich zu einen Mannschaft entschließen.
+Für die Einzelwertung sollte der Vereinsnamen ausgedruckt werden und bei der
+Mannschaftswertung dessen Name.
+
+UrkDokCB:
+1x Problem mit falschen Index gesehen beim Anklicken - Ursache unbekannt
+
+Checkliste für Schwimmbad: Farbige Hintergrund oder Schrift für Bahnen definieren
+entsprechen Badekappen
+
+anMschErgKompakt: bei Rundenrennen wird nur Endzeit, keine Runden angezeigt
+==> so lassen, zu aufwendig
+
+================================================================================
+Serienwertung
+================================================================================
+Streich:
+3.
+Die Startnummern können nicht für die gesamte Serie zugewiesen werden. Wäre auch
+eine sinnvolle Verbesserung. Ich werde in den nächsten Monate ein Update bereitstellen.
+Die Details sind noch nicht festgelegt.
+==> nicht vorsehen, es müssten sonst auch die Startgruppen angelegt werden
+
+................................................................................
+Pfälzer Berglaufpokal und weitere: (Bernd Morbach [berglauf@tus-tholey.de])
+
+P = 550 – 250 t/ts (t = Laufzeit; ts = Siegerzeit).
+Für den Sieger (t = ts) ergibt sich die Punktzahl 300.
+
+Tageswertung:
+Pl. Name Verein JG Zeit Klas. Rg. Stnr. Punkte
+1 Lehmann Jonas TUS Heltersberg 1989 0:31:45 M20 1 443 300,00
+2 Uebel Steffen LAZ Birkenfeld 1987 0:33:16 M20 2 344 288,06
+
+Serienwertung:
+Pl. Name Verein JG Kl. Donn. Landst. Rockh. Edenk. DÜW Punkte Anz.
+1 Lehmann Jonas TuS Heltersberg 1989 MHK 300,00 300,00 300,00 300,00 1200,00 4
+2 Heuer Tom TuS Heltersberg 1970 M40 272,16 283,16 286,09 284,98 1126,39 4
+
+Kontakt:
+http://www.pfaelzer-berglaufpokal.de/
+Henning Schneehage
+Telefon: 06353/2960
+E-Mail: henning.schneehage[at]t-online[dot]de
+
+................................................................................
+klären ob in Serienveranst. nur Daten von Serienveranstaltungen importiert werden können
+
+
+================================================================================
+Pulter:
+
+Leider ist es so, dass die Vereinsmeldeliste nicht immer von einer Person als
+Vereinsmelder überreicht wird, sondern sich aus unterschiedlichen, auch zeitlich
+versetzten Quellen speist.
+(Excelliste vom Vereinsvertreter, Onlinemeldungen in ein Anmeldeformular über die
+Homepage und Nachmeldungen am Veranstaltungstag)
+Bei der Excelliste ist die Zuordnung zum Vereinsmelder ja noch einfach, aber bei
+einzelnen separat eingegebenen Meldungen über das Meldeformular der Homepage wird
+es schon schwieriger)
+Trotzdem habe ich beim Einlesen der externen Meldedaten momentan noch nicht die
+Möglichkeit diese unter der Vereinsmeldeansicht einzulesen oder?
+
+-Im Volkslauf ist das Verhältnis Voranmeldungen zu Nachmeldungen am Wettkampftag
+bei uns ca. ¼ zu ¾ der Teilnehmer. Aber auch hier wäre eine Auswertung der
+vorangemeldeten Teilnehmer eines Vereins wichtig, da gerade bei den Kinderwettkämpfen
+die Startnummern von einem Vereinsvertreter abgeholt werden, der auch das Startgeld
+komplett zahlt.
+Deshalb wäre eine Liste aller Starter eines Vereins ggf. selektierbar
+nach Wettkämpfen mit den Feldinhalten der allgemeinen Startliste und zusätzlich der
+Ausgabe des Startgelds pro Teilnehmer und der Gesamtsumme sehr schön.
+
+===>  Startgeldliste?? getrennt für teilnehmer und Vereine??
+
+--------------------------------------------------------------------------------
+Schäfer:
+Die Eingabe der Streckenlänge stand schon auf meiner Liste und damit auch die
+zusätzliche Spalte in der Ergebnisliste (nur bei Wettkämpfen mit einem Abschnitt).
+Auch eine optionale Spalte für Strafrunden werde ich vorsehen.
+Eine Wertung über mehrere Jahre und Wettkämpfe ist aber zu speziell und werde
+ich deshalb nicht vorsehen.
+
+................................................................................
+Streckenlänge eingeben für Berechnung Durchschnittsgeschwindigkeit (km/h),
+Stundenmittel (min/km) (O/ min), zusätzliche Spalte in ergListe (1 Abs.)
+Zusätzliche Spalte für Strafrunden (Bike-Biathlon)
+Spalte für Abstand / Rückstand (zurück) zum 1. Platz
+
+================================================================================
+
+
+Online Anmeldeformular
+
+--------------------------------------------------------------------------------
+ZtEinlDlg:
+- dBaseDateiLaden: function BlockRead wird benutzt, Warnung in Delphi Hilfe
+  BlockWrite funktioniert mit Delphi XE nicht mehr in TriaZeit, deshalb
+  ersetzt.
+  BlockRead funktioniert noch richtig, aber bei neuen Releases prüfen. Für dBase
+  nichts ändern, wenn nicht erforderlich
+
+--------------------------------------------------------------------------------
+Schneider-Holbach:
+ Rundenzeiten (ohne Wertung) optional in Ergebnisliste für  >= 10 Runden.
+
+--------------------------------------------------------------------------------
+Zeidler:
+mehr Sonderwertungen integrieren
+
+--------------------------------------------------------------------------------
+
+Sortierung für Urkunden erweitern - Röhrig
+z.B. Platz von 3 bis 1 erlauben
+
+----------------------------------------------------------------------------------
+Oskar Schneider:
+Beim Urkunden-Druck bin ich auf ein weiteres Problem gestossen:
+Die Ergebnis-Zeiten werden in der Form 12:34 in der Textdatei gespeichert.
+OpenOffice und Excel behandeln so ein Feld als Zeitangabe in der Form hh:mm, und
+da ist bei 23:59 Schluss. Selbst bei nachträglicher Umformatierung des Feldes
+als MM:SS oder Text ist der Inhalt dann falsch. Einzige Möglichkeit war, das
+direkt beim Import als Textfeld zu kennzeichnen.
+Ich habe dazu in der Textdatei die Felder in Anführungszeichen ""
+gesetzt. Das könnte man vielleicht schon direkt beim Erzeugen der Textdatei?
+
+================================================================================
+Zeitnahme:
+================================================================================
+
+Stoppuhr-Modus als Option mit fester Startzeit=0, unabhängig von Startgr.-Startzeit
+
+................................................................................
+Allgemeines Textformat für Zeiten einlesen (Nagel)
+ Wettkampfart;Ort;Startnr;Zeit;
+ Vielfachstarts;Start;1;0.00
+ Vielfachstarts;Start;2;42.33
+ Vielfachstarts;Start;3;92.29
+ Vielfachstarts;Ziel;1;65.51,
+ Vielfachstarts;Ziel;2;96.35,
+ Vielfachstarts;Ziel;3;100.19,
+
+................................................................................
+Status "Am Start" einlesen
+Rost 19.3.2009 Anmelde-Zeiterfassung:
+Mehrere Veranstalter möchten gern bereits vorm Start eine Teilnehmererfassung per
+Transponder haben, um festzustellen, wer von den gemeldeten nun wirklich am
+Start ist. Siehst du hier eventuell noch die Möglichkeit, dass eine "Nullzeit",
+die beispielsweise ab eine Stunde vorm Start bis 1 min vorm Start eine Erfassung
+vornimmt und die Starter dann "nur" als gestartet gekennzeichnet sind? Dies ist
+beispielsweise bei größeren Schwimm- und Triathlonveranstaltungen notwendig, wo
+keine Echtzeitmessung erfolgen kann.
+
+
+================================================================================
+Import/Export:
+================================================================================
+
+15.9.2012:
+Wettkampfdaten übernehmen ermöglichen. Jetzt bei Import ohne Teilnehmer wird alles
+oder nichts übernommen, z.B. auch Wettkampfname. In gleicher Datei ist z.B. Name bereits
+vorhanden und übernahme der Daten geht nicht. z.B. Altersklassendefinition
+vom anderen, vorjahresWettkampf übernehmen.
+
+--------------------------------------------------------------------------------
+Wir haben alle Wettkämpfe in einer csv-Datei, die man vor dem Import erst
+umständlich in Excel importieren und dann wieder in separate Excel-Files
+aufsplitten und speichern muß. Somit wäre wünschenswert:
+Import mehrerer Wettkämpfe aus einer Tabelle, z.B. über den Inhalt eines Feldes
+ (LAUF = '0' -> Wettkampf1, LAUF = 1 -> Wettkampf2, ..) oder über verschiedene
+ Felder (HAUPTLAUF = 'J' -> Wettkampf1, HOBBY = 'J' -> Wettkampf2, ..
+Eine große Vereinfachung wäre auch, wenn man wie bisher jeden Wettkampf einzeln
+importieren muß, aber mit einer Filterfunktion
+D.h. ich kann einen Wettkampf nach dem anderen aus der gleichen csv-Datei importieren,
+und muß nur jedesmal einen anderen Filter angeben (Import für Wettkampf1 :
+Filterbedingung : HAUPTLAUF = 'J')
+
+................................................................................
+Flexiblere Importfunktion - Cierpinsky - 12. Oktober 2007
+Zum Erfassen:
+Vorbedingungen:
+- Wir haben Voranmeldungen per Internet erfasst.
+- Wir hatten 3 Laptops am Wettkampftag (Laptop A, B, C).
+- 2 Disziplinen (Staffel und 10-km-Lauf).
+
+Vorgehen:
+- Ich habe auf einem Laptop die Stammdaten Veranstaltung, Wettkämpfe, Optionen
+zu den Wettkämpfen erfasst.
+- Dann wurde diese Datei auf allen Laptops verteilt.
+- Auf Laptop A (führendes System) wurden die bereits erfassten Meldungen des
+10-km-Laufes eingespielt. Nur hier konnte die Bezahlung für die 10 Kilometer und
+die Startnummer zugeordnet werden.
+- Auf Laptop B wurden die bereits erfassten Meldungen der Staffel eingespielt.
+Nur hier konnte die Bezahlung und die Startnummer für die Staffeln zugeordnet
+werden (Nachmeldungen und Zuordnung der Startnummern).
+- Auf Laptop C konnten nur Nachmeldungen für die 10 Kilometer erfasst werden.
+- Auf Laptop A wurden nach Abschluss alle Daten von Laptop B und C importiert.
+
+Nun zu den Problemen:
+Problem 1:
+Wären auf Laptop C bereits Daten des 10-km-Laufes vorhanden, wäre der Import
+abgebrochen bzw. hätte die bereits auf Laptop A zugeordnete Startnummer gelöscht,
+da der Import immer der "führende" Datensatz zu sein scheint.
+Problem 2:
+Auf Laptop C konnte keine Recherche betrieben werden. So mussten sichergestellt
+sein, dass sich die Sportler an die richtige Schlange anstellen (Nachmelder oder
+bereits bezahlt, aber keine Startnummer).
+Problem 3:
+Laptops wurden nicht effektiv genutzt (Laptop B waren deutlich weniger belastet).
+Problem 4:
+Eine nachträgliche Änderung der AKs und Optionen (hatte etwas vergessen), wurde
+beim Importieren ignoriert.
+
+Mögliche Lösungsansätze:
+Zu Problem 1:
+-	Datensatz mit „Startnummer zugeordnet“ bleibt bestehen, der importierte
+Datensatz mit Status „Eingegeben“ wird ignoriert. Es ist davon auszugehen, dass
+ein Sportler nicht zweimal an ein (unterschiedliches) Terminal geht und an einem
+seine Startnummer abholg und an einem anderen z. B. seine Straße korrigiert.
+Zu Problem 2:
+-	Siehe Problem 1: Wenn der Datensatz beim Import mit einer höheren Einstufung
+(„Startnummer vergeben“ statt „Erfasst“) bestehen bleibt, können an mehreren
+Stationen die bereits erfassten Sportler bedient werden und Ihnen Startnummern
+zugeordnet werden.
+Zu Problem 3:
+-	Würde sich auch mit dem Problem 1 lösen lassen. Es können auf allen Laptops die
+gleichen vorangemeldeten Sportler eingetragen sein. So ist jedes Terminal für
+jede Aufgabe gerüstet (Nachmeldung bzw. Zuordnung der Startnummer zur Voranmeldung
+für jede Disziplin).
+Zu Problem 4:
+-	Vielleicht könnte mal die Abweichungen darstellen, um die Änderungen an den
+Veranstaltungsdaten auch auf den anderen Rechnern nachziehen zu können.
+-	Alternativ wäre auch das separate Ausspielen der Veranstaltungsdaten und der
+Import auf andere Stationen möglich.
+
+Ich hoffe, Sie konnten meine Situation ein wenig nachvollziehen.
+Ich danke Ihnen schon jetzt dafür, dass Sie sich mit der Problematik beschäftigen
+und wünsche viel Erfolg!
+
+Mit freundlichen Grüßen
+
+André Cierpinski
+
+................................................................................
+Wettkämpfe und Startgruppen beim Import automatisch erstellen
+Nur bei Tria-Import?
+
+
+================================================================================
+
+================================================================================
+Tln Dialog
+................................................................................
+Eingabe in allen Textfelder mit Dropdownliste erweitern:
+für alle Textfelder: z.B. TlnDlg: Name, Vorname, Verein, etc.
+
+Bei Wahlfelder wie Wettk. auch Auswahl über Buchstaben, Text sofort erweitern,
+wie Schriftart bei Word.
+
+Verhalten wie Internet Explorer: bei jede Buchstabe werden alle vorhandene Texte
+aufgelistet und können mit Pfeil oder Tab selektiert werden.
+Erst bei Selektion wird eingegebene Text erweitert und bei Exit festgehalten.
+Oder wie bei Schriftart, Word sofort erweitern
+
+Wenn im Feld Namen jetzt automatisch nach der Eingabe vom M  z.B.:
+•	Meier, Peter
+•	Mustermann, Anne
+•	Mustermann, Paul
+•	Mustermann, Paula
+•	Müller, Karl
+auftauchen habe ich Paul gefunden, sogar wenn Musterman_ heißt.
+================================================================================
+
+================================================================================
+Schneider - 23.7.2009
+•	 Vereinfachte AK-Liste umschaltbar (M30 = 30..39, M40 = 40..49, ...)
+•	 konfigurierbare Filter für Vereinsnennung : Viele geben bei Verein "kein",
+"ohne", "---" ein. Wenn das dann auf der Urkunde erscheint, ist nicht schön.
+Die manuelle Nachbearbeitung macht halt immer Arbeit
+Ein Feature, das wahrscheinlich schwer zu realisieren ist, wären konfigurierbare
+Zusatzfelder. Bei uns haben wir z.B. als Sponsor eine Bank, und bei der Anmeldung
+kann man verschiedene Bankfilialen für die Urkundenabholung bzw. auch den Postweg
+angeben. Hier wäre dann eben z.B. eine Combobox mit den verschiedenen Optionen
+'keine Urkunde', 'Urkunde per Post', 'Abholung Filiale 1', usw. wünschenswert.
+
+Ein Thema ist natürlich auch das Arbeiten im Netzwerk an einer gemeinsamen Datenbasis,
+z.B. dass mehrere PC's die Nachmeldungen parallel erfassen. Hier sehe ich momentan
+nur die Möglichkeit, dass jeder Nachmeldeplatz sein eigenes Startnummernkontigent
+erhält, und dann die einzelnen tria-Files in den Rechner mit den Voranmeldungen
+importiert.
+
+Viele Grüße
+Oskar Schneider
+
+================================================================================
+Rost 7.6.09:
+
+Dlg schliessen mit ESC. und Abfrage wenn was geändert wurde ==> nicht konsequent
+
+bei MschWettk, alle Tln in gleiche SGrp  - prüfen
+
+SGrpDlg und weitere?
+wenn SnrVon Initwert = 0, dann keine Fehlermeldung bei OK (Min = 1) ,
+Dialog wird nicht geschlossen
+==> 0 kann nur im fehlerfall entstanden sein, nomal nicht möglich
+
+Berchnung MschStZeiten und MschZeiten prüfen  (24:00:00-Grenze)
+
+================================================================================
+
+================================================================================
+
+================================================================================
+Rost 4.5.2009 - Plausibilitätsprüfung
+Für eine spätere Option könnte ich mir eine "Plausibilitätsprüfung"  
+vorstellen. So könnten Wertungen markiert werden, die nicht in den Sektor passen
+(z.B. wenn 10 km gelaufen werden, sollten alle Ergebnisse unter 28 min und über
+1:20 h markiert werden). Dies könnte auch bei Rundenrennen interessant sein,
+wenn die Runden nur zwischen 10 und 20 min absolviert werden können.
+================================================================================
+
+================================================================================
+
+================================================================================
+Hansen
+--------------------------------------------------------------------------------
+
+     Da ich ein "Schussel" bin und sowieso keine Anleitungen lese, aber erwarte,
+     das alles auch ohne Lektüre funktioniert (was mich entweder wütend macht
+     oder den "Hacker" in mir wachrüttelt) hier vielleicht
+     die Anregung sowas wie einen Assistenten (für Dumm-User) einzubauen:
+     "Definieren Sie zuerst eine Veranstaltung", definieren sie jetzt Wettkämpfe
+     dafür, Definierren sie Startnummen-kreise usw. weil ich nicht wirklich mit
+     TRIA arbeite muss ich mir das auf meine Weise immer wieder herlei(d)ten.
+     Ist aber nur meine Sicht. Man kann natürlich auch Deine gute Anleitung lesen..
+     ===> Gute Idee, die ich auch irgendwann aufgreifen werde. Ist aber aufwendig
+     und wird deshalb noch etwas dauern.
+
+
+================================================================================
+Staffelwertungsklassen??
+--------------------------------------------------------------------------------
+Ausschreibung
+Landesschwimmverband Brandenburg e.V.
+Berliner Schwimm-Verband e.V.
+SV Wasserfreunde Brandenburg e.V.
+Landesmeisterschaften
+Berlin - Brandenburg 2007 der Masters "kurze Strecke 
+Staffelwertungsklassen der WK 1, 10, 11, 12, 13, 18, 19, 28 und 29
+a)    80 bis 99 Jahre b) 100 bis 119 Jahre c) 120 bis 159 Jahre
+d) 160 bis 199 Jahre  e) 200 bis 239 Jahre  f) 240 bis 279 Jahre 
+g) 280 bis 319 Jahre  h) 320 bis 359 Jahre  i) 360 Jahre und älter  
+Es gilt das tatsächliche Gesamtalter (nur Jahre) der Staffelteilnehmer mit
+Stichtag 31.12.2007.
+Bei Mixed - Staffeln starten je die Hälfte weibliche Starterinnen bzw. männliche
+Starter.
+Jede Schwimmerinnen bzw. jeder Schwimmer kann in einem Staffelwettbewerb nur
+einmal starten.
+================================================================================
+
+================================================================================
+Drucker:
+- Drucker-Einstellungen in Tria.ini speichern?
+================================================================================
+
+================================================================================
+Altersklassen:
+Bei Startliste gibt es immer eine Spalte Ak, auch wenn (k)eine Ak vorhanden ist,
+sowohl bei Teilnehmer als auch Mannschaften
+================================================================================
+
+================================================================================
+Wettkampf+Daten aus alte Datei übernehmen. Jetzt muss erst einen Wettkampf
+definiert werden, bevor Daten importiert werden können.
+================================================================================
+
+================================================================================
+Netzwerkfähigkeit:
+================================================================================
+bei Volksläufe werden Teilnehmer an mehreren Rechnern
+parallel eingegeben, auch wenn der wettkampf schon läuft.
+Startnummern/Teilnehmernamen dürfen nicht doppelt vergeben werden.
+
+================================================================================
+Startgruppe / Startnummer:
+================================================================================
+Starnr.-vergabe nach dem Zufallsprinzip
+Startmodus für individuell einlesbare Startzeiten (Rolf Call- WALK)/ Rost
+
+Startnummern für alle SGrp pro Wettk und für alle Wettk (Volkslauf)
+- gemeinsamer Block über alle Wettkämpfe
+- Blöcke getrennt pro Wettkampf aber gemeinsam für alle Startgruppen des Wettkampfes
+- Blöcke getrennt pro Startgruppe (wie heute)
+Startnummern-vergabe automatisieren, z.B. pro Mannschaft oder nach Alphabet.
+- Entsprechend Sortierung, z.B. auch nach Meldezeit
+- vergebene Snr beibehalten oder überschreiben
+
+Siehe auch Excel mit Reihen-Definition
+
+Startnummern für alle gelistete Tln löschen
+
+================================================================================
+Startzeiten bei Jagdstart - Veigl 20.7.09
+--------------------------------------------------------------------------------
+Bei der Berechnung wird die 1. Startzeit für die 1. Startnr. der Startgruppe
+genommen, unabhängig davon welche Startnr. tatsächlich zugeteilt wurden.
+
+Ich denke aber, bei überlappende Startnummernblöcke ist es sinnvoller die
+Berechnung so zu gestalten, wie Sie es auch erwartet haben. Ich werde dies also
+noch mal überdenken und in Zukunft eventuell ändern.
+================================================================================
+
+================================================================================
+Teilnehmer-datenbank - Rost
+================================================================================
+Ist es eigentlich auch möglich, dass die Daten der einmal registrierten
+Teilnehmer in einer Datenbank abgelegt werden können und dann das System
+beim Neueintrag eventuell den Namen automatisch ergänzen kann, falls
+dieser bereits im System ist?
+--------------------------------------------------------------------------------
+eine Starterdatenbank zu haben, wo bei der Teilnehmererfassung bei Eingabe des
+Nachnamens alle infrage kommenden Starter der Datenbank angezeigt würden, und
+dann nur noch per Mausklick ausgewählt werden müssten. Dieses wäre eine enorme
+zeitliche Ersparnis bei der Dateneingabe, vor allem bei größeren Teilnehmerfeldern.
+Beim erstellen von „neuen Teilnehmern“ könnten dann folgende Komponenten
+automatisch in die Starterdatenbank aufgenommen werden: Nachname, Vorname,
+Verein, Geburtsjahr
+
+================================================================================
+Excel Export sehr langsam
+================================================================================
+
+
+================================================================================
+TlnObj.SucheTln: klären ob Tln mit nur unterschiedliche Groß/Kleinbuchstaben
+in TlnColl aufgenommen werden sollten
+================================================================================
+
+================================================================================
+Startliste Teamwertung
+================================================================================
+bei Teamwertung wird Startzeit nicht gelistet wenn für Tln. keine Mannschaft
+definiert ist (es gibt dafür auch keine fehlermeldung). Der teilnehmer wird auch
+nicht gewertet. Einzelwertung hier erlauben???
+
+
+================================================================================
+Ausdruck von Listen :
+================================================================================
+
+Mehr Abschnitte mit A3-Format (kann vom Anwender auf A4 skaliert werden)
+
+Rost - 23.7.2009:
+Ist es eventuell möglich in der Ergebnisilste meinetwegen beim Triathlon
+Zwischenzeiten zusammenzufassen und auszuwerten? So könnte dann z.B. bei drei
+Zwischenzeiten das Protokoll so aussehen, dass dann Schwimmen - Rad -
+Schwimmen+Rad - Lauf - Endzeit in der Liste steht.
+--------------------------------------------------------------------------------
+
+Spalte Ort/Verein breiter - auch im AnmeldeDialog
+--------------------------------------------------------------------------------
+
+Spalten und Spaltenbreite flexibel definieren
+--------------------------------------------------------------------------------
+
+Flexible Listen mit Logos oben und unten (siehe liste Innsbruck/Hackenjos)
+freie Fußzeile in Listen (Rost)
+--------------------------------------------------------------------------------
+
+RaveUnit:
+getrennte Reports pro Klasse, wenn Format unterschiedlich/Ak auf neue Seite ???
+--------------------------------------------------------------------------------
+
+Es wäre sicherlich für alle interessant, wenn z.B. unter der Überschrift der
+Veranstaltung kurz die Wetterbedingungen
+(Luft- und oder Wassertemperatur und Windstärke und -richtung) stehen.
+Das könnte dann bei der Einrichtung des Wettkampfes eingegeben und auch ausgewählt
+werden welche Daten vorhanden sind.
+--------------------------------------------------------------------------------
+
+Lademann:
+- Idee: Eine Art "Stylesheet-Funktion" für die Protokolle. Unser "Chef" hätte
+gerne die Sportler in 5er-Blöcken. Und manchmal wär das Einfügen eines eigenen
+Headers oder Footers schon schick.
+- Idee: Möglichkeit zur Kommentierung von Ergebnissen, entweder durch Fußnoten
+oder Zwischenzeilen. (bspw. "ist statt 20, 40km Rad gefahren")
+--------------------------------------------------------------------------------
+
+optionale Spalte mit Stundenmittel (Nagel-27.10.08)
+--------------------------------------------------------------------------------
+
+Zeitrückstände:
+Gollon:
+2. In der Ergebnisliste sollte die spalte Zeit Rückstand anwählbar sein.
+Beim ersten steht die Zeit beim zweiten und dritten usw die zeit zum ersten.
+==>
+Macht wahrscheinlich nur bei Laufveranstaltungen mit einem Abschnitt Sinn, da
+die Reihenfolge der Zwischenzeiten nicht mit der Endzeit übereinstimmen muss.
+Ich nehme es in meiner Liste auf.
+--------------------------------------------------------------------------------
+
+Tröger:
+Differenzzeiten
+--------------------------------------------------------------------------------
+
+Rost:
+Bei dieser Gelegenheit fällt mir noch gleich auf, dass bei einer
+Staffelwertung keine Angabe des Rangs nach der Einzeldisziplin
+eingeblendet wird. Hast du dies auf Grund des Platzes weggelassen oder ist
+es ein Versehen? Ich würde mich über diese Angabe sehr freuen. Falls es
+ein Platzproblem ist, kann man es eventuell beim Export z.B. in Excel
+einbinden? ==> Export in 2008-0.2 erledigt
+--------------------------------------------------------------------------------
+
+Druckvorschau wird bei Resize nicht an ferstergröße angepasst
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+
+================================================================================
+Bei Wechsel VeranstArt prüfen: Liga-Kürzel, MschGröße, Ortsnamen
+================================================================================
+
+================================================================================
+ImportDlg:  Prüfen ob Einschränkungen Liga/Liga, Cup ==> Cup nötig sind
+================================================================================
+
+================================================================================
+Checkliste Ziel, Streckenposten
+================================================================================
+
+================================================================================
+ZeitErfassungsdatei bearbeitbar
+================================================================================
+
+================================================================================
+Finanzielles
+================================================================================
+Gollon:
+1. Eine Ansicht Startgeldquittung wäre supper.
+Hier sind alle läufer von einem Verrein auf einer Seite Aufelistet. 
+mit Startnummern und zu zahlenden gesammt betrag-Gesamtbetrag. 
+(Das vereinfacht die Ausgabe der Startnummern und die Abrechnung)
+==> 
+steht schon auf meiner ToDo-Liste, habe aber noch keine Terminvorstellung
+--------------------------------------------------------------------------------
+
+Erstellen einer DTAUS-Datei und Aufnahme der Kontodaten pro Tln / SMld
+--------------------------------------------------------------------------------
+
+Orendorz-Kauserslautern:
+Ich habe mir hierzu einen seperaten Reiter vorgestellt mit folgenden Feldern:
+- Startgeld
+- Tageslizenzgebühr
+- Nachmeldegebühr
+- Summe
+- gezahlter Betrag
+- Datum des Zahlungseingangs
+- intern. Vermerk
+- Kommentar
+
+Hierbei wird die Höhe des Startgeldes durch die Option Einzelstarter/Mannschaft
+entschieden (vorher festzulegen). Die Tageslizenz soll nur möglich sein, wenn es
+sich um einen Enzelstarter Kurzdistanz handelt, sondern soll das Feld nicht
+erscheinen, der Betrag 0 EUR erscheinen oder grau unterlegt sein (Betrag vorher
+festzulegen). Die Nachmeldegebühr wird ab einem bestimmten Datum erhoben (z.B.
+5 EUR ab dem 20.04.2007 - Daten ebenfalss vorher festzulegen). Eine automatische
+Summierung der Einzelbeträge wäre wünschenswert. Als intern. Vermerk würde ich
+die Position der Buchung verwenden (Textfeld 15 Zeichen). Kommentar als Textfeld
+z.B. für Ermäßigungen wegen großer Gruppe (wird intern verrechnet, braucht also
+nicht für Startgeld Einfluss zu haben).
+--------------------------------------------------------------------------------
+
+
+}
+
+
+end.

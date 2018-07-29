@@ -1,0 +1,446 @@
+object OptDialog: TOptDialog
+  Left = 283
+  Top = 418
+  BorderIcons = [biSystemMenu, biHelp]
+  BorderStyle = bsDialog
+  Caption = 'Optionen definieren'
+  ClientHeight = 294
+  ClientWidth = 381
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  OldCreateOrder = False
+  Position = poMainFormCenter
+  OnShow = FormShow
+  PixelsPerInch = 96
+  TextHeight = 15
+  object OptPageControl: TPageControl
+    Left = 10
+    Top = 18
+    Width = 360
+    Height = 225
+    ActivePage = SpeichernTS
+    TabOrder = 0
+    OnChange = OptPageControlChange
+    OnChanging = OptPageControlChanging
+    object AllgemeinTS: TTabSheet
+      Caption = 'Allgemein'
+      ImageIndex = 2
+      object MruDateiCB: TCheckBox
+        Left = 16
+        Top = 83
+        Width = 330
+        Height = 17
+        HelpContext = 2810
+        Caption = 'Beim Programmstart die zuletzt benutzte Datei '#246'ffnen'
+        TabOrder = 0
+        OnClick = SetzeVorgabeButton
+      end
+      object DefaultSexCB: TCheckBox
+        Left = 16
+        Top = 124
+        Width = 238
+        Height = 17
+        HelpContext = 2812
+        Caption = 'Geschlecht bei Anmeldung voreinstellen'
+        TabOrder = 1
+        OnClick = DefaultSexCBClick
+      end
+      object SexCB: TComboBox
+        Left = 251
+        Top = 121
+        Width = 84
+        Height = 23
+        HelpContext = 2812
+        Style = csDropDownList
+        DropDownCount = 2
+        ItemIndex = 0
+        MaxLength = 1
+        TabOrder = 2
+        Text = 'm'#228'nnlich'
+        Items.Strings = (
+          'm'#228'nnlich'
+          'weiblich')
+      end
+      object AutoUpdateCB: TCheckBox
+        Left = 16
+        Top = 42
+        Width = 330
+        Height = 17
+        HelpContext = 2811
+        Caption = 'Automatisch auf Updates '#252'berpr'#252'fen'
+        TabOrder = 3
+        OnClick = SetzeVorgabeButton
+      end
+      object SnrUeberlappCB: TCheckBox
+        Left = 16
+        Top = 165
+        Width = 330
+        Height = 17
+        HelpContext = 2816
+        Caption = #220'berlappung von Startnummernbereichen zulassen'
+        TabOrder = 4
+        OnClick = SetzeVorgabeButton
+      end
+    end
+    object ZeitFormatTS: TTabSheet
+      HelpContext = 2813
+      Caption = 'Zeitformat'
+      ImageIndex = 2
+      object TrennZeichenLabel: TLabel
+        Left = 40
+        Top = 160
+        Width = 70
+        Height = 15
+        HelpContext = 2814
+        Caption = 'Trennzeichen'
+        OnClick = TrennZeichenLabelClick
+      end
+      object ZeitFormatRG: TRadioGroup
+        Left = 16
+        Top = 20
+        Width = 320
+        Height = 121
+        HelpContext = 2813
+        Caption = 'Zeiten darstellen in'
+        Items.Strings = (
+          'Sekunden'
+          'Zehntel-Sekunden'
+          'Hundertstel-Sekunden')
+        TabOrder = 0
+        OnClick = ZeitFormatRGClick
+      end
+      object TrennZeichenCB: TComboBox
+        Left = 116
+        Top = 157
+        Width = 34
+        Height = 23
+        HelpContext = 2814
+        Style = csDropDownList
+        DropDownCount = 2
+        ItemIndex = 0
+        MaxLength = 1
+        TabOrder = 1
+        Text = '.'
+        OnClick = ZeitFormatRGClick
+        Items.Strings = (
+          '.'
+          ',')
+      end
+    end
+    object SpeichernTS: TTabSheet
+      Caption = 'Speichern'
+      ImageIndex = 4
+      object AutoSpeichernLabel: TLabel
+        Left = 258
+        Top = 60
+        Width = 45
+        Height = 15
+        HelpContext = 2831
+        Caption = 'Minuten'
+      end
+      object AutoSpeichernCB: TCheckBox
+        Left = 16
+        Top = 60
+        Width = 195
+        Height = 17
+        HelpContext = 2831
+        Caption = 'Datei automatisch speichern alle'
+        TabOrder = 0
+        OnClick = AutoSpeichernCBClick
+      end
+      object AutoSpeichernEdit: TTriaMaskEdit
+        Left = 212
+        Top = 57
+        Width = 25
+        Height = 22
+        HelpContext = 2831
+        EditMask = '09;0; '
+        Font.Charset = ANSI_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Courier New'
+        Font.Style = []
+        MaxLength = 2
+        ParentFont = False
+        TabOrder = 1
+        Text = '0'
+        OnChange = AutoSpeichernEditChange
+        UpDown = AutoSpeichernUpDown
+      end
+      object AutoSpeichernUpDown: TTriaUpDown
+        Left = 237
+        Top = 56
+        Width = 16
+        Height = 24
+        HelpContext = 2831
+        Min = 1
+        Max = 99
+        Position = 1
+        TabOrder = 2
+        Edit = AutoSpeichernEdit
+      end
+      object BackupCB: TCheckBox
+        Left = 16
+        Top = 135
+        Width = 321
+        Height = 17
+        HelpContext = 2832
+        Caption = 'Beim Speichern Sicherungskopie erstellen (*.~tri)'
+        TabOrder = 3
+        OnClick = SetzeVorgabeButton
+      end
+    end
+    object ZeitErfTS: TTabSheet
+      HelpContext = 2815
+      Caption = 'Zeitnahme'
+      ImageIndex = 3
+      object ZeitFilterGB: TGroupBox
+        Left = 16
+        Top = 105
+        Width = 321
+        Height = 79
+        HelpContext = 2815
+        Caption = 'Doppeleintr'#228'ge in Zeitnahmedatei filtern'
+        TabOrder = 1
+        object ZeitFilterLabel2: TLabel
+          Left = 171
+          Top = 50
+          Width = 95
+          Height = 15
+          HelpContext = 2815
+          Caption = 'mm:ss ignorieren.'
+          OnClick = ZeitFilterLabelClick
+        end
+        object ZeitFilterLabel1: TLabel
+          Left = 30
+          Top = 50
+          Width = 89
+          Height = 15
+          HelpContext = 2815
+          Caption = 'Zeitdifferenz von'
+          OnClick = ZeitFilterLabelClick
+        end
+        object ZeitFilterCB: TCheckBox
+          Left = 12
+          Top = 28
+          Width = 306
+          Height = 17
+          HelpContext = 2815
+          Caption = 'Gleiche Startnummern oder Chip-Codes bis zu einer'
+          Checked = True
+          State = cbChecked
+          TabOrder = 0
+          OnClick = ZeitFilterCBClick
+        end
+        object ZeitFilterEdit: TMinZeitEdit
+          Left = 122
+          Top = 47
+          Width = 47
+          Height = 21
+          HelpContext = 2815
+          EditMask = '!90:00;1;_'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Courier New'
+          Font.Style = []
+          MaxLength = 5
+          ParentFont = False
+          TabOrder = 1
+          Text = '01:00'
+          OnChange = ZeitFilterEditChange
+        end
+      end
+      object ZeitNahmeGB: TGroupBox
+        Left = 16
+        Top = 11
+        Width = 321
+        Height = 79
+        HelpContext = 2833
+        Caption = 'Einlese-Modus'
+        TabOrder = 0
+        object RfidLabel: TLabel
+          Left = 201
+          Top = 49
+          Width = 42
+          Height = 15
+          HelpContext = 2834
+          Caption = 'Zeichen'
+        end
+        object SnrLabel: TLabel
+          Left = 186
+          Top = 22
+          Width = 35
+          Height = 15
+          HelpContext = 2102
+          Caption = 'Ziffern'
+        end
+        object SnrMaxLabel: TLabel
+          Left = 130
+          Top = 22
+          Width = 25
+          Height = 15
+          HelpContext = 224
+          Caption = 'max.'
+        end
+        object RfidMaxLabel: TLabel
+          Left = 130
+          Top = 49
+          Width = 25
+          Height = 15
+          HelpContext = 224
+          Caption = 'max.'
+        end
+        object RfidRB: TRadioButton
+          Left = 12
+          Top = 49
+          Width = 104
+          Height = 17
+          HelpContext = 2833
+          Caption = 'RFID Chip Code'
+          TabOrder = 1
+          OnClick = ZeitnahmeGBClick
+        end
+        object SnrRB: TRadioButton
+          Left = 12
+          Top = 22
+          Width = 101
+          Height = 17
+          HelpContext = 2833
+          Caption = 'Startnummer'
+          TabOrder = 0
+          OnClick = ZeitnahmeGBClick
+        end
+        object LaengeEdit: TTriaMaskEdit
+          Left = 158
+          Top = 46
+          Width = 25
+          Height = 22
+          HelpContext = 2834
+          EditMask = '09;0; '
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Courier New'
+          Font.Style = []
+          MaxLength = 2
+          ParentFont = False
+          TabOrder = 2
+          Text = '0'
+          OnChange = AutoSpeichernEditChange
+          UpDown = LaengeUpDown
+        end
+        object LaengeUpDown: TTriaUpDown
+          Left = 183
+          Top = 45
+          Width = 16
+          Height = 24
+          HelpContext = 2834
+          Min = 1
+          Max = 99
+          Position = 1
+          TabOrder = 3
+          Edit = LaengeEdit
+        end
+        object HexCB: TCheckBox
+          Left = 254
+          Top = 49
+          Width = 61
+          Height = 17
+          HelpContext = 2834
+          Caption = 'nur Hex'
+          TabOrder = 4
+        end
+        object SnrEdit: TTriaEdit
+          Left = 158
+          Top = 19
+          Width = 25
+          Height = 20
+          HelpContext = 2102
+          TabStop = False
+          Alignment = taCenter
+          Color = clBtnFace
+          ReadOnly = True
+          TabOrder = 5
+          Text = '4'
+        end
+      end
+    end
+    object BerechnenTS: TTabSheet
+      Caption = 'Berechnen'
+      object BerechnenRG: TRadioGroup
+        Left = 16
+        Top = 33
+        Width = 201
+        Height = 97
+        HelpContext = 2820
+        Caption = 'Platzierungen berechnen '
+        Items.Strings = (
+          'Sofort nach einer '#196'nderung'
+          'Nach Schlie'#223'ung des Dialogs')
+        TabOrder = 0
+        OnClick = SetzeVorgabeButton
+      end
+      object BerechnenButton: TButton
+        Left = 16
+        Top = 154
+        Width = 201
+        Height = 25
+        HelpContext = 2821
+        Caption = '&Alle Platzierungen jetzt berechnen'
+        TabOrder = 1
+        TabStop = False
+        OnClick = BerechnenButtonClick
+      end
+    end
+  end
+  object CancelButton: TButton
+    Left = 212
+    Top = 256
+    Width = 75
+    Height = 25
+    HelpContext = 102
+    Caption = 'Abbrechen'
+    TabOrder = 3
+    TabStop = False
+    OnClick = CancelButtonClick
+  end
+  object OkButton: TButton
+    Left = 129
+    Top = 256
+    Width = 75
+    Height = 25
+    HelpContext = 103
+    Caption = 'OK'
+    Default = True
+    TabOrder = 2
+    TabStop = False
+    OnClick = OkButtonClick
+  end
+  object VorgabeButton: TButton
+    Left = 10
+    Top = 256
+    Width = 75
+    Height = 25
+    HelpContext = 2801
+    Caption = '&Vorgabe'
+    TabOrder = 1
+    TabStop = False
+    OnClick = VorgabeButtonClick
+  end
+  object HilfeButton: TButton
+    Left = 295
+    Top = 256
+    Width = 75
+    Height = 25
+    HelpContext = 101
+    Caption = '&Hilfe'
+    TabOrder = 4
+    TabStop = False
+    OnClick = HilfeButtonClick
+  end
+end

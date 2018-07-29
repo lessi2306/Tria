@@ -1,0 +1,2004 @@
+unit AllgObj;
+
+interface
+
+uses
+  Windows,SysUtils,Classes,Dialogs,RTLConsts,
+  AllgConst,AllgFunc;
+
+type
+  TTriaStream = class(TFileStream)
+  // Position,Size : Int64  (Integer-Max = 2.147.483.647)
+  public
+    procedure ReadStr(var Str:String);
+    procedure WriteStr(const Str:String);
+  end;
+
+  TTriaPersistent = class(TPersistent)
+  // TPersistent erweitert mit TriaStream-Funktionen
+  protected
+    FVPtr : Pointer;
+    function GetBPObjType: Word; virtual;
+  public
+    constructor Create(Veranst:Pointer);
+    //destructor Destroy; override;
+    //procedure Assign(Source: TPersistent); override;
+    function Load: Boolean; virtual;
+    function Store: Boolean; virtual;
+    property VPtr:Pointer read FVPtr write FVPtr;
+    property BPObjType: Word read GetBPObjType;
+  end;
+
+  TTriaColl = class(TTriaPersistent)
+  // ersetzt BP-TCollection, abgeleitet von TCollection
+  protected
+    //FLimit    : SmallInt; // um DOS-Kompatibel spechern zu können
+    //FDelta    : SmallInt; // um DOS-Kompatibel spechern zu können
+    FItems    : TList;
+    FItemSize : Integer; // ProgressBar beim Speichern/Löschen, Wert nicht exact
+    FStepProgressBar : Boolean;
+    //FStepMeldung : Boolean;
+    function  GetCount: Integer;
+    procedure SetCapacity(CapNeu:Integer); virtual;
+    function  GetPItem(Indx:Integer): Pointer;
+    procedure SetPItem(Indx:Integer; Item:Pointer);
+    {procedure InsertItem(Indx:Integer; Item:Pointer); virtual; }
+    //function  RemoveItem(Item:Pointer): Integer; virtual;
+    procedure FreeItem(Item:Pointer); virtual; abstract; // Item-Inhalt löschen
+    function  LoadItem(Indx:Integer): Boolean; virtual; abstract;
+    function  StoreItem(Indx:Integer): Boolean; virtual; abstract;
+  public
+    constructor Create(Veranst:Pointer);
+    destructor  Destroy; override;
+    function    Load: Boolean; override;
+    function    Store: Boolean; override;
+    function    CollSize: Integer; virtual;
+    //procedure   Assign(Source: TPersistent); override;
+    procedure   Clear; virtual;
+    function    ClearItem(Item:Pointer): Integer; virtual;
+    procedure   ClearIndex(Indx: Integer); virtual;
+    function    AddItem(Item:Pointer): Integer; virtual;
+    function    IndexOf(Item:Pointer): Integer;
+    property Count: Integer read GetCount;
+    property PItems[Indx: Integer]: Pointer read GetPItem write SetPItem; default;
+    property ItemSize:Integer read FItemSize;
+    property List : TList read FItems;
+  end;
+
+  TTriaPointerColl = class(TTriaColl)
+  protected
+    FCollection : TTriaColl;
+    function  GetBPObjType: Word; override;
+    procedure FreeItem(Item: Pointer); override;
+    function  LoadItem(Indx:Integer): Boolean; override;
+    function  StoreItem(Indx:Integer): Boolean; override;
+  public
+    constructor Create(Veranst:Pointer;Collection:TTriaColl);
+    function    Add(Indx:Integer): Integer;
+    //procedure   Assign(Source: TPersistent); override;
+    property Collection: TTriaColl read FCollection;
+  end;
+
+  TTriaSortColl = class;
+
+  TTriaSortList = class(TList)
+  // zusätzliche sortierte Pointer-Liste in TriaSortColl
+  protected
+    FTriaSortColl : TTriaSortColl;
+    FDuplicates   : Boolean;
+    //function Get(Indx: Integer): Pointer;
+  public
+    constructor Create(TriaSortColl:TTriaSortColl);
+    function    Add(Item:Pointer): Integer; virtual;
+    function    Append(Item:Pointer): Integer;
+    function    Find(Item:Pointer; var Indx:Integer): Boolean; virtual;
+    function    IndexOf(Item:Pointer): Integer;
+    property    Duplicates:Boolean read FDuplicates write FDuplicates;
+  end;
+
+  TTriaSortColl = class(TTriaColl)
+  // TriaColl erweitert mit SortItems
+  protected
+    FSortItems : TTriaSortList;
+    FSortMode  : TSortMode;
+    procedure   SetCapacity(CapNeu:Integer); override;
+    function    GetSortCount: Integer;
+    function    GetSortItem(Indx:Integer): Pointer; 
+    procedure   SetPItem(Indx:Integer; Item:Pointer);
+    function    LoadItem(Indx:Integer): Boolean; override;
+    function    StoreItem(Indx:Integer): Boolean; override;
+    {procedure   InsertItem(Indx:Integer;Item:Pointer); override;}
+    {function    InsertSortItem(Item:Pointer): Integer; virtual;}
+    //function    RemoveItem(Item:Pointer): Integer; override;
+    //2006 procedure   SetSortMode(SortModeNeu:TSortMode);
+  public
+    constructor Create(Veranst:Pointer);
+    destructor  Destroy; override;
+    procedure   Clear; override;
+    procedure   ClearIndex(Indx: Integer); override;
+    //procedure   Assign(Source: TPersistent); override;
+    function    SortString(Item:Pointer): String; virtual; abstract;
+    function    Compare(Item1,Item2:Pointer):Integer; virtual;
+    function    ClearSortItem(Item:Pointer): Integer; virtual;
+    procedure   SortClear; virtual;
+    function    AddItem(Item:Pointer): Integer; override;
+    function    AddSortItem(Item:Pointer): Integer; virtual;
+    function    SortIndexOf(Item:Pointer): Integer;
+    //property    SortList: TTriaSortList read FSortItems;
+    property    SortCount:Integer read GetSortCount;
+    property    SortItems[Indx:Integer]:Pointer read GetSortItem;
+    property    SortMode:TSortMode read FSortmode write FSortmode;
+  end;
+
+  TTriaObjColl = class;
+
+  TTriaObj = class(TTriaPersistent)
+  // abgeleitet von TCollectionItem, aber Item nicht Collection inserted
+  protected
+    FLoadPtr    : Pointer;
+    FCollection : TTriaObjColl;
+    function    GetIndex: Integer;
+    function    GetSortIndex: Integer;
+  public
+    constructor Create(Veranst:Pointer;Coll:TTriaObjColl;Add:TOrtAdd); virtual;
+    function    ObjSize: Integer; virtual; abstract;
+    //function    Load: Boolean; override;
+    //function    Store: Boolean; override;
+    //procedure   Assign(Source: TPersistent); override;
+    procedure   SortAdd; virtual;
+    procedure   SortRemove; virtual;
+    procedure   OrtCollAdd; virtual; abstract;
+    procedure   OrtCollClear(Indx:Integer); virtual; abstract;
+    procedure   OrtCollExch(Idx1,Idx2:Integer); virtual; abstract;
+    property    LoadPtr:Pointer read FLoadPtr write FLoadPtr;
+    property    Collection: TTriaObjColl read FCollection;
+    property    CollectionIndex: Integer read GetIndex;
+    property    SortCollIndex: Integer read GetSortIndex;
+  end;
+
+  TTriaObjClass = class of TTriaObj;
+
+  TTriaObjColl = class(TTriaSortColl)
+  // TriaSortColl erweitert mit ItemClass
+  protected
+    FItemClass  : TTriaObjClass;
+    function    GetPItem(Indx:Integer): TTriaObj;
+    procedure   SetPItem(Indx:Integer; Item:TTriaObj);
+    function    GetSortItem(Indx:Integer): TTriaObj; 
+    {procedure   InsertItem(Indx:Integer;Item:Pointer); override;}
+    procedure   FreeItem(Item:Pointer); override;
+{    procedure   RemoveItem(Item:TTriaObj); override;}
+    function    LoadItem(Indx:Integer): Boolean; override;
+    function    StoreItem(Indx:Integer): Boolean; override;
+    procedure   SetItemSize;virtual;//nur bei Bedarf setzen (Rechenzeit)
+  public
+    constructor Create(Veranst:Pointer;ItemClass:TTriaObjClass);
+    procedure   Clear; override;
+    procedure   DeleteItems; // Clear ohne FreeItem
+    function    Load: Boolean; override;
+    function    Store: Boolean; override;
+    function    CollSize: Integer; override;
+    //procedure   Assign(Source: TPersistent); override;
+    procedure   OrtCollAdd; virtual;
+    procedure   OrtCollClear(Indx:Integer); virtual;
+    procedure   OrtCollExch(Idx1,Idx2:Integer); virtual; 
+    procedure   Sortieren(SortModeNeu: TSortMode);
+    {procedure   Assign(Source: TTriaPersistent); override;}
+{    function    Compare(Item1,Item2:Pointer):Integer; override;
+    procedure   SortListClear; virtual;
+    function    Load: Boolean; override;
+    function    Store: Boolean; override; }
+    property PItems[Indx: Integer]: TTriaObj read GetPItem write SetPItem; default;
+    property SortList: TTriaSortList read FSortItems;
+    property SortItems[Indx:Integer]:TTriaObj read GetSortItem;
+    property ItemClass: TTriaObjClass read FItemClass;
+  end;
+
+  TTextCollection = class(TTriaColl)
+  protected
+    function  GetBPObjType: Word; override;
+    function  GetPItem(Indx:Integer): PString;
+    procedure SetPItem(Indx:Integer; Item:PString);
+    procedure FreeItem(Item: Pointer); override;
+    function  LoadItem(Indx:Integer): Boolean; override;
+    function  StoreItem(Indx:Integer): Boolean; override;
+    function  GetItem(Indx:Integer): String;
+    procedure SetItem(Indx:Integer; S:String);
+  public
+    constructor Create(Veranst:Pointer);
+    function  Add(S:String): Integer;
+    property Items[Indx: Integer]: String read GetItem write SetItem; default;
+  end;
+
+  TBoolCollection = class(TTriaColl)
+  protected
+    function  GetBPObjType: Word; override;
+    function  GetItem(Indx:Integer): Boolean;
+    procedure SetItem(Indx:Integer; Item:Boolean);
+    procedure FreeItem(Item: Pointer); override;
+    function  LoadItem(Indx:Integer): Boolean; override;
+    function  StoreItem(Indx:Integer): Boolean; override;
+  public
+    constructor Create(Veranst:Pointer);
+    function  Add(Bool:Boolean): Integer;
+    property Items[Indx: Integer]: Boolean read GetItem write SetItem; default;
+  end;
+
+  TIntegerCollection = class(TTriaColl)
+  // LongInt
+  protected
+    function  GetBPObjType: Word; override;
+    function  GetItem(Indx:Integer): Integer;
+    procedure SetItem(Indx,Item:Integer);
+    procedure FreeItem(Item: Pointer); override;
+    function  LoadItem(Indx:Integer): Boolean; override;
+    function  StoreItem(Indx:Integer): Boolean; override;
+  public
+    constructor Create(Veranst:Pointer);
+    function  Add(Int:Integer): Integer;
+    property Items[Indx: Integer]: Integer read GetItem write SetItem; default;
+  end;
+
+  TSmallIntCollection = class(TIntegerCollection)
+  // wie Integer, SmallInt nur für Tri-Datei
+  protected
+    function  GetBPObjType: Word; override;
+    function  LoadItem(Indx:Integer): Boolean; override;
+    function  StoreItem(Indx:Integer): Boolean; override;
+  public
+    constructor Create(Veranst:Pointer);
+  end;
+
+  TWordCollection = class(TSmallIntCollection)
+  // wie SmallInt, nur für Tri-Datei wegen Compatibilität mit DOS-Version
+  protected
+    function  GetBPObjType: Word; override;
+    function  LoadItem(Indx:Integer): Boolean; override;
+    function  StoreItem(Indx:Integer): Boolean; override;
+  public
+    constructor Create(Veranst:Pointer);
+  end;
+
+  TIntSortCollection = class(TTriaSortColl)
+  // wird nicht gespeichert, nur für serienwertung benutzt (SerPktBuffColl)
+  protected
+    function    GetBPObjType: Word; override;
+    function    LoadItem(Indx:Integer): Boolean; override;
+    function    StoreItem(Indx:Integer): Boolean; override;
+    function    GetPItem(Indx:Integer): PInteger;
+    procedure   SetPItem(Indx:Integer; Item:PInteger);
+    function    GetItem(Indx:Integer): Integer;
+    procedure   SetItem(Indx,Item :Integer);
+    function    GetPSortItem(Indx:Integer): PInteger;
+    function    GetSortItem(Indx:Integer): Integer; 
+    procedure   FreeItem(Item: Pointer); override;
+  public
+    constructor Create(Veranst:Pointer);
+    function    Add(Int:Integer): Integer;
+    function    Compare(Item1,Item2:Pointer):Integer; override;
+    function    SortValue(Item:Pointer): Integer; virtual;
+    function    SortString(Item:Pointer): String; override;
+    property    PItems[Indx:Integer]: PInteger read GetPItem write SetPItem;
+    property    Items[Indx:Integer]: Integer read GetItem write SetItem; default;
+    property    PSortItems[Indx:Integer]:PInteger read GetPSortItem;
+    property    SortItems[Indx:Integer]:Integer read GetSortItem;
+    property    SortList: TTriaSortList read FSortItems;
+  end;
+
+  TVersion = class(TTriaPersistent)
+  protected
+    FJahr : String;
+    FNr   : String;
+    function GetBPObjType: Word; override;
+  public
+    constructor Create(JahrNeu,NrNeu: String);
+    function Load: Boolean; override;
+    function Store: Boolean; override;
+    function JrNr: String;
+    //function DateiType: TDateiType;
+    property Jahr:String read FJahr write FJahr;
+    property Nr:String read FNr write FNr;
+  end;
+
+  TDatei = class(TObject)
+  protected
+    FPath       : String;
+    FGeladen    : boolean;
+    FModified   : boolean;
+    FVersion    : TVersion;
+    procedure   SetPath(const PathNeu:String); // Leerzeichen vermeiden
+  public
+    constructor Create;
+    destructor  Destroy; override;
+    procedure   ClearPath;
+    function    Neu: Boolean;
+    property    Path:String read FPath write SetPath;
+    property    Geladen:Boolean read FGeladen write FGeladen;
+    property    Modified:Boolean read FModified write FModified;
+    property    Version:TVersion read FVersion;
+  end;
+
+var TriDatei    : TDatei;
+    ProgVersion : TVersion; 
+    TriaStream  : TTriaStream;
+
+implementation
+
+{$IFDEF TRIAPROJEKT} // nicht für TriaZeit
+	uses TriaMain,VeranObj;
+{$ENDIF}
+
+
+(******************************************************************************)
+(*                   Methoden von TTriaStream                                 *)
+(******************************************************************************)
+
+//==============================================================================
+procedure TTriaStream.ReadStr(var Str:String);
+//==============================================================================
+// String bis 2011 als ShortString gespeichert, danach als AnsiString
+var
+  L       : LongInt;
+  S       : ShortString;
+  AnsiStr : AnsiString;
+begin
+  Str := '';
+  if TriDatei.Version.Jahr >= '2011' then // AnsiString
+    if Read(L, SizeOf(LongInt)) = SizeOf(LongInt) then
+      if L>0 then
+      begin
+        AnsiStr := '';
+        SetLength(AnsiStr, L); // L = Anzahl der Zeichen und Bytes in AnsiStr
+        if Read(Pointer(AnsiStr)^, L ) = L then
+          Str := String(AnsiStr)
+        else
+          raise EReadError.CreateRes(@SReadError);
+      end else
+    else
+      raise EReadError.CreateRes(@SReadError)
+
+  {else  //  2011 < 1.0, UniString, Zwischenlösung, verworfen weil Datei zu groß wird
+  if (TriDatei.Version.Jahr = '2011')and(TriDatei.Version.Nr < '1.0') then // UniString
+    if Read(L, SizeOf(LongInt))= SizeOf(LongInt) then
+    begin
+      SetLength(Str, L); // L = Anzahl der Zeichen in Str
+      Size := L * SizeOf(Char); // Puffergröße in Byte
+      if Read(Pointer(Str)^, Size ) <> Size then
+        raise EReadError.CreateRes(@SReadError);
+    end else
+      raise EReadError.CreateRes(@SReadError)}
+
+  else  // < 2011, ShortString
+  begin
+    S := '';
+    if (Read(S[0],1)=1) and  // Längen-Byte
+       ((Ord(S[0])=0) or (Read(S[1],Ord(S[0]))=Ord(S[0]))) then  //StringInhalt
+      Str := String(S)
+    else
+      raise EReadError.CreateRes(@SReadError); // nur Meldung beim Debuggen
+  end;
+end;
+
+//==============================================================================
+procedure TTriaStream.WriteStr(const Str:String);
+//==============================================================================
+// String als AnsiString (1 Byte/Char) gespeichert ab 2011
+var
+  L : LongInt;
+  S : AnsiString;
+begin
+  S := AnsiString(Str);
+  L := Length(S);
+  //Size := L * SizeOf(Char); // Puffergröße in Byte angeben, UniString
+  if (Write(L, SizeOf(LongInt)) <> SizeOf(LongInt)) or // Länge in 4 Byte
+     (Write(Pointer(S)^, L) <> L) then // String-Inhalt
+    raise EWriteError.CreateRes(@SWriteError);
+end;
+
+(******************************************************************************)
+(*                   Methoden von TTriaPersistent                             *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+function TTriaPersistent.GetBPObjType: Word;
+//------------------------------------------------------------------------------
+(* Object Types aus Version 7.4 Stream Registration Records *)
+begin
+  Result := 0;
+end;
+
+// public Methoden
+
+//==============================================================================
+constructor TTriaPersistent.Create(Veranst:Pointer);
+//==============================================================================
+begin
+  FVPtr := Veranst;
+  //nil erlaubt
+  //if FVPtr = nil then
+  //  TriaMessage('Create Object mit Veranst = nil',mtInformation,[mbOk],0);
+end;
+
+//==============================================================================
+function TTriaPersistent.Load: Boolean;
+//==============================================================================
+var
+  ObjType : Word;
+begin
+  Result := false;
+  if TriaStream = nil then Exit;
+  if TriaStream.Read(ObjType,cnSizeOfWord) <> cnSizeOfWord then Exit;
+  if ObjType <> BPObjType then
+  begin
+    {TriaMessage('Falscher ObjectType: soll: ' + IntToStr(BPObjType)+
+                                   ', ist: ' + IntToStr(ObjType),
+               mtInformation,[mbOk],0);}
+    Exit;
+  end;
+  Result := true;
+end;
+
+//==============================================================================
+function TTriaPersistent.Store: Boolean;
+//==============================================================================
+var W : Word;
+begin
+  W := BPObjType;
+  if TriaStream = nil then Result := false
+  else Result := TriaStream.Write(W, cnSizeOfWord) = cnSizeOfWord;
+end;
+
+{(******************************************************************************)
+procedure TTriaPersistent.Assign(Source: TPersistent);
+(******************************************************************************)
+begin
+  if Source is TTriaPersistent then
+  begin
+    FVPtr := TTriaPersistent(Source).FVPtr;
+    Exit;
+  end;
+  inherited Assign(Source);
+end;}
+
+
+(******************************************************************************)
+(*  Methoden von TTriaColl                                                    *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+function TTriaColl.GetCount: Integer;
+//------------------------------------------------------------------------------
+begin
+  Result := FItems.Count;
+end;
+
+//------------------------------------------------------------------------------
+procedure TTriaColl.SetCapacity(CapNeu:Integer);
+//------------------------------------------------------------------------------
+begin
+  FItems.Capacity := CapNeu;
+end;
+
+//------------------------------------------------------------------------------
+function TTriaColl.GetPItem(Indx: Integer): Pointer;
+//------------------------------------------------------------------------------
+begin
+  // 2003-1,7: nil nicht sinnvoll, löst weitere exceptions aus
+  // TList Error bei Indx Range Error: nil ohne Fehlermeldung
+  {if (Indx>=0)and(Indx<Count) then Result := FItems[Indx]
+                              else Result := nil; }
+
+  //try
+    Result := FItems[Indx];
+  //except
+  //  Result := nil;  // Exception nicht weitergereicht (wohl in BDS 2006!)
+  //end;
+  {try
+    Result := FItems[Indx];
+  finally
+    Result := nil;   // Exception weitergereicht
+  end;}
+  //Result := FItems[Indx];
+end;
+
+//------------------------------------------------------------------------------
+procedure TTriaColl.SetPItem(Indx:Integer; Item:Pointer);
+//------------------------------------------------------------------------------
+begin
+  // TList Error bei Indx Range Error
+  {if (Indx>=0)and(Indx<Count) then}
+  //try
+    FItems[Indx] := Item;
+  //except // keine Aktion
+  //end;
+end;
+
+
+// public Methoden
+
+//==============================================================================
+constructor TTriaColl.Create(Veranst:Pointer);
+//==============================================================================
+begin
+  inherited Create(Veranst);
+  //FLimit := ALimit;
+  //FDelta := ADelta;
+  FItems := TList.Create;
+  FItemSize := 0;
+  FStepProgressBar := false;
+end;
+
+//==============================================================================
+destructor TTriaColl.Destroy;
+//==============================================================================
+begin
+  Clear;
+  FreeAndNil(FItems);
+  inherited Destroy;
+end;
+
+//==============================================================================
+procedure TTriaColl.Clear;
+//==============================================================================
+begin
+  while FItems.Count > 0 do
+  begin
+    FreeItem(FItems.Last);
+    FItems.Delete(FItems.Count-1); //delete() schneller als remove()
+  end;
+end;
+
+//==============================================================================
+function TTriaColl.ClearItem(Item:Pointer): Integer;
+//==============================================================================
+begin
+  Result := IndexOf(Item);
+  if Result >= 0 then ClearIndex(Result);
+end;
+
+//==============================================================================
+procedure TTriaColl.ClearIndex(Indx:Integer);
+//==============================================================================
+begin
+  if (Indx>=0) and (Indx<Count) then
+  begin
+    // Memory adressiert von Item entfernen
+    FreeItem(GetPItem(Indx)); //2003-1.7: nil wird in FreeItem überprüft
+    // Pointer(Item) aus Liste (FItems) entfernen, auch wenn Pointer=nil
+    FItems.Delete(Indx);
+    //muß in Nachfolger überschrieben werden
+    //delete benutzen statt remove, weil schneller
+  end;
+end;
+
+//==============================================================================
+function TTriaColl.AddItem(Item:Pointer): Integer;
+//==============================================================================
+begin
+  Result := FItems.Add(Item); //EOutOfMemory-Exception, wenn zu wenig Speicher
+end;
+
+//==============================================================================
+function TTriaColl.Load: Boolean;
+//==============================================================================
+var
+  i : Integer;
+  C,SI : SmallInt;
+begin
+  Result := false;
+  if not inherited Load then Exit;
+  if TriaStream.Read(C,cnSizeOfSmallInt) <> cnSizeOfSmallInt then Exit;
+  if (TriDatei.Version.Jahr<'2008')or
+     (TriDatei.Version.Jahr='2008')and(TriDatei.Version.Nr<'2.0') then
+   begin
+     // Dummy Read FLimit,FDelta
+     if TriaStream.Read(SI,cnSizeOfSmallInt) <> cnSizeOfSmallInt then Exit;
+     if TriaStream.Read(SI,cnSizeOfSmallInt) <> cnSizeOfSmallInt then Exit;
+   end;
+{ShowMessage('TriaColl size = '+IntToStr(C));}
+  SetCapacity(C); // zur Leistungssteigerung
+  for i:=0 to C-1 do
+    if not LoadItem(i) then Exit;
+  Result := true;
+end;
+
+//==============================================================================
+function TTriaColl.Store: Boolean;
+//==============================================================================
+var
+  i : Integer;
+  C : SmallInt;
+begin
+  Result := false;
+  if not inherited Store then Exit;
+  C := GetCount;
+  if TriaStream.Write(C,cnSizeOfSmallInt) <> cnSizeOfSmallInt then Exit;
+  //if TriaStream.Write(FLimit,cnSizeOfSmallInt) <> cnSizeOfSmallInt then Exit;
+  //if TriaStream.Write(FDelta,cnSizeOfSmallInt) <> cnSizeOfSmallInt then Exit;
+  for i:=0 to C-1 do
+    if not StoreItem(i) then Exit;
+  Result := true;
+end;
+
+{(******************************************************************************)
+procedure TTriaColl.Assign(Source: TPersistent);
+(******************************************************************************)
+var
+  I: Integer;
+begin
+  if Source is TTriaColl then
+  begin
+    //BeginUpdate;
+    try
+      inherited Assign(Source);
+      Clear;
+      for I := 0 to TTriaColl(Source).Count - 1 do
+        AddItem(TTriaColl(Source).Items[I]);
+    finally
+      //EndUpdate;
+    end;
+    Exit;
+  end;
+  inherited Assign(Source);
+end;}
+
+//==============================================================================
+function TTriaColl.IndexOf(Item:Pointer):Integer;
+//==============================================================================
+begin
+  Result := FItems.IndexOf(Item);
+end;
+
+//==============================================================================
+function TTriaColl.CollSize:Integer;
+//==============================================================================
+// verwendet für ProgressBar während Schliessen, Speichern?
+begin
+  Result := cnMinCollSize + FItems.Count * FItemSize;
+end;
+
+(******************************************************************************)
+(*  Methoden von TTriaPointerColl                                             *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+function TTriaPointerColl.GetBPObjType: Word;
+//------------------------------------------------------------------------------
+(* Object Types aus Version 7.4 Stream Registration Records *)
+begin
+  Result := rrTriaPointerColl;
+end;
+
+//------------------------------------------------------------------------------
+procedure TTriaPointerColl.FreeItem(Item: Pointer);
+//------------------------------------------------------------------------------
+begin
+  // keine Aktion, Pointer-Inhalt wird nicht gelöscht
+end;
+
+//------------------------------------------------------------------------------
+function TTriaPointerColl.LoadItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+// Indx von Pointer in FCollection wird als SmallInt geladen
+var I : SmallInt;
+begin
+  Result := false;
+  if TriaStream.Read(I,cnSizeOfSmallInt) <> cnSizeOfSmallInt then Exit;
+  if (I >= 0) and (FCollection <> nil)  then
+    if AddItem(FCollection[I]) = Indx then Result := true
+    else
+  else if AddItem(nil) = Indx then Result := true;
+end;
+
+//------------------------------------------------------------------------------
+function TTriaPointerColl.StoreItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+// Indx von Pointer in FCollection wird als SmallInt gespeichert
+var I : SmallInt;
+begin
+  if (GetPItem(Indx) <> nil) and (FCollection <> nil) then
+    I := FCollection.IndexOf(GetPItem(Indx))
+  else I := -1;
+  Result := TriaStream.Write(I,cnSizeOfSmallInt) = cnSizeOfSmallInt;
+end;
+
+// public Methoden
+
+//==============================================================================
+constructor TTriaPointerColl.Create(Veranst:Pointer;Collection:TTriaColl);
+//==============================================================================
+begin
+  inherited Create(Veranst);
+  FCollection := Collection;
+  FItemSize   := cnSizeOfPointer;
+end;
+
+//==============================================================================
+function TTriaPointerColl.Add(Indx:integer): Integer;
+//==============================================================================
+begin
+  if (FCollection <> nil) and
+     (Indx >= 0) and (Indx < FCollection.Count) then
+    Result := AddItem(FCollection[Indx])
+  else Result := AddItem(nil);
+end;
+
+{(******************************************************************************)
+procedure TTriaPointerColl.Assign(Source: TPersistent);
+(******************************************************************************)
+begin
+  if Source is TTriaPointerColl then
+  begin
+    inherited Assign(Source);
+    FCollection := TTriaPointerColl(Source).FCollection;
+    Exit;
+  end;
+  inherited Assign(Source);
+end; }
+
+
+(******************************************************************************)
+(*                   Methoden von TTriaSortList                               *)
+(******************************************************************************)
+
+// protected Methoden
+
+{(******************************************************************************)
+function TTriaSortList.Get(Indx: Integer): Pointer;
+(******************************************************************************)
+begin
+  if (Indx>=0)and(Indx<Count) then Result := List^[Indx]
+                              else Result := nil;
+end;}
+
+// public Methoden
+
+//==============================================================================
+constructor TTriaSortList.Create(TriaSortColl:TTriaSortColl);
+//==============================================================================
+begin
+  inherited Create;
+  FTriaSortColl := TriaSortColl;
+  FDuplicates := false;
+end;
+
+//==============================================================================
+function TTriaSortList.Add(Item:Pointer):Integer;
+//==============================================================================
+begin
+  if not Find(Item, Result) or FDuplicates then
+    Insert(Result,Item);
+end;
+
+//==============================================================================
+function TTriaSortList.Append(Item:Pointer): Integer;
+//==============================================================================
+begin
+  Result := inherited Add(Item);
+end;
+
+//==============================================================================
+function TTriaSortList.Find(Item:Pointer; var Indx:Integer):Boolean;
+//==============================================================================
+// Liste muß nach aktueller SortString sortiert sein, sonst falsches Ergebnis
+// das bei Verwendung des Index Absturz verursacht
+var
+  L, H, I, C: Integer;
+begin
+  Result := false;
+  L := 0;
+  H := Count-1;
+  while L <= H do
+  begin
+    I := (L + H) shr 1;
+    C := FTriaSortColl.Compare(Items[I],Item);
+    if C < 0 then L := I + 1 else
+    begin
+      H := I - 1;
+      if C = 0 then
+      begin
+        Result := true;
+        if not FDuplicates then L := I;
+      end;
+    end;
+  end;
+  Indx := L;
+end;
+
+//==============================================================================
+function TTriaSortList.IndexOf(Item:Pointer):Integer;
+//==============================================================================
+begin
+  if FTriaSortColl.SortMode = smNichtSortiert then Result := -1
+  else Result := inherited IndexOf(Item);
+end;
+
+(******************************************************************************)
+(*  Methoden von TTriaSortColl                                                *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+procedure TTriaSortColl.SetCapacity(CapNeu:Integer);
+//------------------------------------------------------------------------------
+begin
+  inherited SetCapacity(CapNeu);
+  if FSortItems<>nil then
+    FSortItems.Capacity := CapNeu;
+end;
+
+//------------------------------------------------------------------------------
+function TTriaSortColl.GetSortCount: Integer;
+//------------------------------------------------------------------------------
+begin
+  if FSortItems <> nil then
+    Result := FSortItems.Count
+  else Result := 0;
+end;
+
+//------------------------------------------------------------------------------
+procedure TTriaSortColl.SetPItem(Indx:Integer; Item:Pointer);
+//------------------------------------------------------------------------------
+begin
+  if (Indx >= 0) and (Indx < Count) then
+  begin
+    ClearSortItem(FItems[Indx]);
+    FItems[Indx] := Item;
+    AddSortItem(FItems[Indx]);
+  end;
+end;
+
+{(******************************************************************************)
+function TTriaSortColl.RemoveItem(Item:Pointer): Integer;
+(******************************************************************************)
+begin
+  if FSortItems <> nil then ClearSortItem(Item);(* FSortItems nil bei Destroy *)
+  Result := inherited RemoveItem(Item);
+end;}
+
+//------------------------------------------------------------------------------
+function TTriaSortColl.GetSortItem(Indx:Integer): Pointer;
+//------------------------------------------------------------------------------
+begin
+  if (FSortItems<>nil) and
+     (Indx>=0)and(Indx<FSortItems.Count) then Result := FSortItems[Indx]
+                                         else Result := nil;
+end;
+
+//------------------------------------------------------------------------------
+function TTriaSortColl.LoadItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+begin
+  Result := false;
+  // Dummy, Compiler-Warnung vermeiden
+end;
+
+//------------------------------------------------------------------------------
+function TTriaSortColl.StoreItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+begin
+  Result := false;
+  // Dummy, Compiler-Warnung vermeiden
+end;
+
+// public Methoden
+
+//==============================================================================
+constructor TTriaSortColl.Create(Veranst:Pointer);
+//==============================================================================
+begin
+  inherited Create(Veranst);
+  FSortMode  := smNichtSortiert;
+  // es wird nicht sortiert,und abstr. Methode SortString nicht benutzt
+  FSortItems := TTriaSortList.Create(Self);
+  FItemSize  := cnSizeOfPointer;
+end;
+
+//==============================================================================
+destructor TTriaSortColl.Destroy;
+//==============================================================================
+begin
+  FreeAndNil(FSortItems); (*bei RemoveItem abgefragt *)
+  inherited Destroy;
+end;
+
+//==============================================================================
+procedure TTriaSortColl.Clear;
+//==============================================================================
+begin
+  if FSortItems<>nil then FSortItems.Count := 0;
+  inherited Clear;
+end;
+
+//==============================================================================
+procedure TTriaSortColl.ClearIndex(Indx:Integer);
+//==============================================================================
+begin
+  if (Indx >= 0) and (Indx < Count) then
+  begin
+    ClearSortItem(GetPItem(Indx));
+    inherited ClearIndex(Indx);
+  end;
+end;
+
+{(******************************************************************************)
+procedure TTriaSortColl.Assign(Source: TPersistent);
+(******************************************************************************)
+begin
+  if Source is TTriaSortColl then
+  begin
+    //BeginUpdate; 
+    try
+      FSortItems.FTriaSortColl := TTriaSortColl(Source).FSortItems.FTriaSortColl;
+      FSortItems.FDuplicates := TTriaSortColl(Source).FSortItems.FDuplicates;
+      inherited Assign(Source);
+    finally
+      //EndUpdate;
+    end;
+    Exit;
+  end;
+  inherited Assign(Source);
+end;}
+
+//==============================================================================
+function TTriaSortColl.Compare(Item1,Item2:Pointer): Integer;
+//==============================================================================
+begin
+  // Unterschied Groß/Klein-Buchstaben berücksichtigen
+  // bei ANSICompareStr Kleinbuchstaben kleiner als Großbuchstaben,
+  // umgekehrt bei ASCII (CompareStr)
+  Result := AnsiCompareStr(SortString(Item1),SortString(Item2));
+  // Unterschied ss/ß berücksichtigen
+  if Result = 0 then
+    Result := CompareStr(SortString(Item1),SortString(Item2));
+end;
+
+//==============================================================================
+function TTriaSortColl.ClearSortItem(Item:Pointer): Integer;
+//==============================================================================
+// FSortItems nil bei Destroy
+begin
+  if FSortItems <> nil then
+    Result := FSortItems.Remove(Item)
+  else Result := -1;
+end;
+
+//==============================================================================
+procedure TTriaSortColl.SortClear;
+//==============================================================================
+begin
+  (* Capacity unverändert *)
+  if FSortItems <> nil then FSortItems.Count := 0;
+end;
+
+//==============================================================================
+function TTriaSortColl.AddItem(Item:Pointer): Integer;
+//==============================================================================
+begin
+  Result := inherited AddItem(Item);
+
+  if (FSortItems<>nil) and (FSortItems.Capacity < FItems.Capacity) then
+    FSortItems.Capacity := FItems.Capacity; // unabhängig von TList.Add
+  AddSortItem(Item);
+end;
+
+//==============================================================================
+function TTriaSortColl.AddSortItem(Item:Pointer): Integer;
+//==============================================================================
+begin
+  if (FSortItems<>nil) and (FSortMode <> smNichtSortiert) then
+    Result := FSortItems.Add(Item)
+  else Result := -1;
+end;
+
+//==============================================================================
+function TTriaSortColl.SortIndexOf(Item:Pointer):Integer;
+//==============================================================================
+begin
+  if FSortItems<>nil then
+    Result := FSortItems.IndexOf(Item)
+  else Result := -1;
+end;
+
+(******************************************************************************)
+(*                   Methoden von TTriaObj                                    *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+function TTriaObj.GetIndex: Integer;
+//------------------------------------------------------------------------------
+begin
+  if FCollection <> nil
+    then Result := FCollection.FItems.IndexOf(Self)
+    else Result := -1;
+end;
+
+//------------------------------------------------------------------------------
+function TTriaObj.GetSortIndex: Integer;
+//------------------------------------------------------------------------------
+begin
+  if (FCollection <> nil) and (FCollection.FSortItems<>nil) then
+    Result := FCollection.FSortItems.IndexOf(Self)
+  else Result := -1;
+end;
+
+// public Methoden
+
+//==============================================================================
+constructor TTriaObj.Create(Veranst:Pointer;Coll:TTriaObjColl;Add:TOrtAdd);
+//==============================================================================
+begin
+  inherited Create(Veranst);
+  FLoadPtr := Self;
+  FCollection := Coll;
+end;
+
+{(******************************************************************************)
+function TTriaObj.Load: Boolean;
+(******************************************************************************)
+begin
+  Result := false;
+  // if FVPtr <> EinlVeranst then Exit; in abgeleitete Obj
+  if not inherited Load then Exit;
+  Result := true;
+end;}
+
+{(******************************************************************************)
+function TTriaObj.Store: Boolean;
+(******************************************************************************)
+begin
+  Result := false;
+  if not inherited Store then Exit;
+  Result := true;
+end;}
+
+{(******************************************************************************)
+procedure TTriaObj.Assign(Source: TPersistent);
+(******************************************************************************)
+begin
+  if Source is TTriaObj then
+  begin
+    FLoadPtr    := TTriaObj(Source).FLoadPtr;
+    FCollection := TTriaObj(Source).FCollection;
+    Exit;
+  end;
+  inherited Assign(Source);
+end; }
+
+//==============================================================================
+procedure TTriaObj.SortAdd;
+//==============================================================================
+// Add nur wenn in FCollection enthalten
+begin
+  if GetIndex >= 0 then FCollection.AddSortItem(Self);
+end;
+
+//==============================================================================
+procedure TTriaObj.SortRemove;
+//==============================================================================
+begin
+  if FCollection <> nil then FCollection.ClearSortItem(Self);
+end;
+
+(******************************************************************************)
+(* Methoden von TTriaObjColl                                                  *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+function TTriaObjColl.GetPItem(Indx:Integer): TTriaObj;
+//------------------------------------------------------------------------------
+begin
+  Result := TTriaObj(inherited GetPItem(Indx));
+end;
+
+//------------------------------------------------------------------------------
+procedure TTriaObjColl.SetPItem(Indx:Integer; Item:TTriaObj);
+//------------------------------------------------------------------------------
+begin
+  {if (Item<>nil) and not (Item is FItemClass) then // bei nil auch false
+    TriaMessage('TriaObjColl.SetPItem mit falscher Class.',mtInformation,[mbOk])
+  else }
+    inherited SetPItem(Indx,Item);
+end;
+
+//------------------------------------------------------------------------------
+function TTriaObjColl.GetSortItem(Indx:Integer): TTriaObj;
+//------------------------------------------------------------------------------
+begin
+  Result := TTriaObj(inherited GetSortItem(Indx));
+end;
+
+//------------------------------------------------------------------------------
+procedure TTriaObjColl.FreeItem(Item:Pointer);
+//------------------------------------------------------------------------------
+begin
+  {2003-1.7: Prüfung streichen um zu beschleunigen
+  if (Item<>nil) and not (TTriaObj(Item) is FItemClass) then
+    TriaMessage('TriaObjColl.FreeItem mit falscher Class.',mtInformation,[mbOk])
+  else} TTriaObj(Item).Free;
+end;
+
+//------------------------------------------------------------------------------
+function TTriaObjColl.LoadItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+var Item : TTriaObj;
+begin
+  {showmessage('TOrtObjColl.LoadItem - '+IntToStr(Indx)); }
+  Result := false;
+  Item := FItemClass.Create(FVPtr,Self,oaNoAdd);
+  if not Item.Load then Exit;
+  if AddItem(Item) = Indx then Result := true;
+  (* AddItem bei TOrtCollection überschrieben, InsertItem nicht *)
+end;
+
+//------------------------------------------------------------------------------
+function TTriaObjColl.StoreItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+begin
+  if (Indx>=0) and (Indx<Count) and
+     (GetPItem(Indx) <> nil) and GetPItem(Indx).Store then Result := true
+  else Result := false;
+end;
+
+//------------------------------------------------------------------------------
+procedure TTriaObjColl.SetItemSize;
+//------------------------------------------------------------------------------
+begin
+  if FItems.Count > 0 then FItemSize := TTriaObj(FItems[0]).ObjSize
+                      else FItemSize := 0;
+
+end;
+
+// public Methoden
+
+//==============================================================================
+constructor TTriaObjColl.Create(Veranst:Pointer; ItemClass:TTriaObjClass);
+//==============================================================================
+begin
+  inherited Create(Veranst);
+  FItemClass := ItemClass;
+  SetItemSize;
+end;
+
+//==============================================================================
+procedure TTriaObjColl.Clear;
+//==============================================================================
+begin
+{$IF Defined(TRIAPROJEKT)}
+  if FSortItems<>nil then FSortItems.Count := 0;
+  if FStepProgressBar then
+  begin
+    HauptFenster.ProgressBarStep(cnMinCollSize);
+    SetItemSize;
+  end;
+  while FItems.Count > 0 do
+  begin
+    if FStepProgressBar then HauptFenster.ProgressBarStep(FItemSize);
+    FreeItem(FItems.Last);
+    FItems.Delete(FItems.Count-1); //delete() schneller als remove()
+  end;
+{$ELSE}
+  inherited Clear;
+{$IFEND}
+end;
+
+//==============================================================================
+procedure TTriaObjColl.DeleteItems; // Clear ohne FreeItem
+//==============================================================================
+begin
+  if FSortItems<>nil then FSortItems.Count := 0;
+  while FItems.Count > 0 do
+    FItems.Delete(FItems.Count-1); //delete() schneller als remove()
+end;
+
+{(******************************************************************************)
+procedure TTriaObjColl.Assign(Source: TPersistent);
+(******************************************************************************)
+begin
+  if Source is TTriaObjColl then
+  begin
+    FItemClass := TTriaObjColl(Source).FItemClass;
+    inherited Assign(Source);
+    Exit;
+  end;
+  inherited Assign(Source);
+end;}
+
+//==============================================================================
+procedure TTriaObjColl.OrtCollAdd;
+//==============================================================================
+var i: Integer;
+begin
+  for i:=0 to Count-1 do GetPItem(i).OrtCollAdd;
+end;
+
+//==============================================================================
+procedure TTriaObjColl.OrtCollClear(Indx:Integer);
+//==============================================================================
+var i: Integer;
+begin
+  for i:=0 to Count-1 do GetPItem(i).OrtCollClear(Indx);
+end;
+
+//==============================================================================
+procedure TTriaObjColl.OrtCollExch(Idx1,Idx2:Integer);
+//==============================================================================
+var i: Integer;
+begin
+  for i:=0 to Count-1 do GetPItem(i).OrtCollExch(Idx1,Idx2);
+end;
+
+//==============================================================================
+procedure TTriaObjColl.Sortieren(SortModeNeu: TSortMode);
+//==============================================================================
+var i: integer;
+begin
+  FSortMode := SortModeNeu;
+  SortClear;
+  if (FSortItems<>nil) and (FSortItems.Capacity < FItems.Capacity) then
+    FSortItems.Capacity := FItems.Capacity;
+  for i:=0 to Count-1 do AddSortItem(GetPItem(i));
+end;
+
+//==============================================================================
+function TTriaObjColl.Load: Boolean;
+//==============================================================================
+// wie TriaColl, aber mit ProgressBar, nicht für TriaZeit
+// Anschliessend ItemSize setzen
+{$IFDEF TRIAPROJEKT}
+var i : Integer;
+    C,SI : SmallInt;
+    StreamPosAlt : Int64;
+    ObjType : Word;
+begin
+  Result := false;
+  if TriaStream = nil then Exit;
+  StreamPosAlt := TriaStream.Position;
+  if TriaStream.Read(ObjType,cnSizeOfWord) <> cnSizeOfWord then Exit;
+  if ObjType <> BPObjType then Exit;
+  if TriaStream.Read(C,cnSizeOfSmallInt) <> cnSizeOfSmallInt then Exit;
+  if (TriDatei.Version.Jahr<'2008')or
+     (TriDatei.Version.Jahr='2008')and(TriDatei.Version.Nr<'2.0') then
+   begin
+     // Dummy Read FLimit,FDelta
+     if TriaStream.Read(SI,cnSizeOfSmallInt) <> cnSizeOfSmallInt then Exit;
+     if TriaStream.Read(SI,cnSizeOfSmallInt) <> cnSizeOfSmallInt then Exit;
+   end;
+  if FStepProgressBar then
+  begin
+    HauptFenster.ProgressBarStep(TriaStream.Position - StreamPosAlt);
+    StreamPosAlt := TriaStream.Position;
+  end;
+  for i:=0 to C-1 do
+  begin
+    if not LoadItem(i) then Exit;
+    if FStepProgressBar then
+    begin
+      HauptFenster.ProgressBarStep(TriaStream.Position - StreamPosAlt);
+      StreamPosAlt := TriaStream.Position;
+    end;
+  end;
+  Result := true;
+
+{$ELSE}
+begin
+  Result := false;  // Dummy
+{$ENDIF}
+  SetItemSize;
+end;
+
+//==============================================================================
+function TTriaObjColl.Store: Boolean;
+//==============================================================================
+{$IFDEF TRIAPROJEKT}
+var
+  i : Integer;
+  C : SmallInt;
+  W : Word;
+begin
+  Result := false;
+  SetItemSize;
+  if TriaStream = nil then Exit;
+  W := BPObjType;
+  if TriaStream.Write(W, cnSizeOfWord) <> cnSizeOfWord then Exit;
+  C := GetCount;
+  if TriaStream.Write(C,cnSizeOfSmallInt) <> cnSizeOfSmallInt then Exit;
+  //if TriaStream.Write(FLimit,cnSizeOfSmallInt) <> cnSizeOfSmallInt then Exit;
+  //if TriaStream.Write(FDelta,cnSizeOfSmallInt) <> cnSizeOfSmallInt then Exit;
+  if FStepProgressBar then HauptFenster.ProgressBarStep(cnMinCollSize);
+  for i:=0 to C-1 do
+  begin
+    if not StoreItem(i) then Exit;
+    if FStepProgressBar then HauptFenster.ProgressBarStep(FItemSize);
+  end;
+  Result := true;
+
+{$ELSE}
+begin
+  SetItemSize;
+  Result := inherited Store;
+{$ENDIF}
+end;
+
+//==============================================================================
+function TTriaObjColl.CollSize:Integer;
+//==============================================================================
+// verwendet für ProgressBar während Schliessen, Speichern
+begin
+  if FItems.Count = 0 then Result := cnMinCollSize
+  else Result := cnMinCollSize + FItems.Count * TTriaObj(FItems[0]).ObjSize;
+end;
+
+(******************************************************************************)
+(*  Methoden von TTextCollection                                              *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+function TTextCollection.GetBPObjType: Word;
+//------------------------------------------------------------------------------
+(* Object Types aus Version 7.4 Stream Registration Records *)
+begin
+  Result := rrTextCollection;
+end;
+
+//------------------------------------------------------------------------------
+function TTextCollection.GetPItem(Indx:Integer): PString;
+//------------------------------------------------------------------------------
+begin
+  Result := PString(FItems[Indx]);
+end;
+
+//------------------------------------------------------------------------------
+procedure TTextCollection.SetPItem(Indx:Integer; Item:PString);
+//------------------------------------------------------------------------------
+begin
+  FItems[Indx] := Item;
+end;
+
+//------------------------------------------------------------------------------
+function TTextCollection.GetItem(Indx:Integer): String;
+//------------------------------------------------------------------------------
+begin
+  if FItems[Indx] <> nil
+    then Result := PString(FItems[Indx])^
+    else Result := '';
+end;
+
+//------------------------------------------------------------------------------
+procedure TTextCollection.SetItem(Indx:Integer; S:String);
+//------------------------------------------------------------------------------
+var P : PString;
+begin
+  P := PString(FItems[Indx]);
+  if P <> nil then Dispose(P);
+  if S <> '' then
+  begin
+    New(P); P^:= S;
+    FItems[Indx] := P;
+  end else FItems[Indx]:= nil;
+end;
+
+//------------------------------------------------------------------------------
+function TTextCollection.Add(S:String): Integer;
+//------------------------------------------------------------------------------
+var P : PString;
+begin
+  if S <> '' then
+  begin
+    New(P);  // EOutOfMemory-Exception, wenn nicht genügend Speicherplatz
+    P^:= S;
+    Result := AddItem(P);
+  end else Result := AddItem(nil);
+end;
+
+//------------------------------------------------------------------------------
+procedure TTextCollection.FreeItem(Item: Pointer);
+//------------------------------------------------------------------------------
+begin
+  if Item <> nil then Dispose(PString(Item));
+end;
+
+//------------------------------------------------------------------------------
+function TTextCollection.LoadItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+var S: String;
+    P: PString;
+begin
+  Result := false;
+  try
+    TriaStream.ReadStr(S);
+    if Length(S) > 0 then
+    begin
+      New(P); P^:= S;
+    end else P := nil; //leerer String als nil gespeichert
+    if AddItem(P) <> Indx then Exit;
+  except
+    Exit;
+  end;
+
+  Result := true;
+{ShowMessage('TextColl.Item '+IntToStr(FItems.Count-1)+' = '+PString(FItems.Last)^);}
+end;
+
+//------------------------------------------------------------------------------
+function TTextCollection.StoreItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+var S : String;
+    P : PString;
+begin
+  Result := false;
+  if (Indx>=0) and (Indx<Count) then
+  try
+    P := GetPItem(Indx);
+    if P <> nil then S := P^
+                else S := '';
+    TriaStream.WriteStr(S);
+  except
+    Exit;
+  end;
+  Result := true;
+end;
+
+// public Methoden
+
+//==============================================================================
+constructor TTextCollection.Create(Veranst:Pointer);
+//==============================================================================
+begin
+  inherited Create(Veranst);
+  FItemSize := cnSizeOfString;
+end;
+
+
+(******************************************************************************)
+(*  Methoden von TBoolCollection                                              *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+function TBoolCollection.GetBPObjType: Word;
+//------------------------------------------------------------------------------
+(* Object Types aus Version 7.4 Stream Registration Records *)
+begin
+  Result := rrBoolCollection;
+end;
+
+//------------------------------------------------------------------------------
+function TBoolCollection.GetItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+begin
+  Result := PBoolean(FItems[Indx])^;
+end;
+
+//------------------------------------------------------------------------------
+procedure TBoolCollection.SetItem(Indx:Integer; Item:Boolean);
+//------------------------------------------------------------------------------
+begin
+  PBoolean(FItems[Indx])^ := Item;
+end;
+
+//------------------------------------------------------------------------------
+procedure TBoolCollection.FreeItem(Item: Pointer);
+//------------------------------------------------------------------------------
+begin
+  if Item <> nil then FreeMem(Item,cnSizeOfBoolean);
+end;
+
+//------------------------------------------------------------------------------
+function TBoolCollection.LoadItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+var P : ^Boolean;
+    B : Boolean;
+begin
+  Result := false;
+  if TriaStream.Read(B,cnSizeOfBoolean) <> cnSizeOfBoolean then Exit;
+  New(P); P^:= B;
+  if AddItem(P) = Indx then Result := true;
+end;
+
+//------------------------------------------------------------------------------
+function TBoolCollection.StoreItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+begin
+  if (Indx>=0) and (Indx<Count) and
+     (GetPItem(Indx) <> nil) and
+     (TriaStream.Write(GetPItem(Indx)^,cnSizeOfBoolean)=cnSizeOfBoolean) then
+    Result := true
+  else Result := false;
+end;
+
+// public Mehoden
+
+//==============================================================================
+constructor TBoolCollection.Create(Veranst:Pointer);
+//==============================================================================
+begin
+  inherited Create(Veranst);
+  FItemSize := cnSizeOfBoolean;
+end;
+
+//==============================================================================
+function TBoolCollection.Add(Bool:Boolean): Integer;
+//==============================================================================
+var P : PBoolean;
+begin
+  New(P);
+  P^:= Bool;
+  Result := AddItem(P);
+end;
+
+
+(******************************************************************************)
+(*  Methoden von TIntegerCollection                                           *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+function TIntegerCollection.GetBPObjType: Word;
+//------------------------------------------------------------------------------
+(* Object Types aus Version 7.4 Stream Registration Records *)
+begin
+  Result := rrIntegerCollection;
+end;
+
+//------------------------------------------------------------------------------
+function TIntegerCollection.GetItem(Indx:Integer): Integer;
+//------------------------------------------------------------------------------
+begin
+  Result := PInteger(FItems[Indx])^;
+end;
+
+//------------------------------------------------------------------------------
+procedure TIntegerCollection.SetItem(Indx,Item:Integer);
+//------------------------------------------------------------------------------
+begin
+  PInteger(FItems[Indx])^ := Item;
+end;
+
+//------------------------------------------------------------------------------
+procedure TIntegerCollection.FreeItem(Item: Pointer);
+//------------------------------------------------------------------------------
+begin
+  if Item <> nil then FreeMem(Item,cnSizeOfInteger);
+end;
+
+//------------------------------------------------------------------------------
+function TIntegerCollection.LoadItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+var P : PInteger;
+    I : Integer;
+begin
+  Result := false;
+  if TriaStream.Read(I,cnSizeOfInteger) <> cnSizeOfInteger then Exit;
+  New(P); P^:= I;
+  if AddItem(P) = Indx then Result := true;
+end;
+
+//------------------------------------------------------------------------------
+function TIntegerCollection.StoreItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+begin
+  if (Indx>=0) and (Indx<Count) and (GetPItem(Indx)<>nil) and
+     (TriaStream.Write(GetPItem(indx)^,cnSizeOfInteger)=cnSizeOfInteger) then Result:=true
+  else Result := false;
+end;
+
+// public Methoden
+
+//==============================================================================
+constructor TIntegerCollection.Create(Veranst:Pointer);
+//==============================================================================
+begin
+  inherited Create(Veranst);
+  FItemSize := cnSizeOfInteger;
+end;
+
+//==============================================================================
+function TIntegerCollection.Add(Int:Integer): Integer;
+//==============================================================================
+var P : PInteger;
+begin
+  New(P);
+  P^:= Int;
+  Result := AddItem(P);
+end;
+
+
+(******************************************************************************)
+(*  Methoden von TSmallIntCollection                                          *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+function TSmallIntCollection.GetBPObjType: Word;
+//------------------------------------------------------------------------------
+(* Object Types aus Version 7.4 Stream Registration Records *)
+begin
+  Result := rrSmallIntCollection;
+end;
+
+//------------------------------------------------------------------------------
+function TSmallIntCollection.LoadItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+var I : SmallInt;
+    P : PInteger;
+begin
+  Result := false;
+  if TriaStream.Read(I,cnSizeOfSmallInt) <> cnSizeOfSmallInt then Exit;
+  New(P); P^ := I;
+  if AddItem(P) = Indx then Result := true;
+end;
+
+//------------------------------------------------------------------------------
+function TSmallIntCollection.StoreItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+begin
+  if (Indx>=0) and (Indx<Count) and (GetPItem(Indx) <> nil) and
+     (TriaStream.Write(GetPItem(Indx)^,cnSizeOfSmallInt)=cnSizeOfSmallInt) then Result := true
+  else Result := false;
+end;
+
+// public Methoden
+
+//==============================================================================
+constructor TSmallIntCollection.Create(Veranst:Pointer);
+//==============================================================================
+begin
+  inherited Create(Veranst);
+  FItemSize := cnSizeOfSmallInt;
+end;
+
+
+(******************************************************************************)
+(*  Methoden von TWordCollection                                              *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+function TWordCollection.GetBPObjType: Word;
+//------------------------------------------------------------------------------
+(* Object Types aus Version 7.4 Stream Registration Records *)
+begin
+  Result := rrWordCollection;
+end;
+
+//------------------------------------------------------------------------------
+function TWordCollection.LoadItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+var P   : ^Integer;
+    Buf : Word;
+begin
+  Result := false;
+  if TriaStream.Read(Buf,cnSizeOfWord) <> cnSizeOfWord then Exit;
+  New(P); P^:= Buf;
+  if AddItem(P) = Indx then Result := true;
+end;
+
+//------------------------------------------------------------------------------
+function TWordCollection.StoreItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+begin
+  if (Indx>=0) and (Indx<Count) and (GetPItem(Indx) <> nil) and
+     (TriaStream.Write(GetPItem(Indx)^,cnSizeOfWord)=cnSizeOfWord) then
+    Result := true
+  else Result := false;
+end;
+
+// public Methoden
+
+//==============================================================================
+constructor TWordCollection.Create(Veranst:Pointer);
+//==============================================================================
+begin
+  inherited Create(Veranst);
+  FItemSize := cnSizeOfWord;
+end;
+
+
+(******************************************************************************)
+(*  Methoden von TIntSortCollection                                           *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+function TIntSortCollection.GetBPObjType: Word;
+//------------------------------------------------------------------------------
+(* Object Types aus Version 7.4 Stream Registration Records *)
+begin
+  Result := rrIntSortCollection;
+end;
+
+//------------------------------------------------------------------------------
+function TIntSortCollection.LoadItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+var P : PInteger;
+    I : Integer;
+begin
+  Result := false;
+  if TriaStream.Read(I,cnSizeOfInteger) <> cnSizeOfInteger then Exit;
+  New(P); P^:= I;
+  if AddItem(P) = Indx then Result := true;
+end;
+
+//------------------------------------------------------------------------------
+function TIntSortCollection.StoreItem(Indx:Integer): Boolean;
+//------------------------------------------------------------------------------
+begin
+  if (Indx>=0) and (Indx<Count) and (GetPItem(Indx)<>nil) and
+     (TriaStream.Write(GetPItem(Indx)^,cnSizeOfInteger)=cnSizeOfInteger) then Result:=true
+  else Result := false;
+end;
+
+//------------------------------------------------------------------------------
+function TIntSortCollection.GetPItem(Indx:Integer): PInteger;
+//------------------------------------------------------------------------------
+begin
+  Result := PInteger(FItems[Indx]);
+end;
+
+//------------------------------------------------------------------------------
+procedure TIntSortCollection.SetPItem(Indx:Integer; Item:PInteger);
+//------------------------------------------------------------------------------
+begin
+  if (Indx >= 0) and (Indx < Count) then // aktuelles item neu sortieren
+  begin
+    ClearSortItem(FItems[Indx]);
+    FItems[Indx] := Item;
+    AddSortItem(FItems[Indx]);
+  end;
+end;
+
+//------------------------------------------------------------------------------
+function TIntSortCollection.GetItem(Indx:Integer): Integer;
+//------------------------------------------------------------------------------
+begin
+  if FItems[Indx] <> nil then Result := PInteger(FItems[Indx])^
+  else Result := -1;
+end;
+
+//------------------------------------------------------------------------------
+procedure TIntSortCollection.SetItem(Indx,Item:Integer);
+//------------------------------------------------------------------------------
+begin
+  if (Indx >= 0) and (Indx < Count) then // aktuelles item neu sortieren
+  begin
+    ClearSortItem(FItems[Indx]);
+    PInteger(FItems[Indx])^ := Item;
+    AddSortItem(FItems[Indx]);
+  end;
+end;
+
+//------------------------------------------------------------------------------
+function TIntSortCollection.GetPSortItem(Indx:Integer): PInteger;
+//------------------------------------------------------------------------------
+begin
+  Result := PInteger(inherited GetSortItem(Indx));
+end;
+
+//------------------------------------------------------------------------------
+function TIntSortCollection.GetSortItem(Indx:Integer): Integer;
+//------------------------------------------------------------------------------
+begin
+  if inherited GetSortItem(Indx) <> nil then
+    Result := PInteger(inherited GetSortItem(Indx))^
+  else Result := -1;
+end;
+
+//------------------------------------------------------------------------------
+procedure TIntSortCollection.FreeItem(Item: Pointer);
+//------------------------------------------------------------------------------
+begin
+  if Item <> nil then FreeMem(Item,cnSizeOfInteger);
+end;
+
+// public Methoden
+
+//==============================================================================
+constructor TIntSortCollection.Create(Veranst:Pointer);
+//==============================================================================
+begin
+  inherited Create(Veranst);
+  if FSortItems<>nil then
+    FSortItems.Duplicates := true;
+  FSortMode := smIncr; // ungleich smNichtSortiert
+  FItemSize := cnSizeOfinteger;
+end;
+
+//==============================================================================
+function TIntSortCollection.Compare(Item1,Item2:Pointer):Integer;
+//==============================================================================
+begin
+  if FSortMode = smDecr then
+  begin
+    if SortValue(Item2) > SortValue(Item1) then Result := 1
+    else if SortValue(Item2) < SortValue(Item1) then Result := -1
+    else Result := 0;
+  end else // smIncr
+  begin
+    if SortValue(Item1) > SortValue(Item2) then Result := 1
+    else if SortValue(Item1) < SortValue(Item2) then Result := -1
+    else Result := 0;
+  end;
+end;
+
+//==============================================================================
+function TIntSortCollection.SortValue(Item:Pointer): Integer;
+//==============================================================================
+begin
+  // nach Integer-Wert sortieren
+  Result := PInteger(Item)^;
+end;
+
+//==============================================================================
+function TIntSortCollection.SortString(Item:Pointer): String;
+//==============================================================================
+begin
+  // Dummy um Compiler-Warnung zu vermeiden
+  Result := '';
+end;
+
+//==============================================================================
+function TIntSortCollection.Add(Int:Integer): Integer;
+//==============================================================================
+var P : PInteger;
+begin
+  New(P);
+  P^:= Int;
+  Result := AddItem(P);
+end;
+
+
+(******************************************************************************)
+(*                   Methoden von TVersion                                    *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+function TVersion.GetBPObjType: Word;
+//------------------------------------------------------------------------------
+(* Object Types aus Version 7.4 Stream Registration Records *)
+begin
+  Result := rrVersion;
+end;
+
+// public Methoden
+
+//==============================================================================
+constructor TVersion.Create(JahrNeu,NrNeu : String);
+//==============================================================================
+begin
+  inherited Create(nil);
+  FNr := NrNeu;
+  FJahr := JahrNeu;
+end;
+
+//==============================================================================
+function TVersion.Load: Boolean;
+//==============================================================================
+// FJahr als String[4] gespeichert, FNr als ShortString,
+// unabhängig von ReadStr, weil Version dort benutzt wird
+var S4 : String[4];
+    S  : ShortString;
+begin
+  Result := false;
+  try
+    if not inherited Load then Exit;
+    TriaStream.ReadBuffer(S4,SizeOf(S4));
+    FJahr := String(S4);
+    if (FJahr < '2003') or (FJahr > IntToStr(cnJahrMax)) then Exit;
+    S := '';
+    TriaStream.ReadBuffer(S[0],1); // Längen-Byte
+    if (Ord(S[0]) > 0) then
+      TriaStream.ReadBuffer(S[1],Ord(S[0])); // StringInhalt
+    FNr := String(S);
+  except
+    Exit;
+  end;
+  Result := true;
+end;
+
+//==============================================================================
+function TVersion.Store: Boolean;
+//==============================================================================
+var S4 : String[4];
+    S  : ShortString;
+begin
+  Result := false;
+  try
+    if not inherited Store then Exit;
+    S4 := ShortString(ProgVersion.Jahr);
+    TriaStream.WriteBuffer(S4,SizeOf(S4));
+    S := ShortString(ProgVersion.Nr);
+    TriaStream.WriteBuffer(S,Ord(S[0])+1); //benutzte Länge statt 256
+  except
+    Exit;
+  end;
+  Result := true;
+end;
+
+//==============================================================================
+function TVersion.JrNr: String;
+//==============================================================================
+// Jahr nur bei Tria, nicht bei TriaZeit
+begin
+{$IFDEF TRIAPROJEKT} // nicht für TriaZeit
+	Result := copy(FJahr,3,2) + '.' + FNr;
+{$ELSE}
+  Result := FNr;
+{$ENDIF}
+end;
+
+(******************************************************************************)
+(*                  Methoden von TDatei                                       *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+procedure TDatei.SetPath(const PathNeu:String);
+//------------------------------------------------------------------------------
+// Leerzeichen vermeiden
+var S : String;
+begin
+  S := Trim(PathNeu);
+  if S <> '' then
+    FPath := Trim(PathNeu);
+end;
+
+// public Methoden
+
+//==============================================================================
+constructor TDatei.Create;
+//==============================================================================
+begin
+  inherited Create;
+  FVersion := TVersion.Create(ProgVersion.Jahr,ProgVersion.Nr);
+  //if Self = TriDatei then UpdatePath('');
+end;
+
+//==============================================================================
+destructor TDatei.Destroy;
+//==============================================================================
+begin
+  FreeAndNil(FVersion);
+  inherited Destroy;
+end;
+
+//==============================================================================
+procedure TDatei.ClearPath;
+//==============================================================================
+begin
+  FPath := '';
+  FGeladen  := false;
+  FModified := false;
+  //UpdatePath('');  in Hauptfenster
+end;
+
+//==============================================================================
+function TDatei.Neu: Boolean;
+//==============================================================================
+begin
+  Result := SysUtils.ExtractFileName(FPath) = cnDateiNeu;
+end;
+
+
+end.

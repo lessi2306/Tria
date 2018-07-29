@@ -1,0 +1,835 @@
+unit SuchenDlg;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, ExtCtrls,StrUtils,ComCtrls,
+  AllgObj,AllgConst,TlnObj,MannsObj;
+
+procedure SuchenErsetzen(Modus:TSuchErsetzModus);
+
+type
+  TSuchenDialog = class(TForm)
+    SuchButton: TButton;
+    AllesButton: TButton;
+    SuchTabControl: TTabControl;
+    SuchenNachLabel: TLabel;
+    SuchenNachCB: TComboBox;
+    SuchenInLabel: TLabel;
+    SuchenInCB: TComboBox;
+    ErsetzenLabel: TLabel;
+    ErsetzenCB: TComboBox;
+    OptionenGB: TGroupBox;
+    GrossKleinCB: TCheckBox;
+    GanzCB: TCheckBox;
+    StartStrCB: TCheckBox;
+    BestaetigenCB: TCheckBox;
+    ErsetzButton: TButton;
+
+    procedure FormShow(Sender: TObject);
+    procedure SuchTabControlChange(Sender: TObject);
+    procedure SuchenNachLabelClick(Sender: TObject);
+    procedure SuchenInLabelClick(Sender: TObject);
+    procedure ErsetzenLabelClick(Sender: TObject);
+    procedure SuchButtonClick(Sender: TObject);
+    procedure AllesButtonClick(Sender: TObject);
+    procedure ErsetzButtonClick(Sender: TObject);
+    procedure SuchChange(Sender: TObject);
+    procedure CancelButtonClick(Sender: TObject);
+
+  private
+    SuchModus   : TSuchModus;
+    ErsatzCount,
+    NameIndex   : Integer;
+    Bestaetigen,
+    Abbruch,
+    MschIdx     : Boolean;
+
+    function  SuchText: String;
+    function  ErsatzText : String;
+    function  VergleicheStr(const S1,S2: String): Boolean;
+    function  VergleicheStrOhneMschIdx(S1: String; const S2:String): Boolean;
+    function  VergleicheIdx(Idx:Integer): Boolean;
+    procedure WeiterSuchen;
+    function  ErsetzeText(S:String): String;
+    function  ErsetzeTlnText(Tln:TTlnObj): Boolean;
+    function  ErsetzeTln(Tln:TTlnObj): Boolean;
+    procedure UpdateTab;
+    procedure SetzeButtons;
+    function  GetSpalte: TColType;
+    procedure DatenUebernehmen;
+    function  EingabeOK: Boolean;
+
+  end;
+
+var
+  SuchenDialog    : TSuchenDialog;
+  SuchErsetzModus : TSuchErsetzModus;
+  //SuchListe,
+  //ErsatzListe     : TStringList;
+
+implementation
+
+uses TriaMain,AllgFunc,VeranObj,WettkObj,AkObj,ListFmt,DateiDlg,TlnErg,VistaFix;
+
+{$R *.dfm}
+
+//******************************************************************************
+procedure SuchenErsetzen(Modus:TSuchErsetzModus);
+//******************************************************************************
+begin
+  if HauptFenster.LstFrame.TriaGrid.ItemCount = 0 then
+  begin
+    TriaMessage('Die Liste ist leer.',mtInformation,[mbOk]);
+    Exit;
+  end;
+  SuchErsetzModus := Modus;
+
+  with SuchenDialog do
+    if Visible then
+    begin
+      BringToFront;
+      if Modus = seErsetzen then SuchTabControl.TabIndex := 1
+                            else SuchTabControl.TabIndex := 0;
+      UpdateTab;
+    end else
+      Show;
+
+  {SuchenDialog := TSuchenDialog.Create(HauptFenster);
+  try
+    SuchenDialog.ShowModal;
+  finally
+    FreeAndNil(SuchenDialog);
+  end;
+  HauptFenster.RefreshAnsicht;}
+
+end;
+
+//------------------------------------------------------------------------------
+procedure TSuchenDialog.SetzeButtons;
+//------------------------------------------------------------------------------
+function EnableErsetzen(Spalte:TColType): Boolean;
+begin
+  case Spalte of
+    spName,spVName,spLand,spMannsch,spMschName: Result := true;
+    else Result := false;
+  end;
+end;
+//..............................................................................
+begin
+  if SuchTabControl.TabIndex = 1 then
+  begin
+    if EnableErsetzen(GetSpalte) then
+    begin
+      ErsetzenLabel.Enabled := true;
+      ErsetzenCB.Enabled    := true;
+      BestaetigenCB.Enabled := true;
+      ErsetzButton.Enabled  := true;
+      AllesButton.Enabled   := true;
+      if VergleicheIdx(HauptFenster.LstFrame.TriaGrid.ItemIndex) then
+      begin
+        SuchButton.Default    := false;
+        ErsetzButton.Default  := true;
+        if (ActiveControl = SuchButton) or (ActiveControl = AllesButton) then
+          ActiveControl := ErsetzButton;
+      end else
+      begin
+        ErsetzButton.Default  := false;
+        SuchButton.Default    := true;
+        if (ActiveControl = ErsetzButton) or (ActiveControl = AllesButton) then
+          ActiveControl := SuchButton;
+      end;
+    end else
+    begin
+      ErsetzenLabel.Enabled := false;
+      ErsetzenCB.Enabled    := false;
+      BestaetigenCB.Enabled := false;
+      ErsetzButton.Enabled  := false;
+      AllesButton.Enabled   := false;
+      SuchButton.Default    := true;
+      ErsetzButton.Default  := false;
+    end;
+  end else
+  begin
+    SuchButton.Default    := true;
+    ErsetzButton.Default  := false;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+procedure TSuchenDialog.UpdateTab;
+//------------------------------------------------------------------------------
+begin
+  if SuchTabControl.TabIndex = 1 then
+  begin
+    ErsetzenLabel.Show;
+    ErsetzenCB.Show;
+    BestaetigenCB.Show;
+    ErsetzButton.Show;
+    AllesButton.Show;
+  end else
+  begin
+    ErsetzenLabel.Hide;
+    ErsetzenCB.Hide;
+    BestaetigenCB.Hide;
+    ErsetzButton.Hide;
+    AllesButton.Hide;
+  end;
+  SuchenNachCB.SetFocus;
+  SuchenNachCB.SelectAll;
+  SetzeButtons;
+end;
+
+//------------------------------------------------------------------------------
+function TSuchenDialog.ErsetzeText(S:String): String;
+//------------------------------------------------------------------------------
+begin
+  if GrossKleinCB.Checked then Result := ReplaceStr(S,SuchText,ErsatzText)
+                          else Result := ReplaceText(S,SuchText,ErsatzText);
+end;
+
+//------------------------------------------------------------------------------
+function TSuchenDialog.ErsetzeTlnText(Tln:TTlnObj): Boolean;
+//------------------------------------------------------------------------------
+var S : String;
+begin
+  Result := false;
+  HauptFenster.LstFrame.TriaGrid.StopPaint := true;
+  with Tln do
+  try
+    case GetSpalte of
+      spName:
+      begin
+        S := ErsetzeText(Name);
+        if S = '' then
+        begin
+          HauptFenster.LstFrame.TriaGrid.FocusedItem := Tln; // Tln bei AllesErsetzen zeigen
+          HauptFenster.FocusedTln := Tln;
+          HauptFenster.RefreshAnsicht;  // aktuelle Sortierung vor Meldung zeigen
+          TriaMessage(Self,'Name muss mindestens ein Zeichen enthalten.'+#13+
+                      'Vor- und Nachname sind Pflichtfelder.',
+                       mtInformation,[mbOk]);
+          Exit;
+        end;
+        if Veranstaltung.TlnColl.SucheTln(Tln,S,VName,MannschName,Wettk) <> nil then
+        begin
+          HauptFenster.LstFrame.TriaGrid.FocusedItem := Tln; // Tln bei AllesErsetzen zeigen
+          HauptFenster.FocusedTln := Tln;
+          HauptFenster.RefreshAnsicht;  // aktuelle Sortierung vor Meldung zeigen
+          TriaMessage(Self,'Teilnehmer mit gleichem Namen, Vornamen, Mannschaftsnamen und'+#13+
+                      'Wettkampf ist bereits vorhanden.',mtInformation,[mbOk]);
+          Exit;
+        end;
+        Name := S;
+      end;
+
+      spVName:
+      begin
+        S := ErsetzeText(VName);
+        if S = '' then
+        begin
+          HauptFenster.LstFrame.TriaGrid.FocusedItem := Tln; // Tln bei AllesErsetzen zeigen
+          HauptFenster.FocusedTln := Tln;
+          HauptFenster.RefreshAnsicht;  // aktuelle Sortierung vor Meldung zeigen
+          TriaMessage(Self,'Vorname muss mindestens ein Zeichen enthalten.'+#13+
+                      'Vor- und Nachname sind Pflichtfelder.',
+                       mtInformation,[mbOk]);
+          Exit;
+        end;
+        if Veranstaltung.TlnColl.SucheTln(Tln,Name,S,MannschName,Wettk) <> nil then
+        begin
+          HauptFenster.LstFrame.TriaGrid.FocusedItem := Tln; // Tln bei AllesErsetzen zeigen
+          HauptFenster.FocusedTln := Tln;
+          HauptFenster.RefreshAnsicht;  // aktuelle Sortierung vor Meldung zeigen
+          TriaMessage(Self,'Teilnehmer mit gleichem Namen, Vornamen, Mannschaftsnamen und'+#13+
+                      'Wettkampf ist bereits vorhanden.',mtInformation,[mbOk]);
+          Exit;
+        end;
+        VName := S;
+      end;
+
+      spMannsch:  // TlnAnsicht
+      begin
+        S := ErsetzeText(MannschName);
+        if Veranstaltung.TlnColl.SucheTln(Tln,Name,VName,S,Wettk) <> nil then
+        begin
+          HauptFenster.LstFrame.TriaGrid.FocusedItem := Tln; // Tln bei AllesErsetzen zeigen
+          HauptFenster.FocusedTln := Tln;
+          HauptFenster.RefreshAnsicht;  // aktuelle Sortierung vor Meldung zeigen
+          TriaMessage(Self,'Teilnehmer mit gleichem Namen, Vornamen, Mannschaftsnamen und'+#13+
+                      'Wettkampf ist bereits vorhanden.',mtInformation,[mbOk]);
+          Exit;
+        end;
+        MannschName := S
+      end;
+
+      spLand: Land := ErsetzeText(Land);
+
+      spMschName : // MschAnsicht, Name in MannschNameColl, für alle Tln in Wettk ändern
+      begin
+        S := ErsetzeText(MannschName);
+        if not Veranstaltung.TlnColl.AlleMschNamenErsetzenErlaubt(MannschName,S,Wettk) then
+        begin
+          HauptFenster.LstFrame.TriaGrid.FocusedItem := Tln; // Tln bei AllesErsetzen zeigen
+          HauptFenster.FocusedTln := Tln;
+          HauptFenster.RefreshAnsicht;  // aktuelle Sortierung vor Meldung zeigen
+          TriaMessage(Self,'Teilnehmer mit gleichem Namen, Vornamen, Mannschaftsnamen und'+#13+
+                      'Wettkampf ist bereits vorhanden.',mtInformation,[mbOk]);
+          Exit;
+        end;
+        Veranstaltung.TlnColl.AlleMschNamenErsetzen(MannschName,S,Wettk);
+      end;
+      else Exit;
+    end;
+    // geänderte Tln wird bei Änderung neu sortiert
+    Result := true;
+    Inc(ErsatzCount);
+    SetzeBearbeitet;
+    TriDatei.Modified := true;
+
+  finally
+    HauptFenster.LstFrame.TriaGrid.StopPaint := false;
+    //HauptFenster.LstFrame.TriaGrid.Refresh; // hier wird neu sortierte Liste dargestellt
+  end;
+end;
+
+//------------------------------------------------------------------------------
+function TSuchenDialog.ErsetzeTln(Tln:TTlnObj): Boolean;
+//------------------------------------------------------------------------------
+var Buttons : TMsgDlgButtons;
+begin
+  Result := false;
+  if SuchText = '' then Exit;
+  if (Tln=nil) or (HauptFenster.LstFrame.TriaGrid.GetIndex(Tln) < 0) then Exit;
+  if SuchModus = smErsetzen then Buttons := [mbOk,mbCancel]
+                            else Buttons := [mbYes,mbYesToAll,mbNo,mbCancel];
+
+  if not Bestaetigen then
+    Result := ErsetzeTlnText(Tln)
+  else
+  begin
+    HauptFenster.LstFrame.TriaGrid.FocusedItem := Tln;
+    HauptFenster.FocusedTln := Tln;
+    HauptFenster.RefreshAnsicht;  // aktuelle Sortierung vor Meldung zeigen
+    case TriaMessage(Self,'Dieses Vorkommen von "'+SuchText+'" in "'+
+                     Trim(GetColHeader(GetSpalte,HauptFenster.SortWettk))+
+                     '" ersetzen?',
+                     mtInformation,Buttons) of
+      mrYes, mrOk:
+        Result := ErsetzeTlnText(Tln);
+      mrYesToAll:
+      begin
+        Bestaetigen := false;
+        Result := ErsetzeTlnText(Tln);
+      end;
+      mrNo: Result := true; // nicht Ersetzen aber weitersuchen
+      else Abbruch := true; // Suche Abbrechen, Result false
+    end;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+function TSuchenDialog.SuchText: String;
+//------------------------------------------------------------------------------
+begin
+  Result := Trim(SuchenNachCB.Text);
+end;
+
+//------------------------------------------------------------------------------
+function TSuchenDialog.ErsatzText : String;
+//------------------------------------------------------------------------------
+begin
+  Result := Trim(ErsetzenCB.Text);
+end;
+
+//------------------------------------------------------------------------------
+function TSuchenDialog.VergleicheStr(const S1,S2: String): Boolean;
+//------------------------------------------------------------------------------
+// Auch Übereinstimmung am Anfang suchen 2011-2.4 (S2 = SubStr)
+begin
+  if GrossKleinCB.Checked then
+    if GanzCB.Checked then
+      Result := SameStr(S1,S2)
+    else // not GanzCheckB.Checked
+      if StartStrCB.Checked then
+        Result := StartsStr(S2,S1)
+      else // not StartStrCB.Checked
+        Result := ContainsStr(S1,S2)
+  else // not GrossKleinCheckB.Checked
+    if GanzCB.Checked then
+      Result := SameText(S1,S2)
+    else // not GanzCheckB.Checked
+      if StartStrCB.Checked then
+        Result := StartsText(S2,S1)
+      else // not StartStrCB.Checked
+        Result := ContainsText(S1,S2);
+end;
+
+//------------------------------------------------------------------------------
+function TSuchenDialog.VergleicheStrOhneMschIdx(S1: String; const S2:String): Boolean;
+//------------------------------------------------------------------------------
+var i : Integer;
+begin
+  Result := true; // VergleicheStr(S1,S2) wurde vorher ausgeführt und true
+  if (SuchTabControl.TabIndex=1) and (GetSpalte=spMschName) then
+  begin
+    i := Pos('~',S1);
+    if i > 0 then
+    begin
+      S1 := Copy(S1,1,i-1); // MschIndex entfernen
+      Result := VergleicheStr(S1,S2);
+    end;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+function TSuchenDialog.VergleicheIdx(Idx:Integer): Boolean;
+//------------------------------------------------------------------------------
+var Tln  : TTlnObj;
+    Wk   : TWettkObj;
+    Ak   : TAkObj;
+    Wrtg : TWertungMode;
+    Bool : Boolean;
+    S,E  : String;
+begin
+  Result := false;
+  Wk     := HauptFenster.SortWettk;
+  Ak     := HauptFenster.SortKlasse;
+  Wrtg   := HauptFenster.SortWrtg;
+  S := Suchtext;
+  if S = '' then Exit;
+  with HauptFenster.LstFrame do
+  begin
+    if (Idx < 0) or (Idx >= TriaGrid.ItemCount) then Exit;
+    //TriaGrid.ItemIndex := Idx; // Suche laufend in Liste anzeigen
+    Tln := TTlnObj(TriaGrid[Idx]);
+    E := Trim(GetColData(Wk,Wrtg,Ak,Tln,GetSpalte,Bool,lmSchirm));
+    Result := VergleicheStr(E,S);
+    MschIdx :=  Result and not VergleicheStrOhneMschIdx(E,S);
+    // function AnsiResemblesText(const AText, AOther: String): Boolean;  end;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+procedure TSuchenDialog.WeiterSuchen;
+//------------------------------------------------------------------------------
+// smSuchen: nächste Zeilemit Übereinstimmung suchen (ab Idx+1)
+// smErsetzen: aktuelle Zeile vergleichen und bei Übereinstimmung Ersetzen.
+// smAlleErsetzen: ab aktueller Zeile ganze Liste nach Übereinstimmung suchen und ersetzen
+
+var SuchIdx,
+    SuchStartIdx,
+    SuchStopIdx : Integer;
+    SuchTln : TTlnObj;
+    TlnLst  : TList;
+  i: Integer;
+
+//..............................................................................
+procedure SucheAbNextIdx(Idx:Integer);
+//..............................................................................
+// Ganze Liste durchsuchen ab Idx nach StartIdx bis SuchStart-1, true wenn gefunden
+// SuchStopIdx zeigt Ergebnis
+var i : Integer;
+//..............................................................................
+function NextIdx(Idx:Integer):Integer;
+begin
+  Inc(Idx);
+  if Idx >= HauptFenster.LstFrame.TriaGrid.ItemCount then
+    Idx := 0; // weiter am Anfang
+  Result := Idx;
+end;
+//..............................................................................
+begin
+  SuchStopIdx := -1;
+  i := Idx;
+  repeat
+    i := NextIdx(i);
+    if i = SuchStartIdx then Exit; // Suchvorgang abgeschlossen
+    if VergleicheIdx(i) then SuchStopIdx := i;
+  until SuchStopIdx >= 0;
+end;
+
+//..............................................................................
+begin // procedure WeiterSuchen
+
+  SuchStartIdx := HauptFenster.LstFrame.TriaGrid.ItemIndex;
+  SuchTln := TTlnObj(HauptFenster.LstFrame.TriaGrid.FocusedItem);
+  if (SuchStartIdx < 0) or (SuchTln = nil) then Exit;
+  SuchStopIdx := -1;
+  ErsatzCount := 0;
+  Bestaetigen := (SuchModus <> smSuchen) and BestaetigenCB.Checked;
+  Abbruch := false;
+  MschIdx := false;
+
+  case SuchModus of
+    smSuchen:
+    begin
+      SucheAbNextIdx(SuchStartIdx); // ganze Liste ohne StartIdx wird durchsucht;
+      if SuchStopIdx >= 0 then
+      begin
+        HauptFenster.LstFrame.TriaGrid.ItemIndex := SuchStopIdx;
+        HauptFenster.FocusedTln := HauptFenster.LstFrame.TriaGrid.FocusedItem;
+      end else // nicht gefunden, Index unverändert
+        if VergleicheIdx(SuchStartIdx) then // zuletzt StartIdx vergleichen
+          TriaMessage(Self,'Der Suchbegriff wurde nur in der markierten Zeile gefunden.',
+                      mtInformation,[mbOk])
+        else
+          TriaMessage(Self,'Der Suchbegriff wurde in Spalte "' +
+                      Trim(GetColHeader(GetSpalte,HauptFenster.SortWettk))+
+                      '" nicht gefunden.',
+                      mtInformation,[mbOk]);
+    end;
+    smErsetzen: // ersetzen nur in markierter Zeile
+    begin
+      if VergleicheIdx(SuchStartIdx) then // StartIdx vergleichen
+        if MschIdx then
+          TriaMessage(Self,'Der Mannschaftsindex kann nicht ersetzt werden.',
+                      mtInformation,[mbOk])
+        else
+        if ErsetzeTln(SuchTln) then
+        begin
+          HauptFenster.CommandDataUpdate;
+          BringToFront;
+          //Activate;
+          // Tln kann nach UpdateAnsicht aus Liste verschwinden oder Index sich ändern
+          with HauptFenster.LstFrame.TriaGrid do
+          begin
+            if GetIndex(SuchTln) >= 0 then
+              FocusedItem := SuchTln
+            else
+            if SuchStartIdx < ItemCount then
+              ItemIndex := SuchStartIdx
+            else
+              ItemIndex := ItemCount - 1;
+            HauptFenster.FocusedTln := FocusedItem;
+          end;
+        end else
+      else // keine Übereinstimmung am StartIndex
+        TriaMessage(Self,'Der Suchbegriff wurde in Spalte "' +
+                    Trim(GetColHeader(GetSpalte,HauptFenster.SortWettk))+
+                    '" in der markierten Zeile nicht gefunden.',
+                    mtInformation,[mbOk]);
+      // nicht automatisch weitersuchen, weil bei Änderung Sortierung geändert wird und NextIndex
+      // dann nicht mehr stimmt
+    end;
+    smAlleErsetzen:
+    begin
+      TlnLst := TList.Create;
+      try
+        SuchIdx := SuchStartIdx;
+        // zunächst alle Tln unverändert lassen, damit Sortierung gleich bleibt
+        repeat
+          if VergleicheIdx(SuchIdx) then
+          begin
+            if MschIdx then
+            begin
+              HauptFenster.LstFrame.TriaGrid.ItemIndex := SuchIdx;
+              HauptFenster.FocusedTln := HauptFenster.LstFrame.TriaGrid.FocusedItem;
+              Break;
+            end;
+            SuchStopIdx := SuchIdx;
+            TlnLst.Add(TTlnObj(HauptFenster.LstFrame.TriaGrid[SuchIdx]));
+          end;
+          SucheAbNextIdx(SuchIdx);  // nächste Übereinstimmung (SuchStop) suchen
+          SuchIdx := SuchStopIdx;   // End wenn nichts gefunden bis SuchStartIdx
+        until SuchIdx < 0;
+        if (TlnLst.Count > 0) and not MschIdx then  // Änderungen durchführen, Tln werden neu sortiert
+          for i:=0 to TlnLst.Count-1 do
+          begin
+            if not ErsetzeTln(TTlnObj(TlnLst[i])) then Break;
+            SuchTln := TTlnObj(TlnLst[i]); // letzter Tln festhalten
+          end;
+        if ErsatzCount > 0 then
+        begin
+          HauptFenster.CommandDataUpdate;
+          // hier wird neu sortierte Liste dargestellt
+          // Tln kann nach UpdateAnsicht aus Liste verschwinden oder Index sich ändern
+          with HauptFenster.LstFrame.TriaGrid do
+          begin
+            if GetIndex(SuchTln) >= 0 then
+              FocusedItem := SuchTln
+            else
+            if SuchStartIdx < ItemCount then
+              ItemIndex := SuchStartIdx
+            else
+              ItemIndex := ItemCount - 1;
+            HauptFenster.FocusedTln := FocusedItem;
+          end;
+          TriaMessage(Self,'Der Suchbegriff wurde '+IntToStr(ErsatzCount)+' mal ersetzt.',
+                      mtInformation,[mbOk]);
+        end else
+          if MschIdx then
+            TriaMessage(Self,'Der Mannschaftsindex kann nicht ersetzt werden.',
+                         mtInformation,[mbOk])
+          else
+            TriaMessage(Self,'Der Suchbegriff wurde in Spalte "' +
+                        Trim(GetColHeader(GetSpalte,HauptFenster.SortWettk))+
+                        '" nicht gefunden.',
+                        mtInformation,[mbOk]);
+      finally
+        FreeAndNil(TlnLst);
+      end;
+    end;
+  end;
+  SetzeButtons;
+end;
+
+{------------------------------------------------------------------------------}
+function TSuchenDialog.GetSpalte: TColType;
+{------------------------------------------------------------------------------}
+var Idx  : Integer;
+begin
+  Idx := SuchenInCB.ItemIndex;
+  if NameIndex >= 0 then
+    if Idx = NameIndex then Result := spName
+    else if Idx = NameIndex+1 then Result := spVName
+    else if Idx < NameIndex then
+      Result := GetColType(HauptFenster.ListType,HauptFenster.SortWettk,Idx,lmSchirm)
+    else Result := GetColType(HauptFenster.ListType,HauptFenster.SortWettk,Idx-1,lmSchirm)
+  else Result := GetColType(HauptFenster.ListType,HauptFenster.SortWettk,Idx,lmSchirm);
+end;
+
+{------------------------------------------------------------------------------}
+procedure TSuchenDialog.DatenUebernehmen;
+{------------------------------------------------------------------------------}
+var i : Integer;
+    S : String;
+begin
+  {SuchGrossKleinBuf  := GrossKleinCB.Checked;
+  SuchGanzBuf        := GanzCB.Checked;
+  SuchStartStrBuf    := StartStrCB.Checked;
+  SuchBestaetigenBuf := BestaetigenCB.Checked; }
+  with SuchenInCB do
+    if ItemIndex >= 0 then
+      SuchSpalteBuf := Items[ItemIndex]
+    else
+      SuchSpalteBuf := 'Name';
+
+  with SuchenNachCB do
+  begin
+    S := SuchText; // SuchText wird '' beim delete
+    for i:=0 to Items.Count-1 do
+      if (S<>'') and (S = Items[i]) then
+      begin
+        Items.Delete(i); // Item muss an 1. Position
+        Break;
+      end;
+    if Items.Count >= cnSuchListeMax then Items.Delete(Items.Count-1);
+    Items.Insert(0,S);
+    ItemIndex := 0;
+   { SuchListe.Clear;
+    for i:=0 to Items.Count-1 do
+      SuchListe.Add(Items[i]); }
+  end;
+  if SuchTabControl.TabIndex = 1 then // Ersetzen
+  begin
+    with ErsetzenCB do
+    begin
+      S := ErsatzText;
+      for i:=0 to Items.Count-1 do
+        if (S<>'') and (S = Items[i]) then
+        begin
+          Items.Delete(i);
+          Break;
+        end;
+      if Items.Count >= cnSuchListeMax then Items.Delete(Items.Count-1);
+      Items.Insert(0,S);
+      ItemIndex := 0;
+     { ErsatzListe.Clear;
+      for i:=0 to Items.Count-1 do
+        ErsatzListe.Add(Items[i]);}
+    end;
+  end;
+  Bestaetigen := (SuchModus = smErsetzen) and BestaetigenCB.Checked;
+end;
+
+{------------------------------------------------------------------------------}
+function TSuchenDialog.EingabeOK: Boolean;
+{------------------------------------------------------------------------------}
+begin
+  Result := false;
+  if HauptFenster.LstFrame.TriaGrid.ItemCount = 0 then
+  begin
+    TriaMessage(Self,'Die Liste ist leer.',mtInformation,[mbOk]);
+    Exit;
+  end;
+  if SuchText = '' then
+  begin
+    TriaMessage(Self,'Der Suchbegriff fehlt.',mtInformation,[mbOk]);
+    SuchenNachCB.SetFocus;
+    Exit;
+  end;
+  // ErsatzText darf leer sein
+
+  if ((SuchModus=smErsetzen)or(SuchModus=smAlleErsetzen)) and
+     ((GetSpalte = spMschName) or (GetSpalte = spMannsch)) then
+  begin
+    if ErsetzenCB.Enabled and ContainsStr(ErsetzenCB.Text,'~') then
+    begin
+      TriaMessage(Self,'Das Zeichen "~" ist im Mannschaftsnamen nicht erlaubt',mtInformation,[mbOk]);
+      ErsetzenCB.SetFocus;
+      Exit;
+    end;
+    if GetSpalte = spMschName then // Mannschaftsname wird für alle Mannschaftsteilnehmer geändert
+      if ContainsStr(SuchenNachCB.Text,'~') then
+      begin
+        TriaMessage(Self,'Das Zeichen "~" (Mannschaftsindex) kann nicht ersetzt werden',mtInformation,[mbOk]);
+        SuchenNachCB.SetFocus;
+        Exit;
+      end;
+  end;
+  Result := true;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSuchenDialog.FormShow(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+var i   : Integer;
+    Col : TColType;
+begin
+  Bestaetigen := false;
+  NameIndex   := -1;
+  {GrossKleinCB.Checked  := SuchGrossKleinBuf;
+  GanzCB.Checked        := SuchGanzBuf;
+  StartStrCB.Checked    := SuchStartStrBuf;
+  BestaetigenCB.Checked := SuchBestaetigenBuf;
+  SuchenNachCB.Items := SuchListe;
+  if SuchenNachCB.Items.Count > 0 then
+    SuchenNachCB.ItemIndex := 0;
+  ErsetzenCB.Items := ErsatzListe;
+  if ErsetzenCB.Items.Count > 0 then
+    ErsetzenCB.ItemIndex := 0; }
+
+  SuchenInCB.Items.Clear;
+  for i:=0 to HauptFenster.LstFrame.TriaGrid.ColCount-1 do
+  begin
+    Col := GetColType(HauptFenster.ListType,HauptFenster.SortWettk,i,lmSchirm);
+    if Col=spNameVName then
+    begin
+      SuchenInCB.Items.Add(GetColHeader(spName,HauptFenster.SortWettk));
+      NameIndex := i;
+      SuchenInCB.Items.Add(GetColHeader(spVName,HauptFenster.SortWettk));
+    end else
+      SuchenInCB.Items.Add(GetColHeader(Col,HauptFenster.SortWettk));
+  end;
+  i := SuchenInCB.Items.IndexOf(SuchSpalteBuf);
+  if i >= 0 then
+    SuchenInCB.ItemIndex := i
+  else
+  if NameIndex >= 0 then
+    SuchenInCB.ItemIndex := NameIndex
+  else SuchenInCB.ItemIndex := 0; // Name immer an 1. Stelle
+
+  SuchenNachCB.Taborder := 0;
+  SuchenInCB.Taborder   := 1;
+  ErsetzenCB.Taborder   := 2;
+  OptionenGB.Taborder   := 3;
+  SetzeFonts(Font);
+
+  if SuchErsetzModus = seErsetzen then SuchTabControl.TabIndex := 1
+                                  else SuchTabControl.TabIndex := 0;
+  UpdateTab;
+  BringToFront;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSuchenDialog.SuchTabControlChange(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  UpdateTab;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSuchenDialog.SuchenNachLabelClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if SuchenNachCB.CanFocus then SuchenNachCB.SetFocus;
+  SuchenNachCB.SelectAll; // Cursor vollständig dargestellt
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSuchenDialog.SuchChange(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if Sender=GanzCB then
+    if GanzCB.Checked then
+    begin
+      StartStrCB.Checked := true;
+      StartStrCB.Enabled := false;
+    end else
+    begin
+      StartStrCB.Checked := true;
+      StartStrCB.Enabled := true;
+    end;
+  SetzeButtons;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSuchenDialog.SuchenInLabelClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if SuchenInCB.CanFocus then SuchenInCB.SetFocus;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSuchenDialog.ErsetzenLabelClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if ErsetzenCB.CanFocus then ErsetzenCB.SetFocus;
+  ErsetzenCB.SelectAll; // Cursor vollständig dargestellt
+end;
+
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+procedure TSuchenDialog.SuchButtonClick(Sender: TObject);
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+begin
+  SuchModus := smSuchen;
+  if EingabeOK then
+  begin
+    WeiterSuchen;
+    DatenUebernehmen;
+  end;
+  ErsetzButton.Refresh;
+  SuchButton.Refresh;
+  Refresh;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSuchenDialog.ErsetzButtonClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  SuchModus := smErsetzen;
+  if EingabeOK then
+  begin
+    WeiterSuchen;
+    DatenUebernehmen;
+  end;
+  ErsetzButton.Refresh;
+  SuchButton.Refresh;
+  Refresh;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSuchenDialog.AllesButtonClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  SuchModus := smAlleErsetzen;
+  if EingabeOK then
+  begin
+    DatenUebernehmen;
+    WeiterSuchen;
+  end;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSuchenDialog.CancelButtonClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  Hide;
+end;
+
+
+
+end.
+

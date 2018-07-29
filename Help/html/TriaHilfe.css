@@ -1,0 +1,19 @@
+/* @charset "iso-8859-1"; */
+/* Datei: TriaHilfe.css */
+
+body,h1,h2,h3,h4,td,th,p,ul,ol,li,b,div { font-family:Arial,Helvetica,sans-serif; }
+h1 { font-size:22px; color:#0D3B80;}
+h2 { font-size:18px; color::#0D3B80;}
+h3 { font-size:16px; color::#0D3B80;}
+h4 { font-size:14px; color::#0D3B80;}
+h5 { font-size:13.4px; color::#0D3B80;}
+td,th,p,ul,ol,li,b,div { font-size:13.4px; }
+small,.small { font-size:11px; color:#0D3B80 }
+
+li { margin-top:3px }
+
+a { text-decoration:underline; font-weight:bold; } /* font-size variabel */
+a:link { color:#0000CC; }
+a:visited { color:#0000CC; }
+a:active { color:#CC0000; }
+a:hover { color:#CC0000; }

@@ -1,0 +1,34 @@
+<html>
+<head>
+<Title>Tria-Import-Serie</Title>
+<link rel="stylesheet" type="text/css" href="TriaHilfe.css">
+<meta name="author" content="Gerhard Selten">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+<body bgcolor="#FFFFFF" text="#000000">
+<Object type="application/x-oleobject" classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e">
+	<param name="Keyword" value="Import in eine Serienveranstaltung">
+</OBJECT>
+<h1>Import in Serienveranstaltung</h1>
+<p>
+Bei Serienveranstaltungen wird die Importfunktion hauptsächlich dazu verwendet, Teilnehmerdaten von verschiedenen Austragungsorten in einer Datei zusammenzuführen. Dabei muss darauf geachtet werden, dass die Daten den richtigen Teilnehmern zugeordnet werden, und dass ein Teilnehmer nicht mehrfach (mit unterschiedlichen Meldedaten) in der Datei eingetragen wird. Insbesondere wenn die Teilnehmer für die verschiedenen Austragungsorte unabhängig angemeldet werden, sind unterschiedliche Schreibweisen von Namen und Mannschaften kaum zu vermeiden.</p> 
+<p>
+Bei Serienveranstaltungen werden deshalb beim Importieren von Teilnehmern alle wesentlichen Meldedaten (Name, Vorname, Jahrgang, Geschlecht, Mannschaftsname und Vereinsmelder) aus Quell- und Zieldatei verglichen. Nur bei vollständiger Übereinstimmung werden die Import-Daten für den Ziel-Teilnehmer automatisch übernommen, andernfalls wird der bereits vorher beschriebene Importdialog eingeblendet. In der Teilnehmerliste wird der alphabetisch nächste Teilnehmer markiert, und die Unterschiede zu dem Import-Teilnehmer durch die rote Hintergrundfarbe im Importdialog hervorgehoben.</p>
+<p>
+Die folgende Abbildung zeigt ein vollständiges Programmfenster mit dem erweiterten Importdialog und der Teilnehmerliste. Sie zeigt ein typisches Beispiel für die Synchronisierung der Daten bei einer Cup-Serienveranstaltung.<br>
+Es werden hier die Daten von der Datei "Cup-Beispiel-1.tri" in die Datei "Cup-Beispiel-2.tri" importiert. Beide Dateien enthalten Daten der gleichen Serien-Veranstaltung "LBS Nachwuchscup 2003", jedoch für unterschiedliche Austragungsorte. In der Datei "Cup-Beispiel-1.tri" sind die Ergebnisse von dem Ort "Dettingen/Erms" enthalten, nicht aber in der Datei "Cup-Beispiel-2.tri".<br>
+Das Bild zeigt die Übernahme dieser Ergebnisse für Teilnehmer des Wettkampfes "Schüler A".</p><br>
+<p>
+<img src="img/imp3.gif" alt="Import Beispiel" width="852" height="533" border="0"></p><br>
+<p>
+In dieser Momentaufnahme wurden die Daten für den Teilnehmer "Tomas Mahle" bereits importiert (zu erkennen am Inhalt der Spalten Snr, Startzeit und Status in der Teilnehmerliste). In der Statuszeile wird angezeigt, dass bereits 37 Teilnehmer importiert wurden. Am Laufbalken in der Statusleiste ist zudem zu erkennen, dass diese Zahl etwa der Hälfte der Import-Teilnehmer entspricht.</p>
+<p>
+Der nächste Import-Teilnehmer "Michael Maier" wurde in der Zieldatei nicht gefunden. In diesem Fall ist dieser aber offensichtlich identisch mit dem in der Liste markierten Teilnehmer, der nur mit unterschiedlichem Namen, Jahrgang und Mannschaftsnamen in der Zieldatei eingetragen wurde. Hier ist also der Importmodus "Gewählten Teilnehmer ersetzen" zu wählen, wobei die richtigen Daten im Importdialog eingetragen werden müssen, bevor der Import fortgesetzt werden kann.</p>
+<br>
+<p style="font-weight:bold">Siehe auch:</p>
+<table width="100%" border="0" cellpadding="0" cellspacing="0">
+  <tr><td height="25">&nbsp;&nbsp;&nbsp;<img src="img/next_pas.gif" alt="" height="10" width="15" border="0"><a href="Hlp1210.htm">Import aus Tria-Datei</a></td></tr>
+  <tr><td height="25">&nbsp;&nbsp;&nbsp;<img src="img/next_pas.gif" alt="" height="10" width="15" border="0"><a href="Hlp1200.htm">Daten-Import Übersicht</a></td></tr>
+</table>
+</body>
+</html>

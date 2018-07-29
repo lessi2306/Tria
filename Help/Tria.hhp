@@ -1,0 +1,79 @@
+[OPTIONS]
+Auto Index=Yes
+Compatibility=1.1 or later
+Compiled file=..\Object\Tria.chm
+Contents file=Tria.hhc
+Default Window=TriaHilfe
+Default topic=html\Hlp0100.htm
+Display compile progress=Yes
+Full-text search=Yes
+Index file=Tria.hhk
+Language=0x407 Deutsch (Deutschland)
+Title=TriaHilfe
+
+[WINDOWS]
+TriaHilfe="Tria - Hilfe","Tria.hhc","Tria.hhk","html\Hlp0100.htm","html\Hlp0100.htm",,,,,0x2520,,0x4e,,,,,,,,0
+
+
+[FILES]
+html\Hlp0100.htm
+html\Hlp0300.htm
+html\Hlp0500.htm
+html\Hlp0510.htm
+html\Hlp0520.htm
+html\Hlp0530.htm
+html\Hlp0540.htm
+html\Hlp0600.htm
+html\Hlp0610.htm
+html\Hlp0620.htm
+html\Hlp0700.htm
+html\Hlp0701.htm
+html\Hlp0710.htm
+html\Hlp0720.htm
+html\Hlp0730.htm
+html\Hlp0740.htm
+html\Hlp0750.htm
+html\Hlp0800.htm
+html\Hlp0810.htm
+html\Hlp0820.htm
+html\Hlp0900.htm
+html\Hlp1000.htm
+html\Hlp1010.htm
+html\Hlp1020.htm
+html\Hlp1030.htm
+html\Hlp1100.htm
+html\Hlp1200.htm
+html\Hlp1210.htm
+html\Hlp1211.htm
+html\Hlp1212.htm
+html\Hlp1220.htm
+html\Hlp1230.htm
+html\Hlp1300.htm
+html\Hlp0760.htm
+html\Hlp1015.htm
+html\Hlp1400.htm
+html\Hlp0715.htm
+html\Hlp0550.htm
+html\Hlp0560.htm
+html\Hlp0630.htm
+html\Hlp0770.htm
+html\Hlp0830.htm
+html\Hlp1500.htm
+html\Hlp1600.htm
+html\Hlp0712.htm
+html\Hlp0200.htm
+html\Hlp1019.htm
+html\Hlp1700.htm
+
+[ALIAS]
+#include Tria.ali
+
+[MAP]
+#include TriaHlpFile.h
+
+[TEXT POPUPS]
+Tria.txt
+TriaHlpText.h
+
+[INFOTYPES]
+

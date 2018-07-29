@@ -1,0 +1,598 @@
+unit SerienDr;
+
+interface
+
+uses
+  Windows,SysUtils, Dialogs, Math,
+  AllgComp,AllgObj,AllgConst,AllgFunc,AkObj,AusgDlg;
+
+function SerDateiErstellen: Boolean;
+
+
+implementation
+
+uses TriaMain,VeranObj,ListFmt,DateiDlg,WettkObj,MannsObj;
+
+var
+  SerDrDateiName   : String;
+  SerDrDatei       : Text;
+  SerDrReportType  : TListType;
+  SerDrSpaltenZahl : Integer;
+  SerDrWkNr        : Integer;
+
+function SerienDruckTlnEtiketten: Boolean;         forward;
+function SerienDruckSMldEtiketten: Boolean;        forward;
+function SerienDruckTlnTagesWertung: Boolean;      forward;
+function SerienDruckTlnSerienWertung: Boolean;     forward;
+function SerienDruckMschWertungKompakt(RepMschGr:Integer): Boolean;   forward;
+function SerienDruckMschWertungDetail: Boolean;    forward;
+function SerienDruckMschSerienWertung: Boolean;    forward;
+function SchreibFehler: Boolean;                   forward;
+
+
+(*============================================================================*)
+function SerDateiErstellen: Boolean;
+(*============================================================================*)
+var BarMax,WkNr,
+    i,j,MschGrMax : Integer;
+    RepWk   : TReportWkObj;
+    Titel : String;
+begin
+  Result := false;
+    case ReportMode of
+      rmUrkunden  : Titel := 'Seriendruckdatei für Urkunden erstellen';
+      rmEtiketten : Titel := 'Seriendruckdatei für Etiketten erstellen';
+    end;
+  SerDrDateiName := SysUtils.ChangeFileExt(TriDatei.Path,'.txt');
+  if SaveFileDialog('txt',
+                    'Textdatei (*.txt)|*.txt|Alle Dateien (*.*)|*.*',
+                    SysUtils.ExtractFileDir(TriDatei.Path),
+                    Titel,
+                    SerDrDateiName) then
+  begin
+    case HauptFenster.Ansicht of
+      anAnmEinzel       : BarMax := Veranstaltung.TlnColl.SortCount;
+      anAnmSammel       : BarMax := Veranstaltung.SMldColl.SortCount;
+      anTlnErg,
+      anTlnErgSerie     : BarMax := Veranstaltung.TlnColl.Count * 2;
+      anMschErgDetail,
+      anMschErgKompakt,
+      anMschErgSerie    : BarMax := Veranstaltung.MannschColl.Count * 2;
+      else BarMax:=0;
+    end;
+    if SysUtils.FileExists(SerDrDateiName) and not SysUtils.DeleteFile(SerDrDateiName) then
+    begin
+      TriaMessage('Vorhandene Datei  "'+SysUtils.ExtractFileName(SerDrDateiName)+
+                  '"  kann nicht gelöscht werden.',
+                   mtInformation,[mbOk]);
+      Exit;
+    end;
+
+    HauptFenster.ProgressBarInit('Textdatei für Seriendruck wird erstellt',BarMax);
+
+    try
+      {$I-}
+      AssignFile(SerDrDatei,SerDrDateiName);
+      if SchreibFehler then Exit;
+
+      Rewrite(SerDrDatei);
+      if SchreibFehler then Exit;
+
+      if ReportMode = rmEtiketten then // Tln-/SMldSortColl benutzt
+        case HauptFenster.Ansicht of
+          anAnmEinzel : if not SerienDruckTlnEtiketten then Exit;
+          anAnmSammel : if not SerienDruckSMldEtiketten then Exit;
+        end
+      else
+      begin // ReportListe benutzt
+        for WkNr:=0 to ReportWkListe.Count-1 do // Anfang bei WkNr=0
+        begin
+          RepWk := ReportWkListe[WkNr];
+          SerDrWkNr:= WkNr+1; // Anfang bei SerDrWkNr=1
+          // BarPos bleibt erhalten
+          if WkNr>0 then HauptFenster.ProgressBarMaxUpdate(BarMax);
+          if HauptFenster.TlnAnsicht then Veranstaltung.TlnColl.ReportSortieren(RepWk)
+                                     else Veranstaltung.MannschColl.ReportSortieren(RepWk);
+          // BarPos bleibt erhalten (50%), Report immer von TlnColl erstellt
+          HauptFenster.ProgressBarMaxUpdate(Veranstaltung.TlnColl.ReportCount*ReportWkListe.Count);
+
+          MschGrMax := cnMschGrMin;
+          for i:=0 to ReportWkListe.Count-1 do
+            for j:=0 to ReportAkListe.Count-1 do
+              MschGrMax := Max(MschGrMax,TReportWkObj(ReportWkListe[i]).Wettk.MschGroesse[TAkObj(ReportAkListe[j]).Sex]);
+
+          SerDrReportType := GetListType(lmSchirm,RepWk.Wettk,RepWk.Wrtg,MschGrMax);
+        {case ExportReportType of
+          ltMldLstTln,ltMldLstTlnSml,ltMldLstTlnSer,ltMldLstTlnSerSml,
+          ltMldLstTlnLnd,ltMldLstTlnSmlLnd,ltMldLstTlnSerLnd,ltMldLstTlnSerSmlLnd:
+            ExportReportType := ltMldLstTlnExp;
+          ltFehler: Exit;
+        end;}
+          if SerDrReportType = ltFehler then Exit;
+
+          SerDrSpaltenZahl := 0;
+          while GetColType(SerDrReportType,RepWk.Wettk,SerDRSpaltenZahl,lmSchirm) <> spLeer do
+            SerDrSpaltenZahl := SerDrSpaltenZahl +1;
+
+          // Statusbar steht auf halbe Position
+          case HauptFenster.Ansicht of
+            anAnmEinzel,
+            anAnmSammel      : ; // oben behandelt
+            anTlnErg         : if not SerienDruckTlnTagesWertung then Exit;
+            anTlnErgSerie    : if not SerienDruckTlnSerienWertung then Exit;
+            anMschErgDetail  : if not SeriendruckMschWertungDetail then Exit;
+            anMschErgKompakt : if not SeriendruckMschWertungKompakt(MschGrMax) then Exit;
+            anMschErgSerie   : if not SeriendruckMschSerienWertung then Exit;
+            else
+            begin
+              TriaMessage('Für diese Ansicht kann keine Textdatei für Seriendruck '+
+                          'erstellt werden.',
+                           mtInformation,[mbOk]);
+              Exit;
+            end;
+          end;
+        end;
+      end;
+
+      Result := true;
+
+    finally
+      CloseFile(SerDrDatei);
+      IoResult;    (*Löschen Fehlerspeicher*)
+      {$I+}
+      HauptFenster.StatusBarClear;
+    end;
+  end;
+end;
+
+(*============================================================================*)
+function SerienDruckTlnEtiketten: Boolean;
+(*============================================================================*)
+var i    : Integer;
+    Text : String;
+begin
+  Result := false;
+  // 1. Zeile mit Feldnamen
+  Text := 'Anrede;Vorname;Name;Jahrgang;Geschlecht;Ak;AkKuerzel;Strasse;Hausnr;PLZ;Ort;Land;'+
+          Veranstaltung.MschSpalteName(WettkAlleDummy)+';Snr;Wettkampf;Kommentar;'+
+          'E-Mail;Startgeld';
+  WriteLn(SerDrDatei,Text);
+  if SchreibFehler then Exit;
+  // Rest der Zeilen mit Daten
+  for i:=0 to Veranstaltung.TlnColl.SortCount-1 do
+    with Veranstaltung.TlnColl.SortItems[i] do
+    begin
+      case Sex of
+        cnMaennlich : Text := 'Herr;';
+        cnWeiblich  : Text := 'Frau;';
+        else Text := ';';
+      end;
+      Text := Text+VName+';'+Name+';';
+      if Jg>0 then Text := Text + IntToStr(Jg)+';'
+              else Text := Text + '-;';
+      case Sex of
+        cnMaennlich : Text := Text + 'M;';
+        cnWeiblich  : Text := Text + 'W;';
+        cnMixed     : Text := Text + 'X;';
+        else          Text := Text + '-;';
+      end;
+      Text := Text + WertungsKlasse(kwAltKl,tmTln).Name+';';
+      Text := Text + WertungsKlasse(kwAltKl,tmTln).Kuerzel+';';
+      Text := Text+Strasse+';'+HausNr+';'+PLZ+';'+Ort+';'+
+              Land+';'+MannschName+';'+IntToStr(Snr)+';'+Wettk.Name+';'+Komment+';'+
+              EMail+';'+EuroStr(Startgeld);
+
+      WriteLn(SerDrDatei,Text);
+      if SchreibFehler then Exit;
+      HauptFenster.ProgressBarStep(1);
+    end;
+  Result := true;
+end;
+
+(*============================================================================*)
+function SerienDruckSMldEtiketten: Boolean;
+(*============================================================================*)
+var i    : Integer;
+    Text : String;
+begin
+  Result := false;
+  // 1. Zeile mit Feldnamen
+  Text := 'Vorname;Name;Strasse;Hausnr;PLZ;Ort;Land;Mannschaft;E-Mail';
+  WriteLn(SerDrDatei,Text);
+  if SchreibFehler then Exit;
+  // Rest der Zeilen mit Daten
+  for i:=0 to Veranstaltung.SMldColl.SortCount-1 do
+    with Veranstaltung.SMldColl.SortItems[i] do
+    begin
+      Text := VName+';'+Name+';'+Strasse+';'+HausNr+';'+PLZ+';'+Ort+';'+MannschName^+';'+EMail;
+      WriteLn(SerDrDatei,Text);
+      if SchreibFehler then Exit;
+      HauptFenster.ProgressBarStep(1);
+    end;
+  Result := true;
+end;
+
+(*============================================================================*)
+function SerienDruckTlnTagesWertung: Boolean;
+(*============================================================================*)
+var i    : Integer;
+    Text : String;
+    AbsMax,TlnMax : Integer;
+    AbsCnt : TWkAbschnitt;
+    RndRennen : Boolean;
+begin
+  Result := false;
+  AbsMax := 0;
+  TlnMax := 0;
+  RndRennen := false;
+  for i:=0 to ReportWkListe.Count-1 do
+    if TReportWkObj(ReportWkListe[i]).Wettk.WettkArt = waTlnStaffel then
+    begin
+      AbsMax := Max(AbsMax,TReportWkObj(ReportWkListe[i]).Wettk.AbschnZahl);
+      TlnMax := Max(TlnMax,TReportWkObj(ReportWkListe[i]).Wettk.AbschnZahl);
+    end else
+    begin
+      AbsMax := Max(AbsMax,TReportWkObj(ReportWkListe[i]).Wettk.AbschnZahl);
+      TlnMax := Max(TlnMax,0);
+      if TReportWkObj(ReportWkListe[i]).Wettk.WettkArt = waRndRennen then
+        RndRennen := true;
+    end;
+
+  // nur 1. Zeile mit Feldnamen, auch bei mehreren Wettkämfen
+  if SerDrWkNr=1 then
+  begin
+    Text := 'Veranstaltung;';
+    if Veranstaltung.Serie then Text := Text + 'Ort;';
+    Text := Text + 'Wettkampf;Datum;WertgKlasse;';
+    // keine Punkte in Feldnamen, sonst wird Trennzeichen ';'
+    // von Word nicht automatisch erkannt
+    Text := Text + 'WertgRng;';
+    Text := Text + 'Snr;';
+    Text := Text + 'Name;Vorname;Nachname;';
+    if ReportWkListe.Count > 0 then
+      Text := Text + Veranstaltung.MschSpalteName(TReportWkObj(ReportWkListe[0]).Wettk)+';'
+    else
+      Text := Text + Veranstaltung.MschSpalteName(WettkAlleDummy)+';';
+    Text := Text + 'Land;';
+    Text := Text + 'Jg;';
+    Text := Text + 'Geschlecht;Ak;AkKuerzel;';
+    Text := Text + 'GesRng;SexRng;AkRng;SondKlRng;';
+    if AbsMax > 1 then
+      for AbsCnt:=wkAbs1 to wkAbs8 do
+        if AbsMax >= Integer(AbsCnt) then
+          Text := Text + 'Abs'+IntToStr(Integer(AbsCnt))+
+                         'Zeit;Abs'+IntToStr(Integer(AbsCnt))+'Einh;Abs'+IntToStr(Integer(AbsCnt))+'Rng;';
+    if RndRennen then Text := Text + 'Runden;';
+    Text := Text + 'Endzeit;Einheit;Nettozeit;Strafzeit;Gutschrift;';
+    if AbsMax > 1 then
+      for AbsCnt:=wkAbs1 to wkAbs8 do
+        if TlnMax >= Integer(AbsCnt) then
+          Text := Text + 'Teilnehmer'+IntToStr(Integer(AbsCnt))+';';
+    Text := Text + 'Kommentar;';
+    Text := Text + 'Strasse;Hausnr;PLZ;Ort;E-Mail;Startgeld'; // kein ';' als Abschluss
+    WriteLn(SerDrDatei,Text);
+    if SchreibFehler then Exit;
+  end;
+
+  for i:=0 to Veranstaltung.TlnColl.ReportCount-1 do
+    with Veranstaltung.TlnColl.ReportItems[i] do
+    begin
+      if TlnPtr.UrkDruck then
+      begin
+        Text := Veranstaltung.Name+';';
+        if Veranstaltung.Serie then Text := Text+Veranstaltung.OrtName+';';
+        Text := Text+GetTitel2(ReportWk,ReportWrtg)+';'+ReportWk.Datum+';'+ReportAk.Name+';';
+        Text := Text + TlnPtr.TagesEndRngStr(wkAbs0,ReportAk.Wertung,HauptFenster.SortWrtg)+';';
+        Text := Text + IntToStr(TlnPtr.Snr)+';';
+        Text := Text + TlnPtr.VNameName+';'+TlnPtr.VName+';'+TlnPtr.Name+';';
+        Text := Text + TlnPtr.MannschName+';';
+        Text := Text + TlnPtr.Land+';';
+        if TlnPtr.Jg>0 then Text := Text + IntToStr(TlnPtr.Jg)+';'
+                       else Text := Text + '-;';
+        case TlnPtr.Sex of
+          cnMaennlich : Text := Text + 'M;';
+          cnWeiblich  : Text := Text + 'W;';
+          cnMixed     : Text := Text + 'X;';
+          else          Text := Text + '-;';
+        end;
+        Text := Text + TlnPtr.WertungsKlasse(kwAltKl,tmTln).Name+';'+
+                       TlnPtr.WertungsKlasse(kwAltKl,tmTln).Kuerzel+';'+
+                       TlnPtr.TagesZwRngStr(wkAbs0,kwAlle,HauptFenster.SortWrtg)+';'+
+                       TlnPtr.TagesZwRngStr(wkAbs0,kwSex,HauptFenster.SortWrtg)+';'+
+                       TlnPtr.TagesZwRngStr(wkAbs0,kwAltKl,HauptFenster.SortWrtg)+';'+
+                       TlnPtr.TagesZwRngStr(wkAbs0,kwSondKl,HauptFenster.SortWrtg)+';';
+        if AbsMax > 1 then
+          for AbsCnt:=wkAbs1 to wkAbs8 do
+            if AbsMax >= Integer(AbsCnt) then
+              Text := Text + EffZeitStr(TlnPtr.AbsZeit(AbsCnt))+';' + ZeitEinhStr(TlnPtr.AbsZeit(AbsCnt))+';'+
+                              TlnPtr.TagesZwRngStr(AbsCnt,ReportAk.Wertung,HauptFenster.SortWrtg)+';';
+        if RndRennen then Text := Text + IntToStr(TlnPtr.RundenZahl(wkAbs1))+';';
+        Text := Text + EffZeitStr(TlnPtr.EndZeit)+';' + ZeitEinhStr(TlnPtr.EndZeit)+';';
+        Text := Text + EffZeitStr(TlnPtr.NettoEndZeit)+';'+
+                       EffZeitStr(Max(0,TlnPtr.StrafZeit))+';'+
+                       EffZeitStr(Max(0,TlnPtr.Gutschrift))+';';
+        if AbsMax > 1 then
+          for AbsCnt:=wkAbs1 to wkAbs8 do
+            if TlnMax >= Integer(AbsCnt) then
+              Text := Text + TlnPtr.StaffelVNameName(AbsCnt)+';';
+        Text := Text + TlnPtr.Komment+';';
+        Text := Text + TlnPtr.Strasse+';'+TlnPtr.Hausnr+';'+TlnPtr.PLZ+';'+TlnPtr.Ort+';'+
+                       TlnPtr.EMail+';'+EuroStr(TlnPtr.Startgeld);
+        WriteLn(SerDrDatei,Text);
+        if SchreibFehler then Exit;
+      end;
+      HauptFenster.ProgressBarStep(1);
+    end;
+  Result := true;
+end;
+
+(*============================================================================*)
+function SerienDruckTlnSerienWertung: Boolean;
+(*============================================================================*)
+var i    : Integer;
+    Text     : String;
+begin
+  Result := false;
+  // 1. Zeile mit Feldnamen
+  if SerDrWkNr=1 then
+  begin
+    Text := 'Veranstaltung;Ort;Wettkampf;Datum;WertgKlasse;';
+    Text := Text + 'WertgRng;';
+    Text := Text + 'Name;Vorname;Nachname;';
+    Text := Text + Veranstaltung.MschSpalteName(WettkAlleDummy)+';';
+    Text := Text + 'Jg;';
+    Text := Text + 'Geschlecht;Ak;AkKuerzel;';
+    Text := Text + 'GesRng;SexRng;AkRng;SondKlRng;';
+    Text := Text + 'Punkte;';
+    Text := Text + 'Strasse;Hausnr;PLZ;Ort;E-Mail'; // kein ';' als Abschluss
+    WriteLn(SerDrDatei,Text);
+    if SchreibFehler then Exit;
+  end;
+
+  for i:=0 to Veranstaltung.TlnColl.ReportCount-1 do
+    with Veranstaltung.TlnColl.ReportItems[i] do
+    begin
+      if TlnPtr.UrkDruck then
+      begin
+        Text := Veranstaltung.Name+';'+Veranstaltung.OrtName+';'+
+                GetTitel2(ReportWk,ReportWrtg)+';'+ReportWk.Datum+';'+ReportAk.Name+';';
+        Text := Text + TlnPtr.GetSerieRangStr(ReportAk.Wertung)+';';
+        Text := Text + TlnPtr.VNameName+';'+TlnPtr.VName+';'+TlnPtr.Name+';';
+        Text := Text + TlnPtr.MannschName+';';
+        if TlnPtr.Jg>0 then Text := Text + IntToStr(TlnPtr.Jg)+';'
+                       else Text := Text + '-;';
+        case TlnPtr.Sex of
+          cnMaennlich : Text := Text + 'M;';
+          cnWeiblich  : Text := Text + 'W;';
+          cnMixed     : Text := Text + 'X;';
+          else          Text := Text + '-;';
+        end;
+        Text := Text + TlnPtr.WertungsKlasse(kwAltKl,tmTln).Name+';' +
+                       TlnPtr.WertungsKlasse(kwAltKl,tmTln).Kuerzel+';' +
+                       TlnPtr.GetSerieRangStr(kwAlle)+';'+
+                       TlnPtr.GetSerieRangStr(kwSex)+';'+
+                       TlnPtr.GetSerieRangStr(kwAltKl)+';'+
+                       TlnPtr.GetSerieRangStr(kwSondKl)+';';
+        Text := Text + TlnPtr.GetSerieSumStr(lmReport,ReportAk.Wertung)+';';
+        Text := Text + TlnPtr.Strasse+';'+TlnPtr.Hausnr+';'+TlnPtr.PLZ+';'+TlnPtr.Ort+';'+
+                       TlnPtr.EMail; // kein ';' als Abschluss
+        WriteLn(SerDrDatei,Text);
+        if SchreibFehler then Exit;
+      end;
+      HauptFenster.ProgressBarStep(1);
+    end;
+  Result := true;
+end;
+
+(*============================================================================*)
+function SerienDruckMschWertungKompakt(RepMschGr:Integer): Boolean;
+(*============================================================================*)
+// nicht für wmSchultour, bei RndRennen keine Runden
+var i    : Integer;
+    Text : String;
+begin
+  Result := false;
+
+  // 1. Zeile mit Feldnamen *)
+  if SerDrWkNr=1 then
+  begin
+    Text := 'Veranstaltung;';
+    if Veranstaltung.Serie then Text := Text + 'Ort;';
+    Text := Text + 'Wettkampf;Datum;GesKlasse;';
+    Text := Text + 'GesRng;';
+    Text := Text + 'Mannschaft;';
+    Text := Text + 'Endzeit;Einheit';
+    if RepMschGr >= 1 then Text := Text + ';NameTln1;ZeitTln1;ZeitEinh1';
+    if RepMschGr >= 2 then Text := Text + ';NameTln2;ZeitTln2;ZeitEinh2';
+    if RepMschGr >= 3 then Text := Text + ';NameTln3;ZeitTln3;ZeitEinh3';
+    if RepMschGr >= 4 then Text := Text + ';NameTln4;ZeitTln4;ZeitEinh4';
+    if RepMschGr >= 5 then Text := Text + ';NameTln5;ZeitTln5;ZeitEinh5';
+    if RepMschGr >= 6 then Text := Text + ';NameTln6;ZeitTln6;ZeitEinh6';
+    if RepMschGr >= 7 then Text := Text + ';NameTln7;ZeitTln7;ZeitEinh7';
+    if RepMschGr >= 8 then Text := Text + ';NameTln8;ZeitTln8;ZeitEinh8';
+    WriteLn(SerDrDatei,Text);
+    if SchreibFehler then Exit;
+  end;
+
+  for i:=0 to Veranstaltung.MannschColl.ReportCount-1 do
+    with Veranstaltung.MannschColl.ReportItems[i] do
+    begin
+      Text := Veranstaltung.Name+';';
+      if Veranstaltung.Serie then Text := Text+Veranstaltung.OrtName+';';
+      Text := Text+GetTitel2(MschPtr.Wettk,wgStandWrtg)+';'+MschPtr.Wettk.Datum+';'+ MschPtr.Klasse.Name +';';
+      Text := Text + MschPtr.TagesRngStr +';';
+      Text := Text + MschPtr.Name;
+      if MschPtr.MschIndex > 1 then
+        Text := Text + '~' + IntToStr(MschPtr.MschIndex);
+        Text := Text + ';';
+      Text := Text + EffZeitStr(MschPtr.MschEndZeit)+';' + ZeitEinhStr(MschPtr.MschEndZeit);
+      if RepMschGr >= 1 then
+        if MschPtr.SortedTln[0] <> nil then
+          Text := Text + ';' + MschPtr.SortedTln[0].VNameName+';' +
+                  EffZeitStr(MschPtr.SortedTln[0].EndZeit)+';' + ZeitEinhStr(MschPtr.SortedTln[0].EndZeit)
+        else Text := Text + ';' + '   -;;';
+      if RepMschGr >= 2 then
+        if MschPtr.SortedTln[1] <> nil then
+          Text := Text + ';' + MschPtr.SortedTln[1].VNameName+';' +
+                  EffZeitStr(MschPtr.SortedTln[1].EndZeit)+';' + ZeitEinhStr(MschPtr.SortedTln[1].EndZeit)
+        else Text := Text + ';' + '   -;;';
+      if RepMschGr >= 3 then
+        if MschPtr.SortedTln[2] <> nil then
+          Text := Text + ';' + MschPtr.SortedTln[2].VNameName+';' +
+                  EffZeitStr(MschPtr.SortedTln[2].EndZeit)+';' + ZeitEinhStr(MschPtr.SortedTln[2].EndZeit)
+        else Text := Text + ';' + '   -;;';
+      if RepMschGr >= 4 then
+        if MschPtr.SortedTln[3] <> nil then
+          Text := Text + ';' + MschPtr.SortedTln[3].VNameName+';' +
+                  EffZeitStr(MschPtr.SortedTln[3].EndZeit)+';' + ZeitEinhStr(MschPtr.SortedTln[3].EndZeit)
+        else Text := Text + ';' + '   -;;';
+      if RepMschGr >= 5 then
+        if MschPtr.SortedTln[4] <> nil then
+          Text := Text + ';' + MschPtr.SortedTln[4].VNameName+';' +
+                  EffZeitStr(MschPtr.SortedTln[4].EndZeit)+';' + ZeitEinhStr(MschPtr.SortedTln[4].EndZeit)
+        else Text := Text + ';' + '   -;;';
+      if RepMschGr >= 6 then
+        if MschPtr.SortedTln[5] <> nil then
+          Text := Text + ';' + MschPtr.SortedTln[5].VNameName+';' +
+                  EffZeitStr(MschPtr.SortedTln[5].EndZeit)+';' + ZeitEinhStr(MschPtr.SortedTln[5].EndZeit)
+        else Text := Text + ';' + '   -;;';
+      if RepMschGr >= 7 then
+        if MschPtr.SortedTln[6] <> nil then
+          Text := Text + ';' + MschPtr.SortedTln[6].VNameName+';' +
+                  EffZeitStr(MschPtr.SortedTln[6].EndZeit)+';' + ZeitEinhStr(MschPtr.SortedTln[6].EndZeit)
+        else Text := Text + ';' + '   -;;';
+      if RepMschGr >= 8 then
+        if MschPtr.SortedTln[7] <> nil then
+          Text := Text + ';' + MschPtr.SortedTln[7].VNameName+';' +
+                  EffZeitStr(MschPtr.SortedTln[7].EndZeit)+';' + ZeitEinhStr(MschPtr.SortedTln[7].EndZeit)
+        else Text := Text + ';' + '   -;;';
+      WriteLn(SerDrDatei,Text);
+      if SchreibFehler then Exit;
+      HauptFenster.ProgressBarStep(1);
+    end;
+  Result := true;
+end;
+
+(*============================================================================*)
+function SerienDruckMschWertungDetail: Boolean;
+(*============================================================================*)
+var i,j  : Integer;
+    Text : String;
+    MschGrMax : Integer;
+    RndRennen : Boolean;
+begin
+  Result := false;
+  MschGrMax := cnMschGrMin;
+  RndRennen := false;
+  for i:=0 to ReportWkListe.Count-1 do
+  begin
+    for j:=0 to ReportAkListe.Count-1 do
+      MschGrMax := Max(MschGrMax,TReportWkObj(ReportWkListe[i]).Wettk.MschGroesse[TAkObj(ReportAkListe[j]).Sex]);
+    if TReportWkObj(ReportWkListe[i]).Wettk.WettkArt = waRndRennen then
+      RndRennen := true;
+  end;
+
+  // 1. Zeile mit Feldnamen *)
+  if SerDrWkNr=1 then
+  begin
+    Text := 'Veranstaltung;';
+    if Veranstaltung.Serie then Text := Text + 'Ort;';
+    Text := Text + 'Wettkampf;Datum;GesKlasse;GesRng;Mannschaft;';
+    if RndRennen then Text := Text + 'Runden;';
+    Text := Text + 'Endzeit;Einheit';
+    for i := 1 to MschGrMax do
+    begin
+      Text := Text +';NameTln'+IntToStr(i)+ ';';
+      if RndRennen then Text := Text +'RndTln'+IntToStr(i)+ ';';
+      Text := Text +'ZeitTln'+IntToStr(i)+ ';' +'ZeitEinh'+IntToStr(i);
+    end;
+    WriteLn(SerDrDatei,Text);
+    if SchreibFehler then Exit;
+  end;
+
+  for i:=0 to Veranstaltung.MannschColl.ReportCount-1 do
+    with Veranstaltung.MannschColl.ReportItems[i] do
+    begin
+      Text := Veranstaltung.Name+';';
+      if Veranstaltung.Serie then Text := Text +Veranstaltung.OrtName+ ';';
+      Text := Text+GetTitel2(MschPtr.Wettk,wgStandWrtg)+';'+MschPtr.Wettk.Datum+';'+
+              MschPtr.Klasse.Name+';'+MschPtr.TagesRngStr+';' + MschPtr.Name;
+      if MschPtr.MschIndex > 1 then
+        Text := Text + '~' + IntToStr(MschPtr.MschIndex);
+      Text := Text +';';
+      if RndRennen then Text := Text + IntToStr(MschPtr.Runden)+';';
+      Text := Text + EffZeitStr(MschPtr.MschEndZeit)+';' + ZeitEinhStr(MschPtr.MschEndZeit);
+      for j := 0 to MschGrMax-1 do
+        if (j < MschPtr.TlnListe.SortCount) and
+           (j < MschPtr.Wettk.MschGroesse[MschPtr.Klasse.Sex]) and
+           (MschPtr.SortedTln[j]<>nil) and
+           (MschPtr.SortedTln[j].TlnInStatus(stGewertet)) then
+        begin
+          Text := Text + ';'+MschPtr.SortedTln[j].VNameName+';';
+          if RndRennen then Text := Text + IntToStr(MschPtr.SortedTln[j].RundenZahl(wkAbs1))+';';
+          Text := Text + EffZeitStr(MschPtr.SortedTln[j].EndZeit)+';'+ ZeitEinhStr(MschPtr.SortedTln[j].EndZeit);
+        end else
+          if RndRennen then
+            Text := Text + ';;'+'   -;;'
+          else Text := Text + ';'+'   -;;';
+
+      WriteLn(SerDrDatei,Text);
+      if SchreibFehler then Exit;
+      HauptFenster.ProgressBarStep(1);
+    end;
+  Result := true;
+end;
+
+(*============================================================================*)
+function SerienDruckMschSerienWertung: Boolean;
+(*============================================================================*)
+var i    : Integer;
+    Text : String;
+begin
+  Result := false;
+  // 1. Zeile mit Feldnamen *)
+  if SerDrWkNr=1 then
+  begin
+    Text := 'Veranstaltung;Ort;Wettkampf;Datum;GesKlasse;';
+    Text := Text + 'GesRng;';
+    Text := Text + 'Mannschaft;';
+    Text := Text + 'Punkte';
+    WriteLn(SerDrDatei,Text);
+    if SchreibFehler then Exit;
+  end;
+
+  for i:=0 to Veranstaltung.MannschColl.ReportCount-1 do
+    with Veranstaltung.MannschColl.ReportItems[i] do
+    begin
+      Text := Veranstaltung.Name+';'+Veranstaltung.OrtName+';'+
+              GetTitel2(MschPtr.Wettk,wgStandWrtg)+';'+MschPtr.Wettk.Datum+';'+MschPtr.Klasse.Name+';';
+      Text := Text + MschPtr.GetSerieRangStr+';';
+      Text := Text + MschPtr.Name;
+      if MschPtr.MschIndex > 1 then
+        Text:=Text+'~'+IntToStr(MschPtr.MschIndex);
+      Text := Text + ';';
+      Text := Text + MschPtr.GetSerieSumStr(lmReport); // kein ';' als Abschluss
+
+      WriteLn(SerDrDatei,Text);
+      if SchreibFehler then Exit;
+      HauptFenster.ProgressBarStep(1);
+    end;
+  Result := true;
+end;
+
+(*============================================================================*)
+function SchreibFehler: Boolean;
+(*============================================================================*)
+var Fehler : Word;
+begin
+  Fehler:=IoResult;
+  if Fehler <> 0 then
+  begin
+    TriaMessage('Fehler beim Schreiben in  "'+SerDrDateiName+'".',
+                 mtInformation,[mbOk]);
+    Result := true;
+  end else Result := false;
+end;
+
+
+end.

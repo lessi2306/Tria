@@ -1,0 +1,105 @@
+<html>
+<head>
+<Title>Excel-Import</Title>
+<link rel="stylesheet" type="text/css" href="TriaHilfe.css">
+<meta name="author" content="Gerhard Selten">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+<body bgcolor="#FFFFFF" text="#000000">
+<Object type="application/x-oleobject" classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e">
+	<param name="Keyword" value="Excel">
+	<param name="Keyword" value="Importieren">
+	<param name="Keyword" value="Daten aus einer Excel-Datei Importieren">
+</OBJECT>
+<h1>Import aus Excel-Datei</h1>
+<p>
+Diese Importfunktion (wie auch der Import aus einer Textdatei) ist vorgesehen, um extern von Tria erfassten Teilnehmerdaten (z.B. über eine Online-Anmeldung im Internet) automatisch in Tria zu übernehmen und so eine manuelle Eingabe dieser Teilnehmer zu vermeiden.<br>
+Ein Import von Excel ist generell nur möglich, wenn Microsoft Excel auf dem Rechner installiert ist. Unterstütz werden die Versionen ab Excel XP.</p>
+<p>
+Es können alle relevanten Teilnehmerdaten importiert werden, einschließlich Zwischen- und Endzeiten. Im Gegensatz zum Import aus einer Tria-Datei können aber keine Wettkampf- und Startgruppeneinstellungen oder Vereinsmelder übernommen werden.<br>
+Dieselben Daten können auch aus Tria in eine Excel- oder Textdatei exportiert werden.</p>
+<p>
+Damit die Daten eingelesen werden können, muss die Excel-Datei die Feldnamen aller zu importierenden Teilnehmerdaten enthalten und nachfolgend die zugehörigen Daten. Leerzeilen und Kopfzeilen am Anfang werden ignoriert, aber in der Tabelle sind Leerzeilen und Spalten ohne Feldname nicht erlaubt.</p>
+<p>
+Die Excel-Datei muss mindestens die beiden Pflichtfelder mit Name und Vorname der Teilnehmer enthalten. Die übrigen Daten sind optional. 
+Die Feldnamen können in der Excel-Datei beliebig definiert und die Spalten in beliebiger Reihenfolge angeordnet werden. Die Excel-Datenfelder können den Teilnehmerdaten in dem unten gezeigten Dialog flexibel zugeordnet werden.</p><br>
+<p>
+<img src="img/imp10.gif" alt="Excel-Import" width="769" height="496" border="0"></p><br>
+<p>
+In der linken Tabelle "<b>Zuordnung der Datenfelder</b>" sind an der linken Seite alle Teilnehmerdatenfelder aufgelistet, die für den gewählten Wettkampf importiert werden können und rechts die in der ersten Excel-Tabellenzeile aufgeführten Feldnamen. Zu jedem der Tria-Datenfelder muss auf der rechten Tabellenseite den passenden Feldnamen aus einer Drop-Down Liste mit allen in der Excel-Datei vorhandenen Feldnamen ausgewählt werden. Für die optionalen Datenfelder kann auch kein Feldname zugeordnet werden, wenn keine Daten importiert werden sollen.</p>
+<p>
+Folgende Teilnehmerdaten können importiert werden:</p>
+<table width="700" border="0" cellpadding="2" cellspacing="2">
+  <tr bgcolor="#BBBBBB"><th align="left" width="220">Feldname</th><th align="left">Kommentar</th></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Name</td><td>Pflichtfeld</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Vorname</td><td>Pflichtfeld</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Geschlecht (Geschl.)</td><td>&nbsp;</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Jahrgang (Jahrg.)</td><td>&nbsp;</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Verein/Ort (Mannschaft)</td><td>&nbsp;</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Straße</td><td>&nbsp;</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Hausnummer (Nr.)</td><td>&nbsp;</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">PLZ</td><td>&nbsp;</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Ort</td><td>&nbsp;</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">E-Mail</td><td>&nbsp;</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Land (definierte Bezeichnung)</td><td>wenn zusätzliche Spalte definiert ist</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Meldezeit (MeldeZt)</td><td>hh:mm:ss in Zellformat Text</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Startgeld (StGeld)</td><td>000[,00]</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">RFID-Code (RFID))</td><td>nur wenn RFID-Modus gewählt ist</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Kommentar</td><td>&nbsp;</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Mannschaftswertung (MaWg.)</td><td>Optionsfeld</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Mixed Mannschaft (MxMa.)</td><td>Optionsfeld</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Mixed-Mannschaft (MxMa.)</td><td>Optionsfeld</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Sonderwertung (SoWg.)</td><td>Optionsfeld</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Serienwertung (SeWg.)</td><td>Optionsfeld, nur bei Serienveranstaltung</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Urkunde drucken (Urk.)</td><td>Optionsfeld</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Außer Konkurrenz (a.K.)</td><td>Optionsfeld</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">a.K.-Altersklasse (a.K.-AK)</td><td>Optionsfeld</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">a.K.-Sonderklasse (a.K.-SK)</td><td>Optionsfeld</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Startnummer (Startnr.)</td><td>&nbsp;</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Reststrecke (RestMtr)</td><td>nur bei Stundenrennen</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Startzeit (StZeit)</td><td>Format hh:mm:ss[.dd] (Text), nur bei Einzelstart</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Startbahn (Bahn)</td><td>wenn Startbahnen definiert sind</td></tr>
+ <tr bgcolor="#E8E8E8"><td valign="top">Staffeltln.X-Name (TlnX-Name)</td><td>Einzel-Staffelwertung, &ge; X Abschn.</td></tr> 
+  <tr bgcolor="#E8E8E8"><td valign="top">Staffeltln.X-Vorname (TlnX-Vorname)</td><td>Einzel-Staffelwertung, &ge; X Abschn.</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Abschn.X-Zeit (Abschn.X) oder<br>
+                 Abschn.X-RundeY (Abschn.X-Y)</td><td>wenn &ge; X Abschn. definiert sind,<br>
+                 für Runde Y, wenn Runden definiert sind<br>
+                 Format hh:mm:ss [.dd] (Text)</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Gutschrift (Gutschr.)</td><td>Format [00:]mm:ss (Text)</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Strafzeit (Strafe)</td><td>Format [00:]mm:ss (Text)</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Disq.-Grund (DisqGr.)</td><td>&nbsp;</td></tr>
+  <tr bgcolor="#E8E8E8"><td valign="top">Disq.-Bez. (DisqBez.)</td><td>&nbsp;</td></tr>
+</table>
+<p>
+Wenn in der Importdatei die oben aufgelisteten Feldbezeichnungen (oder die in Klammern angegebenen Alternativen) verwendet werden, werden diese Datenfelder automatisch richtig zugeordnet. Die eingestellte Feldzuordnung wird gespeichert und beim nächsten Import wieder verwendet, auch über das Programmende hinaus.<br>
+Der obige Screenshot zeigt die Situation unmittelbar nach dem Einlesen und der Zuordnung der Datenfelder.</p>
+<p>
+Das Ergebnis dieser Zuordnung wird als "<b>Importvorschau</b>" in der rechten Tabelle angezeigt. Vor einem Import werden alle Teilnehmerdaten überprüft. Diese Prüfung kann auch gesondert durchgeführt werden. Ein Import findet nur statt, wenn alle Daten korrekt sind.<br> 
+Geprüft wird u.a. ob Teilnehmer bereits in der Datei vorhanden sind, ob Pflichtfelder leer sind, ob Startnummer und Startbahn für den Wettkampf erlaubte Werte enthalten, ob die Meldezeit dem oben definierten Format entspricht und ob die Inhalte der Optionsfelder gültig sind.</p>
+<p>
+Wenn ein zu importierende Teilnehmer bereits vorhanden ist (Name, Vorname und Verein/Ort sind identisch), wird abgefragt ob dies als Fehler zu bewerten ist oder ob die vorhandenen Teilnehmerdaten überschrieben werden sollen.</p>
+<p>
+Für das Datenfeld "Geschlecht" sind in der Tabelle vier verschiedene Werte erlaubt, die Einträge sind jedoch beliebig. Die Bedeutung dieser Feldinhalten wird abgefragt, einige Werte werden aber automatisch erkannt: z.B.:</p>
+<table width="600" border="0" cellpadding="0" cellspacing="0">
+  <tr><td width="180">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;Männlich:&nbsp;</td><td width="420">&nbsp;"M", "m", "männl."</td></tr>
+  <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;Weiblich:&nbsp;</td><td>&nbsp;"W", "w", "weibl."</td></tr>
+  <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;Mixed:&nbsp;</td><td>&nbsp;"X", "x", "Mix"</td></tr>
+  <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;keine Angabe:&nbsp;</td><td>&nbsp;"-", Leerfeld, Leerzeichen</td></tr>
+</table>
+<p>
+Für die übrigen Optionsfelder sind in der Tabelle nur zwei verschiedene Werte erlaubt, die Einträge sind auch hier beliebig. Die Bedeutung dieser Feldinhalten wird abgefragt, einige Werte werden aber automatisch erkannt: z.B.:</p>
+<table width="600" border="0" cellpadding="0" cellspacing="0">
+  <tr><td width="180">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;Option gesetzt:&nbsp;</td><td width="420">&nbsp;"M", "m", "männl."</td></tr>
+  <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;Option gelöscht:&nbsp;</td><td>&nbsp;"-", Leerfeld, Leerzeichen</td></tr>
+</table>
+<p>
+Bei Angabe einer Startnummer, wird der importierte Teilnehmer automatisch in der zugehörigen Startgruppe eingeteilt. Vorher wird überprüft, ob eine passende Startgruppe für den Wettkampf vorhanden ist und ob die Startnummer noch nicht belegt wurde.</p>
+<p>
+Alle Felder der Excel-Tabelle können im Zellformat "Text" formatiert werden. Mit Ausnahme des Datenfelds "Meldezeit" ist auch die Einstellung "Standard" oder "Zahl" für Zahlenwerte erlaubt.</p>
+<br>
+<p style="font-weight:bold">Siehe auch:</p>
+<table width="100%" border="0" cellpadding="0" cellspacing="0">
+  <tr><td height="25">&nbsp;&nbsp;&nbsp;<img src="img/next_pas.gif" alt="" height="10" width="15" border="0"><a href="Hlp1200.htm">Daten-Import Übersicht</a></td></tr>
+</table>
+</body>
+</html>

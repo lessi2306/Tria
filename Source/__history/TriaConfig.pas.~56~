@@ -1,0 +1,598 @@
+unit TriaConfig;
+
+interface
+
+uses SysUtils, ShlObj, Dialogs, Windows, Classes,
+     RpDevice, // Rave
+     AllgConst,History;
+
+
+procedure LadeKonfiguration;
+procedure SpeichereKonfiguration;
+
+
+implementation
+
+uses IniFiles,Forms,Math,
+     AllgObj,AllgFunc,MruObj,TriaMain,DateiDlg,ImpDlg,VeranObj,ListFmt,
+     UpdateDlg,SuchenDlg,WettkObj;
+
+//******************************************************************************
+procedure LadeKonfiguration;
+//******************************************************************************
+var
+  i,j,Rnd,C,Links,Oben,Breite,Hoehe : Integer;
+  IniDatei,S : String;
+  pIdL: PItemIDList;
+  Path : Array[0..1023] of Char;
+  IniFile : TIniFile;
+  Col : TColType;
+
+//------------------------------------------------------------------------------
+function ReadImportFeld(Ident:String): Boolean;
+var Wert : String;
+begin
+  Wert := IniFile.ReadString(iiImpFeldListe,Ident,cnKein);
+  if Wert <> cnKein then // Feld vorhanden
+  begin
+    Inc(j);
+    SetLength(MruImpFeldArr,j+1);
+    MruImpFeldArr[j].FeldType := Col;
+    MruImpFeldArr[j].Runde    := Rnd;
+    MruImpFeldArr[j].FeldName := Wert;
+    Result := true;
+  end else
+    Result := false;
+end;
+
+//------------------------------------------------------------------------------
+begin
+  SHGetSpecialFolderLocation(0,CSIDL_APPDATA,pIdL);
+  SHGETPathFromIDList(pIdL,Path);
+  IniDatei := Path;
+  IniDatei := IniDatei + '\' + cnTriProg + '\' + ExtractFileName(ParamStr(0));
+  IniDatei := SysUtils.ChangeFileExt(IniDatei,'.ini'); //Tria.ini
+
+  if not SysUtils.FileExists(IniDatei) then
+    // alte Ini aus 1.0 verwenden, wenn vorhanden
+    if SysUtils.FileExists(SysUtils.ChangeFileExt(ParamStr(0),'.ini')) then
+      IniDatei := SysUtils.ChangeFileExt(ParamStr(0),'.ini');
+
+  with HauptFenster do
+  begin
+    Links  := Left;
+    Oben   := Top;
+    Breite := Width;
+    Hoehe  := Height;
+
+    if SysUtils.FileExists(IniDatei) then
+    begin
+      IniFile := TIniFile.Create(IniDatei);
+      with IniFile do
+      try
+        // Layout
+        i := ReadInteger(iiLayout,iiState,0);
+        if TWindowState(i) = wsMaximized then WindowState := wsMaximized
+        else
+        begin
+          WindowState := wsNormal;
+          Position := poDesigned;
+          // auf nutzbarem Bereich auf Hauptbildschirm (Primary=true) beschränken,
+          // auch bei mehreren Bildschirme
+          i := ReadInteger(iiLayout,iiHeight,Hoehe);
+          if i < Constraints.MinHeight then Hoehe := Constraints.MinHeight
+          else if i > Monitor.WorkAreaRect.Height then Hoehe := Monitor.WorkAreaRect.Height
+          else Hoehe := i;
+          i := ReadInteger(iiLayout,iiWidth,Breite);
+          if i < Constraints.MinWidth then Breite := Constraints.MinWidth
+          else if i > Monitor.WorkAreaRect.Width then Breite := Monitor.WorkAreaRect.Width
+          else Breite := i;
+          i := ReadInteger(iiLayout,iiTop,Oben);
+          if i < Monitor.Top then Oben := Monitor.Top
+          else if i > Monitor.WorkAreaRect.Height-Hoehe then
+            Oben := Monitor.WorkAreaRect.Height-Hoehe
+          else Oben := i;
+          i := ReadInteger(iiLayout,iiLeft,Links);
+          if i < Monitor.Left then Links := Monitor.Left
+          else if i > Monitor.WorkAreaRect.Width-Breite then
+            Links := Monitor.WorkAreaRect.Width-Breite
+          else Links := i;
+          SetBounds(Links,Oben,Breite,Hoehe);
+        end;
+
+        // Optionen
+        AutoUpdate  := ReadBool(iiOptions,iiAutoUpdate,opAutoUpdate);
+        UpdateDatum := ReadString(iiOptions,iiUpdateDatum,opUpdateDatum);
+        MruDateiOeffnen := ReadBool(iiOptions,iiMruDateiOeffnen,opMruDateiOeffnenTri);
+        SnrUeberlapp := ReadBool(iiOptions,iiSnrUeberlapp,opSnrUeberlapp);
+        i := ReadInteger(iiOptions,iiAutoSpeichern,opAutoSpeichernTri);
+        if (i<=0) or (i>cnAutoSpeichernTriMax) then AutoSpeichernInterval := 0
+                                               else AutoSpeichernInterval := i * 60000; // Min => mSek
+        BackupErstellen := ReadBool(iiOptions,iiBackupErstellen,opBackupErstellenTri);
+        SofortRechnen   := ReadBool(iiOptions,iiAutoBerechnen,false) or // vor 2007
+                           ReadBool(iiOptions,iiSofortRechnen,opSofortRechnen);
+        S               := ReadString(iiOptions,iiDefaultSex,'');
+        if S = opSexMaennlich then DefaultSex := cnMaennlich
+        else if S = opSexWeiblich then DefaultSex := cnWeiblich
+        else DefaultSex := cnKeinSex; // cnMixed nicht speichern, da nur für TlnStaffel
+        S               := ReadString(iiOptions,iiZeitFormat,opZeitSek);
+        if S = opZeitHundertstel then ZeitFormat := zfHundertstel
+        else if S = opZeitZehntel then ZeitFormat := zfZehntel
+        else ZeitFormat := zfSek;
+        DecTrennZeichen := ReadString(iiOptions,iiDecTrennZeichen,opDecTrennZeichen);
+        // nur '.' oder ',' zulassen
+        if DecTrennZeichen <> '.' then DecTrennZeichen := ',';
+        // ZeitFilter
+        ZeitFilter := ReadInteger(iiOptions,iiZeitFilter,opDefaultZeitFilter);
+    
+        RfidModus := ReadBool(iiOptions,iiRfidModus,false);
+        i := ReadInteger(iiOptions,iiRfidZeichen,cnRfidZeichenDefault);
+        if i > cnRfidZeichenMax then
+          RfidZeichen := cnRfidZeichenDefault // = max
+        else
+          RfidZeichen := i;
+        RfidHex := ReadBool(iiOptions,iiRfidHex,cnRfidHexDefault);
+        RfidDatName    := ReadString(iiRfidDat,iiRfidDatName,'');
+        RfidDatExt     := ReadString(iiRfidDat,iiRfidDatExt,'.txt');
+        RfidDatFilter  := ReadInteger(iiRfidDat,iiRfidDatFilter,1);
+        if (RfidDatFilter < 1) or (RfidDatFilter > 3) then
+          RfidDatFilter := 1;
+        RfidDatHeader   := ReadBool(iiRfidDat,iiRfidDatHeader,false);
+        S               := ReadString(iiRfidDat,iiRfidDatTrennung,';');
+        if S = ',' then RfidDatTrennung := ','
+        else if S = ' ' then RfidDatTrennung := ' '
+        else if S = 'TAB' then RfidDatTrennung := #9
+        else ZtErfTrennung := ';';
+        RfidDatSnrPos   := ReadInteger(iiRfidDat,iiRfidDatSnrPos,1);
+        RfidDatRfidPos  := ReadInteger(iiRfidDat,iiRfidDatRfidPos,2);
+        RfidDatLoeschen := ReadBool(iiRfidDat,iiRfidDatLoeschen,false);
+
+        // MruDateiListe
+        for i:=1 to cnMruMaxCount do
+          MruListe.PfadListe[i]:=Trim(ReadString(iiMruListe,IntToStr(i),''));
+        MruListe.Init;
+
+        // MruImportFeldnamenListe
+        j   := -1;
+        C   :=  0;
+        Rnd := 0;
+        Col := GetColType(ltTlnImport,WettkAlleDummy,0,lmImport);
+        while Col <> spLeer do
+        begin
+          // nur gültige Felder definieren
+          if GetFeldNameKurz(Col) <> '' then
+          begin
+            case Col of
+              spLand:
+              begin
+                ReadImportFeld('Land'); //Name unabhängig vom Wettk
+                Inc(C); // weiter mit nächstem Feld
+              end;
+              spAbs1UhrZeit..spAbs8UhrZeit: // mehrere Runden möglich
+              begin
+                // zuerst mit Runde=0 probieren
+                if ReadImportFeld(GetFeldNameKurz(Col,Rnd)) then
+                  if Rnd = 0 then Inc(C) // weiter mit nächstem Feld
+                  else
+                  if Rnd < cnRundenMax then Inc(Rnd) // weiter mit nächster runde
+                  else //  Max erreicht
+                  begin
+                    Rnd := 0;
+                    Inc(C);  // weiter mit nächstem Feld
+                  end
+                else // Feld nicht vorhanden
+                  if Rnd = 0 then // Rnd=1 probieren
+                  begin
+                    Inc(Rnd); // Rnd = 1
+                    if ReadImportFeld(GetFeldNameKurz(Col,Rnd)) then
+                      Inc(Rnd) // vorhanden, weiter mit nächster runde
+                    else // Rnd=1 nicht vorhanden
+                    begin
+                      Rnd := 0;
+                      Inc(C);  // weiter mit nächstem Feld
+                    end
+                  end else // Rnd > 0
+                  begin
+                    Rnd := 0;
+                    Inc(C);  // weiter mit nächstem Feld
+                  end;
+              end;
+              else // Normalfall
+              begin
+                ReadImportFeld(GetFeldNameKurz(Col));
+                Inc(C); // weiter mit nächstem Feld
+              end;
+            end;
+          end;
+          Col := GetColType(ltTlnImport,WettkAlleDummy,C,lmImport);
+        end;
+
+        // SerieOrtIndex
+        SerieOrtIndex := ReadInteger(iiSerie,iiOrtIndex,0);
+
+        // Drucker
+        S := ReadString(iiDrucker,iiDruckername,'');
+        if (S <> '') and (S <> RpDev.Device) then
+          RpDev.SelectPrinter(S,true); // exakter Namensgleichheit
+        // else Windows DefaultPrinter voreingestellt
+
+        // ZeitErfassung-Dateiformat
+        S := ReadString(iiZtErf,iiZtErfDatFormat,'');
+        if S = iiTriaZeit then ZtErfDateiFormat := fzTriaZeit
+        else if S = iiTCBacknang then ZtErfDateiFormat := fzTCBacknang
+        else if S = iiZerf then ZtErfDateiFormat := fzZerf
+        else if S = iiGis then ZtErfDateiFormat := fzGis
+        else if S = iiSportronic then ZtErfDateiFormat := fzSportronic
+        else if S = iiDAG then ZtErfDateiFormat := fzDAG
+        else if S = iiMandigo then ZtErfDateiFormat := fzMandigo
+        else if S = iiSonstig then ZtErfDateiFormat := fzSonstig
+        else ZtErfDateiFormat := fzTriaZeit; // fehlerfall
+
+        ZeitenBehalten := ReadBool(iiZtErf,iiZeitenBehalten,true);
+
+        // ZeitErf - Sonstige Dateiformate
+        ZtErfHeader   := ReadBool(iiZtErf,iiZtErfHeader,false);
+        S             := ReadString(iiZtErf,iiZtErfTrennung,';');
+        if S = ',' then ZtErfTrennung := ','
+        else if S = ' ' then ZtErfTrennung := ' '
+        else if S = 'TAB' then ZtErfTrennung := #9
+        else ZtErfTrennung := ';';
+        S             := ReadString(iiZtErf,iiZtErfZeitTrenn,':');
+        if S = '' then ZtErfZeitTrenn := ''
+        else ZtErfZeitTrenn := ':';
+        ZtErfSnrPos   := ReadInteger(iiZtErf,iiZtErfSnrPos,1);
+        ZtErfZeitPos  := ReadInteger(iiZtErf,iiZtErfZeitPos,RfidZeichen+1);
+        S             := ReadString(iiZtErf,iiZtErfFormat,opZeitSek);
+        if S = opZeitHundertstel then ZtErfFormat := zfHundertstel
+        else if S = opZeitZehntel then ZtErfFormat := zfZehntel
+        else ZtErfFormat := zfSek;
+
+        // ZeitErfDateiListe
+        for i:=1 to cnZtErfDatListeMax do
+        begin
+          S := ReadString(iiZtErfDatListe,IntToStr(i),'');
+          if not StrGleich(S,'') then ZeitErfDateiListe.Add(Trim(S));
+        end;
+
+        //UrkDokListe
+        for i:=1 to cnUrkDokListeMax do
+        begin
+          S := ReadString(iiUrkDokListe,IntToStr(i),'');
+          if not StrGleich(S,'') then
+            UrkDokListe.Add(Trim(S))
+          else Break;
+        end;
+        WordUrkAkIndx   := ReadInteger(iiWordUrkunde,iiWordUrkAkIndx,-1);
+
+        // SuchDialog
+        with SuchenDialog do
+        begin
+          GrossKleinCB.Checked  := ReadBool(iiSuchDialog,iiGrossKlein,false);
+          GanzCB.Checked        := ReadBool(iiSuchDialog,iiGanz,false);
+          StartStrCB.Checked    := ReadBool(iiSuchDialog,iiStartStr,true);
+          BestaetigenCB.Checked := ReadBool(iiSuchDialog,iiBestaetigen,false);
+          SuchSpalteBuf         := ReadString(iiSuchDialog,iiSuchSpalte,'Name');
+          // SuchListe
+          for i:=1 to cnSuchListeMax do
+          begin
+            S := ReadString(iiSuchListe,IntToStr(i),'');
+            if not StrGleich(S,'') then
+              SuchenNachCB.Items.Add(Trim(S));
+          end;
+          // ErsatzListe
+          for i:=1 to cnSuchListeMax do
+          begin
+            S := ReadString(iiErsatzListe,IntToStr(i),'');
+            if not StrGleich(S,'') then
+              ErsetzenCB.Items.Add(Trim(S));
+          end;
+        end;
+
+        {if (RpDev.DevMode.dmFields and DM_ORIENTATION) = DM_ORIENTATION then
+        if RpDev.DevMode.dmOrientation = DMORIENT_LANDSCAPE then
+        begin
+        ShowMessage('Landscape');
+        end;}
+        {S := ReadString(iiDrucker,iiDruckername,'');
+        if S <> '' then
+        begin
+          if ReadBinaryStream(iiDrucker,iiDruckermode,DrDevModeStream) > 0 then
+          begin
+          DrDevModeStream.Read(DrDevMode, DrDevModeStream.Size);
+          LoadPrinterInfo(PChar(S),DrDevModeStream);
+          RpDev.SelectPrinter(S,true);
+          end;
+          DruckerDatei := SysUtils.ChangeFileExt(IniDatei,'.dru'); //Tria.dru
+          if SysUtils.FileExists(DruckerDatei) then
+          begin
+            DruckerStream := TFileStream.Create(DruckerDatei,fmOpenRead or fmShareDenyNone);
+            LoadPrinterInfo(PChar(S),DruckerStream);
+          end;
+        end;}
+
+        {if not RpDev.InvalidPrinter then
+          if (ReadBinaryStream(iiDrucker,iiDruckermode,DrDevModeStream) > 0) then
+            if (DrDevModeStream.Size < 1024) then
+            begin
+              i := DrDevModeStream.Size;
+              DrDevModeStream.Read(DrDevMode, i);
+              //DrDevModeStream.Read(RpDev.DevMode, i);
+              i := DrDevModeStream.Size;
+              if (DrDevModeStream.Read(DrDevMode, DrDevModeStream.Size) =
+                                                      DrDevModeStream.Size) then
+              begin
+                //RpDev.ResetHandle(true); // ??
+                RpDev.SelectPrinter(DrDevMode.dmDeviceName, true);
+
+                if RpDev.Device = DrDevMode.dmDeviceName then
+                begin
+                  if (RpDev.DevMode.dmFields and DM_PAPERSIZE) = DM_PAPERSIZE then
+                  begin
+                    DrDevMode.dmPaperSize := DMPAPER_A4_TRANSVERSE;
+                    RpDev.SelectPaper('A4',false);
+                  end else
+                end else
+              end else
+            end else
+          else
+          begin }
+            // Devicemode ungültig
+            //S := ReadString(iiDrucker,iiDruckername,'');
+            //if S <> '' then RpDev.SelectPrinter(S,true);
+         { end; }
+
+      finally
+        //DruckerStream.Free;
+        Free;
+      end;
+    end;
+
+    // Hauptfenster sichtbar machen nachdem Layout definiert ist,
+    // aber bevor Datei geladen wird
+    Application.ShowMainForm := true;
+    HauptFenster.Show;
+    HauptFenster.Init;
+    // FocusControl(nil);
+    //Refresh; // sonst wird nicht alles sichtbar
+
+    if AutoUpdate and (UpdateDatum <> SystemDatum) then // max 1x täglich
+    begin
+      UpdateDatum := SystemDatum;
+      InternetUpdate(umAuto);
+      if SetupGestartet then
+      begin
+        HauptFenster.Close;
+        Exit;
+      end;
+    end;
+
+    try
+      // Bei Tri-Datei-Execute Datei öffnen, sonst neue Datei
+      if ParamCount > 0 then
+      begin
+        MruListe.AddiereDatei(ParamStr(1));
+        SerieOrtIndex := 0;
+        TriDatNeu(MruListe[1]);
+      end else
+        if MruDateiOeffnen then
+        begin
+          // zuletzt benutzte Datei öffnen, SerieOrtIndex von Ini-Datei übernehmen
+          TriDatNeu(MruListe[1]);
+        end else
+        begin
+          SerieOrtIndex := 0;
+          TriDatNeu('');
+        end;
+    except
+      // Exceptions abfangen, auch bei Exceptions soll Programm beendet werden
+      TriaMessage('Fehler beim Lesen der aktuellen Konfiguration in '+#13+
+                  'Datei '+IniDatei,
+                   mtInformation,[mbOk]);
+    end;
+  end;
+end;
+
+
+//******************************************************************************
+procedure SpeichereKonfiguration;
+//******************************************************************************
+var
+  i : Integer;
+  IniDatei,S : String;
+  pIdL: PItemIDList;
+  Path : Array[0..1023] of Char;
+begin
+  if Veranstaltung = nil then Exit; // passiert beim 2x Close 
+
+  SHGetSpecialFolderLocation(0,CSIDL_APPDATA,pIdL);
+  SHGETPathFromIDList(pIdL,Path);
+  S := Path;
+  S := S + '\' + cnTriProg;
+  if not DirectoryExists(S) then
+    if not CreateDir(S) then
+    begin
+      TriaMessage('Fehler beim Erstellen des Verzeichnisses '+S,
+                   mtInformation,[mbOk]);
+      Exit;
+    end;
+  IniDatei := S + '\' + ExtractFileName(ParamStr(0));
+  IniDatei := SysUtils.ChangeFileExt(IniDatei,'.ini'); //Tria.ini
+  SysUtils.DeleteFile(IniDatei); // damit alte Inhalte immer gelöscht werden
+
+  with TIniFile.Create(IniDatei) do
+  try
+    try
+      // Layout
+      with HauptFenster do
+      begin
+        WriteInteger(iiLayout,iiState,Integer(WindowState));
+        WriteInteger(iiLayout,iiHeight,Height);
+        WriteInteger(iiLayout,iiWidth,Width);
+        WriteInteger(iiLayout,iiTop,Top);
+        WriteInteger(iiLayout,iiLeft,Left);
+      end;
+
+      // Optionen
+      WriteBool(iiOptions,iiAutoUpdate,AutoUpdate);
+      WriteString(iiOptions,iiUpdateDatum,UpdateDatum);
+      WriteBool(iiOptions,iiMruDateiOeffnen,MruDateiOeffnen);
+      WriteBool(iiOptions,iiSnrUeberlapp,SnrUeberlapp);
+      i := HauptFenster.AutoSpeichernInterval;
+      if i > 0 then i := i DIV 60000; // mSek => Min
+      WriteInteger(iiOptions,iiAutoSpeichern, i);
+      WriteBool(iiOptions,iiBackupErstellen,BackupErstellen);
+      if ValueExists(iiOptions,iiAutoBerechnen) then // vor 2007
+        DeleteKey(iiOptions,iiAutoBerechnen);
+      WriteBool(iiOptions,iiSofortRechnen,SofortRechnen);
+      case DefaultSex of
+        cnMaennlich : WriteString(iiOptions,iiDefaultSex,opSexMaennlich);
+        cnWeiblich  : WriteString(iiOptions,iiDefaultSex,opSexWeiblich);
+        else          WriteString(iiOptions,iiDefaultSex,'');
+      end;
+      case ZeitFormat of
+        zfSek     : WriteString(iiOptions,iiZeitFormat,opZeitSek);
+        zfZehntel : WriteString(iiOptions,iiZeitFormat,opZeitZehntel);
+        else        WriteString(iiOptions,iiZeitFormat,opZeitHundertstel);
+      end;
+      WriteString(iiOptions,iiDecTrennZeichen,DecTrennZeichen);
+      WriteInteger(iiOptions,iiZeitFilter,ZeitFilter);
+      WriteBool(iiOptions,iiRfidModus,RfidModus);
+      WriteInteger(iiOptions,iiRfidZeichen,RfidZeichen);
+      WriteBool(iiOptions,iiRfidHex,RfidHex);
+      WriteString(iiRfidDat,iiRfidDatName,RfidDatName);
+      WriteInteger(iiRfidDat,iiRfidDatFilter,RfidDatFilter);
+      WriteBool(iiRfidDat,iiRfidDatHeader,RfidDatHeader);
+      WriteBool(iiRfidDat,iiRfidDatLoeschen,RfidDatLoeschen);
+      S := RfidDatTrennung;
+      if S=#9 then S := 'TAB'; // #9 wird als '' eingelesen
+      WriteString(iiRfidDat,iiRfidDatTrennung,S);
+      WriteInteger(iiRfidDat,iiRfidDatSnrPos,RfidDatSnrPos);
+      WriteInteger(iiRfidDat,iiRfidDatRfidPos,RfidDatRfidPos);
+
+      // MruDateiListe
+      for i:=1 to cnMruMaxCount do
+      begin
+        S := HauptFenster.MruListe.PfadListe[i];
+        if not StrGleich(S,'') then
+          WriteString(iiMruListe,IntToStr(i),S);
+      end;
+      
+      // MruImportFeldnamenListe
+      for i:=0 to Length(MruImpFeldArr)-1 do //2008-1.5 dynamisch, 2.0 abhängig Rundenzahl
+      with MruImpFeldArr[i] do
+        if FeldName <> cnKein then
+          case FeldType of
+            spLand :
+              WriteString(iiImpFeldListe,'Land',FeldName);//unabhängig von wettk
+            spAbs1UhrZeit..spAbs8UhrZeit:
+              if GetFeldNameKurz(FeldType,Runde) <> '' then // sonst Exception
+                WriteString(iiImpFeldListe,GetFeldNameKurz(FeldType,Runde),FeldName);
+            else
+              if GetFeldNameKurz(FeldType) <> '' then
+                WriteString(iiImpFeldListe,GetFeldNameKurz(FeldType),FeldName);
+          end;
+
+      // SerieOrtIndex
+      if Veranstaltung.Serie then
+        WriteInteger(iiSerie,iiOrtIndex,Veranstaltung.OrtIndex);
+
+      // Drucker
+      WriteString(iiDrucker,iiDruckername,RpDev.Device);
+
+     {case RpDev.DevMode.dmDuplex of
+        DMDUP_VERTICAL     : WriteString(iiDrucker,iiDuplexMode,opdupVertical);
+        DMDUP_HORIZONTAL   : WriteString(iiDrucker,iiDuplexMode,opdupHorizontal);
+        else (*DMDUP_SIMPLEX*) WriteString(iiDrucker,iiDuplexMode,opdupSimplex);
+      end; }
+
+      // ZeitErfassung-Dateiformat
+      case ZtErfDateiFormat of
+        fzTCBacknang  : WriteString(iiZtErf,iiZtErfDatFormat,iiTCBacknang);
+        fzZerf        : WriteString(iiZtErf,iiZtErfDatFormat,iiZerf);
+        fzGis         : WriteString(iiZtErf,iiZtErfDatFormat,iiGis);
+        fzSportronic  : WriteString(iiZtErf,iiZtErfDatFormat,iiSportronic);
+        fzDAG         : WriteString(iiZtErf,iiZtErfDatFormat,iiDAG);
+        fzMandigo     : WriteString(iiZtErf,iiZtErfDatFormat,iiMandigo);
+        fzSonstig     : WriteString(iiZtErf,iiZtErfDatFormat,iiSonstig);
+        else            WriteString(iiZtErf,iiZtErfDatFormat,iiTriaZeit);
+      end;
+
+      WriteBool(iiZtErf,iiZeitenBehalten,ZeitenBehalten);
+
+      WriteBool(iiZtErf,iiZtErfHeader,ZtErfHeader);
+      S := ZtErfTrennung;
+      if S=#9 then S := 'TAB'; // #9 wird als '' eingelesen
+      WriteString(iiZtErf,iiZtErfTrennung,S);
+      WriteString(iiZtErf,iiZtErfZeitTrenn,ZtErfZeitTrenn);
+      WriteInteger(iiZtErf,iiZtErfSnrPos,ZtErfSnrPos);
+      WriteInteger(iiZtErf,iiZtErfZeitPos,ZtErfZeitPos);
+      case ZtErfFormat of
+        zfSek     : WriteString(iiZtErf,iiZtErfFormat,opZeitSek);
+        zfZehntel : WriteString(iiZtErf,iiZtErfFormat,opZeitZehntel);
+        else        WriteString(iiZtErf,iiZtErfFormat,opZeitHundertstel);
+      end;
+
+      // ZtErfDateiListe
+      for i:=0 to ZeitErfDateiListe.Count-1 do
+        if not StrGleich(ZeitErfDateiListe[i],'') then
+          WriteString(iiZtErfDatListe,IntToStr(i+1),ZeitErfDateiListe[i]);
+
+      // UrkDokListe
+      for i:=0 to UrkDokListe.Count-1 do
+        if not StrGleich(UrkDokListe[i],'') then
+          WriteString(iiUrkDokListe,IntToStr(i+1),UrkDokListe[i])
+        else Break;
+      WriteInteger(iiWordUrkunde,iiWordUrkAkIndx,WordUrkAkIndx);
+
+      // SuchDialog
+      with SuchenDialog do
+      begin
+        WriteBool(iiSuchDialog,iiGrossKlein,GrossKleinCB.Checked);
+        WriteBool(iiSuchDialog,iiGanz,GanzCB.Checked);
+        WriteBool(iiSuchDialog,iiStartStr,StartStrCB.Checked);
+        WriteBool(iiSuchDialog,iiBestaetigen,BestaetigenCB.Checked);
+        WriteString(iiSuchDialog,iiSuchSpalte,SuchSpalteBuf);
+        // SuchListe
+        for i:=0 to SuchenNachCB.Items.Count-1 do
+          if not StrGleich(SuchenNachCB.Items[i],'') then
+            WriteString(iiSuchListe,IntToStr(i+1),SuchenNachCB.Items[i]);
+        // ErsatzListe
+        for i:=0 to ErsetzenCB.Items.Count-1 do
+          if not StrGleich(ErsetzenCB.Items[i],'') then
+            WriteString(iiErsatzListe,IntToStr(i+1),ErsetzenCB.Items[i]);
+      end;
+
+      // Drucker-Einstellungen über stream speichern
+      {DruckerDatei := SysUtils.ChangeFileExt(IniDatei,'.dru'); //Tria.dru
+      DruckerStream := TFileStream.Create(DruckerDatei,fmCreate or fmShareDenyNone);
+      SavePrinterInfo(PChar(RpDev.Device), DruckerStream);}
+      {DrDevModeStream.Position := 0;
+      WriteBinaryStream(iiDrucker,iiDruckermode, DrDevModeStream);}
+
+
+      {if (SizeOf(RpDev.DevMode^) < 1024) and
+         (DrDevModeStream.Write(RpDev.DevMode^, SizeOf(RpDev.DevMode^)) =
+                                                     SizeOf(RpDev.DevMode^)) then
+      begin
+        DrDevModeStream.Position := 0;
+        WriteBinaryStream(iiDrucker,iiDruckermode, DrDevModeStream)
+      end else }
+        //WriteString(iiDrucker,iiDruckername,RpDev.Device);
+
+    except
+      // Exceptions abfangen, auch bei Exceptions soll Programm beendet werden
+      TriaMessage('Fehler beim Speichern der aktuellen Konfiguration in '+#13+
+                  'Datei '+IniDatei,
+                   mtInformation,[mbOk]);
+    end;
+  finally
+    //DruckerStream.Free;
+    Free;
+  end;
+
+
+
+end;
+
+
+end.

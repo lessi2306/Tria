@@ -1,0 +1,172 @@
+object AnsFrame: TAnsFrame
+  Left = 0
+  Top = 0
+  Width = 861
+  Height = 42
+  HorzScrollBar.Visible = False
+  VertScrollBar.Visible = False
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  ParentFont = False
+  TabOrder = 0
+  TabStop = True
+  object AnsichtCBLabel: TLabel
+    Left = 7
+    Top = 2
+    Width = 43
+    Height = 15
+    Hint = 'W'#228'hle Listenart'
+    Caption = 'Ansicht '
+    Transparent = True
+    Layout = tlCenter
+    OnClick = AnsichtCBLabelClick
+  end
+  object SortModeCBLabel: TLabel
+    Left = 211
+    Top = 2
+    Width = 55
+    Height = 15
+    Hint = 'W'#228'hle Sortiermodus'
+    Caption = 'Sortierung'
+    Transparent = True
+    Layout = tlBottom
+    OnClick = SortModeCBLabelClick
+  end
+  object WettkampfCBLabel: TLabel
+    Left = 329
+    Top = 2
+    Width = 59
+    Height = 15
+    Hint = 'W'#228'hle Wettkampf'
+    Caption = 'Wettkampf'
+    Transparent = True
+    Layout = tlBottom
+    OnClick = WettkampfCBLabelClick
+  end
+  object SexCBLabel: TLabel
+    Left = 555
+    Top = 2
+    Width = 58
+    Height = 15
+    Hint = 'W'#228'hle Geschlecht'
+    Caption = 'Geschlecht'
+    Transparent = True
+    Layout = tlBottom
+    OnClick = SexCBLabelClick
+  end
+  object KlasseCBLabel: TLabel
+    Left = 633
+    Top = 2
+    Width = 32
+    Height = 15
+    Hint = 'W'#228'hle Altersklasse'
+    Caption = 'Klasse'
+    Transparent = True
+    Layout = tlBottom
+    OnClick = KlasseCBLabelClick
+  end
+  object StatusCBlabel: TLabel
+    Left = 760
+    Top = 2
+    Width = 32
+    Height = 15
+    Hint = 'W'#228'hle Status'
+    Caption = 'Status'
+    Transparent = True
+    Layout = tlBottom
+    OnClick = StatusCBlabelClick
+  end
+  object AnsichtCB: TComboBox
+    Left = 3
+    Top = 18
+    Width = 200
+    Height = 23
+    Hint = 'W'#228'hle Listenart'
+    AutoComplete = False
+    Style = csDropDownList
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 0
+    OnChange = AnsichtCBChange
+    OnCloseUp = ComboBoxCloseUp
+    OnKeyPress = ComboBoxKeyPress
+  end
+  object SortModeCB: TComboBox
+    Left = 207
+    Top = 18
+    Width = 122
+    Height = 23
+    Hint = 'W'#228'hle Sortiermodus'
+    AutoComplete = False
+    Style = csDropDownList
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 1
+    OnChange = SortModeCBChange
+    OnCloseUp = ComboBoxCloseUp
+    OnKeyPress = ComboBoxKeyPress
+  end
+  object WettkampfCB: TComboBox
+    Left = 333
+    Top = 18
+    Width = 214
+    Height = 23
+    Hint = 'W'#228'hle Wettkampf'
+    AutoComplete = False
+    Style = csDropDownList
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 2
+    OnChange = WettkampfCBChange
+    OnCloseUp = ComboBoxCloseUp
+    OnKeyPress = ComboBoxKeyPress
+  end
+  object SexCB: TComboBox
+    Left = 551
+    Top = 18
+    Width = 74
+    Height = 23
+    Hint = 'W'#228'hle Geschlecht'
+    AutoComplete = False
+    Style = csDropDownList
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 3
+    OnChange = SexCBChange
+    OnCloseUp = ComboBoxCloseUp
+    OnKeyPress = ComboBoxKeyPress
+  end
+  object KlasseCB: TComboBox
+    Left = 629
+    Top = 18
+    Width = 123
+    Height = 23
+    Hint = 'W'#228'hle Altersklasse'
+    AutoComplete = False
+    Style = csDropDownList
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 4
+    OnChange = KlasseCBChange
+    OnCloseUp = ComboBoxCloseUp
+    OnKeyPress = ComboBoxKeyPress
+  end
+  object StatusCB: TComboBox
+    Left = 756
+    Top = 18
+    Width = 102
+    Height = 23
+    Hint = 'W'#228'hle Status'
+    AutoComplete = False
+    Style = csDropDownList
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 5
+    OnChange = StatusCBChange
+    OnCloseUp = ComboBoxCloseUp
+    OnKeyPress = ComboBoxKeyPress
+  end
+end

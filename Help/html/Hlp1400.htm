@@ -1,0 +1,57 @@
+<html>
+<head>
+<Title>Serienwertung</Title>
+<link rel="stylesheet" type="text/css" href="TriaHilfe.css">
+<meta name="author" content="Gerhard Selten">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+<body bgcolor="#FFFFFF" text="#000000">
+<Object type="application/x-oleobject" classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e">
+	<param name="Keyword" value="Serienwertung">
+	<param name="Keyword" value="Streichergebnisse">
+	<param name="Keyword" value="Pflichtwettkampf">
+	<param name="Keyword" value="Punktgleichheit">
+	<param name="Keyword" value="Wertungspunkte">
+	<param name="Keyword" value="Punkte">
+	<param name="Keyword" value="Zeitaddition">
+	<param name="Keyword" value="Punktaddition">
+</OBJECT>
+<h1>Serienwertung</h1>
+<p>
+Bei einer Serienveranstaltung können nach Eingabe der Wettkampfdaten die verschiedenen Optionen für die Serienwertung in diesem Dialog individuell pro Wettkampf und unabhängig für Teilnehmer- und Mannschaftswertung definiert werden.</p>
+<p>
+Bei der Teilnehmer-Serienwertung werden Staffel- und Teamwettkämpfe grundsätzlich nicht berücksichtigt und Stundenrennen nur bei einer Serienwertung nach Punkten.<br>
+Bei der Mannschafts-Serienwertung durch Zeitaddition werden Veranstaltungsorte nur berücksichtigt, wenn dort auch die Mannschafts-Tageswertung durch Zeitaddition erfolgt. Sonst werden grundsätzlich alle Orte berücksichtigt, wenn dort eine Mannschaftswertung definiert wurde.</p>
+<br>
+<p>
+  <img src="img/serwrtg.gif" alt="Serienwertung" width="562" height="705" border="0"></p><br>
+<p>
+Für Serienveranstaltungen müssen nicht alle Tagesergebnisse bei der Serienwertung berücksichtigt werden. Im Bereich <b>"Wertungsoptionen"</b> kann eine beliebige Anzahl von <b>Streichergebnissen</b> definiert werden (die aber naturgemäß kleiner als die Zahl der Veranstaltungsorte sein muss). Es werden dann grundsätzlich die schlechtesten Tagesergebnisse bei der Serienwertung nicht berücksichtigt.</p>
+<p>
+Zusätzlich kann die Anzahl <b>Mindestwettkämpfe</b> festgelegt werden. Teilnehmer oder Mannschaften die diese Anzahl an Tageswertungen nicht erreichen, werden bei der Serienwertung nicht berücksichtigt.</p>
+<p>
+In der Regel werden die Altersklassen den Teilnehmern in Abhängigkeit vom <b>Kalenderjahr des Wettkampfes</b> zugeordnet. Wenn jedoch bei einer Serienveranstaltung die Wettkämpfe nicht alle im gleichen Kalenderjahr stattfinden, muss hier das Jahr für die Definition der Altersklassen festgelegt werden. Damit ist sichergestellt, dass die Teilnehmer in allen Veranstaltungsorten in der gleichen Altersklasse gewertet werden. Dies ist Voraussetzung für eine Serienwertung.</p>
+<p>
+Es können 1, 2 oder 1 von 2 Orten als <b>Pflichtwettkampf</b> definiert werden. Diese Wettkämpfe müssen erfolgreich beendet werden um in die Wertung zu gelangen und werden auch nicht als Streichergebnis berücksichtigt.</p>
+<p>
+Wenn die Berechnung für verschiedene Teilnehmer oder Mannschaften in einer <b>identischen Platzierung</b> resultiert, kann die Wertung in einem der Austragungsorte als maßgeblich für das Gesamtergebnis definiert werden. Ansonsten wird bei Summengleichheit auch die gleiche Platzziffer vergeben.</p>
+<p>
+Im Bereich <b>"Berechnungsoptionen"</b> kann zwischen eine Wertung durch Zeitaddition und verschiedene Wertungen durch Punktaddition gewählt werden. Die Wertungen nach Punkten unterscheiden sich durch unterschiedliche Zuordnungen von Wertungspunkten zur Platzierung.</p> 
+<p>
+Wenn die Punkte der Platzierung entsprechen, erhalten nicht platzierte Teilnehmer / Mannschaften einen Punkt mehr als der Letztplatzierte und in der Regel also für jeden Austragungsort eine unterschiedliche Punktzahl (abhängig von der Teilnehmerzahl). Durch Setzen der entsprechenden Option, kann stattdessen für alle Austragungsorte die gleiche und zwar höchste Punktzahl vergeben werden.</p>
+<p>
+Bei der zweiten Möglichkeit erhalten die Erstplatzierten in der Regel je nach Austragungsort unterschiedliche Punkte. Auch in diesem Fall kann alternativ der Höchstwert als einheitlicher Punktzahl für die Erstplatzierten festgelegt werden. Nicht gewertete Teilnehmer erhalten hier grundsätzlich keine Punkte.</p>
+<p>
+Der Screenshot zeigt die dritte Möglichkeit, bei der die Punkte den Platzierungen flexibel zugeordnet werden können. In dem gezeigten Beispiel wird nur einen Platzierungsbereich verwendet, es können jedoch beliebig viele Bereiche mit unterschiedlichen Punktwerten definiert werden.</p>
+<p>
+Die Liste der Wertungspunktbereiche beginnt grundsätzlich bei Platz 1. Die nachfolgenden Platzierungen müssen lückenlos und in aufsteigender Reihenfolge definiert werden. Sowohl für Platzierungen als auch für Punkte sind Werte von 1 bis höchstens 9.999 zulässig. Platzierungen außerhalb der definierten Bereiche werden wie nicht gewertete Teilnehmer / Mannschaften behandelt.<br> 
+Die Wertungspunkte werden pro Bereich mit einem Anfangswert und einem konstanten Punkteabstand zur nächsten Platzierung entweder aufsteigend (Inkrement) oder absteigend (Dekrement) definiert. Die Auswahl von Inkrement oder Dekrement steht nur für den ersten Bereich zur Verfügung und gilt für die gesamte Liste.</p> 
+<p>
+Für alle Teilnehmer und Mannschaften werden pro Austragungsort Punkte entsprechend ihrer Tagesplatzierung und der hier definierten Zuordnung berechnet. Die Summe der Punkte über alle Orte bestimmt das Endergebnis.
+Bei aufsteigenden  Punktwerten (Inkrement) wird die kleinste Punktzahl als Sieger gewertet, bei absteigenden Punktwerten (Dekrement) die höchste Punktzahl.</p>
+<p>
+Nichtgewertete Teilnehmer/Mannschaften oder mit einer Platzierung außerhalb des definierten Bereiches erhalten bei absteigenden Punktwerten 0 Punkte, bei aufsteigenden Punktwerten den höchst definierten Punktzahl + 1.</p>
+<p>
+Bei Zeitaddition wird grundsätzlich die niedrigste Summe der Endzeiten über alle bei der Wertung berücksichtigte Orte als Sieger gewertet.</p>
+</body>
+</html>

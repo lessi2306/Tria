@@ -1,0 +1,665 @@
+unit SMldObj;
+
+interface
+
+uses
+  Classes,SysUtils,Dialogs,
+  AllgConst,AllgFunc,AllgObj,AkObj,WettkObj,SGrpObj;
+
+
+type
+  TSMldObj = class;
+  TSMldTlnListe = class(TTriaObjColl)
+  protected
+    FSMldPtr    : TSMldObj;
+    FSortWettk  : TWettkObj;
+    FSortKlasse : TAkObj;
+    FSortStatus : TStatus;
+    procedure FreeItem(Item: Pointer); override;
+    procedure SetItemSize; override;
+  public
+    constructor Create(Veranst:Pointer;ItemClass:TTriaObjClass;SMld:TSMldObj);
+    procedure Clear; override;
+    procedure Sortieren(ModeNeu:TSortMode; WettkNeu:TWettkObj;
+                        AkNeu: TAkObj; StatusNeu: TStatus);
+    function  SortString(Item:Pointer): String; override;
+    function  AddItem(Item:Pointer): Integer; override;
+    function  AddSortItem(Item: Pointer): Integer; override;
+    function  CollSize: Integer; override;
+    property  SMldPtr:TSMldObj read FSMldPtr;
+  end;
+
+  TSMldObj = class(TTriaObj)
+  protected
+    FMannschName : PString;
+    FName    : String;
+    FVName   : String;
+    FStrasse : String;
+    FHausNr  : String;//ab 2005-0.4, bleibt Leerstring bei ältere Dateien
+    FPLZ     : String;//ab 2005-0.4, bleibt Leerstring bei ältere Dateien
+    FOrt     : String;
+    FLand    : String; // Dummy
+    FTlnListe : TSMldTlnListe; (* alle gemeldete Tln *)
+    procedure SetName(NameNeu:String);
+    procedure SetVName(VNameNeu:String);
+    procedure SetMannschNamePtr(MannschNamePtrNeu: PString);
+    function  GetBPObjType: Word; override;
+  public
+    EMail : String;
+    constructor Create(Veranst:Pointer;Coll:TTriaObjColl;Add:TOrtAdd); override;
+    destructor  Destroy; override;
+    procedure Init(NameNeu,VNameNeu,StrasseNeu,HausNrNeu,PLZNeu,OrtNeu,
+                   VereinNeu,EMailNeu:String);
+    function  Load: Boolean; override;
+    function  Store: Boolean; override;
+    function  NameVName : String;
+    function  VNameName : String;
+    procedure SetMannschName(MannschNameNeu: String);
+    function  Verein: String;
+    procedure OrtCollAdd; override;
+    procedure OrtCollClear(Indx:Integer); override;
+    procedure OrtCollExch(Idx1,Idx2:Integer); override;
+    function  ObjSize: Integer; override;
+    property Name: String read FName write SetName;
+    property VName: String read FVName write SetVName;
+    property Strasse: String read FStrasse write FStrasse;
+    property HausNr: String read FHausNr write FHausNr;
+    property PLZ: String read FPLZ write FPLZ;
+    property Ort: String read FOrt write FOrt;
+    //property Land: String read FLand write FLand;
+    property MannschName: PString read FMannschName write SetMannschNamePtr;
+    property TlnListe:TSMldTlnListe read FTlnListe;
+  end;
+
+  TSMldColl = class(TTriaObjColl)
+  protected
+    FSortTlnColl  : TMannschSortMode;
+    function    GetBPObjType: Word; override;
+    function    GetPItem(Indx:Integer): TSMldObj;
+    procedure   SetPItem(Indx:Integer; Item:TSMldObj);
+    function    GetSortItem(Indx:Integer): TSMldObj;
+  public
+    constructor Create(Veranst:Pointer;ItemClass:TTriaObjClass);
+    function    SortString(Item: Pointer): String; override;
+    procedure   ClearIndex(Indx:Integer); override;
+    function    Belegt(Item: TSMldObj): Boolean;
+    function    MannschNameVorhanden(MannschNameObj:PString): Boolean;
+    function    GetSMld(NameNeu,VNameNeu,VereinNeu:String): TSMldObj;
+    procedure   Sortieren(ModeNeu:TSortMode; SortTlnCollNeu:TMannschSortMode);
+    property    SortTlnColl : TMannschSortMode   read FSortTlnColl;
+    property Items[Indx: Integer]: TSMldObj read GetPItem write SetPItem; default;
+    property SortItems[Indx:Integer]:TSMldObj read GetSortItem;
+  end;
+
+
+(************************** Implementation **********************************)
+implementation
+
+uses TriaMain,VeranObj,TlnObj,DateiDlg;
+
+(******************************************************************************)
+(*                  Methoden von TSMldTlnListe                                *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+procedure TSMldTlnListe.FreeItem(Item: Pointer);
+//------------------------------------------------------------------------------
+begin
+  // Pointer-Inhalt (=Tln) wird nicht gelöscht
+  //if Item<>nil then TTlnObj(Item).SMld := nil;
+  //TlnListe wird über TlnObj eingestellt,  anders als bei MschObj
+end;
+
+//------------------------------------------------------------------------------
+procedure TSMldTlnListe.SetItemSize;
+//----------------------------------------------------------------------------
+begin
+  FItemSize := cnSizeOfSmallInt;
+end;
+
+// public Methoden
+
+//==============================================================================
+constructor TSMldTlnListe.Create(Veranst:Pointer;ItemClass:TTriaObjClass;
+                                    SMld:TSMldObj);
+//==============================================================================
+begin
+  inherited Create(Veranst,ItemClass);
+  //FStepMeldung := false;
+  FSMldPtr := SMld;
+  FItemSize := cnSizeOfPointer;
+end;
+
+//==============================================================================
+procedure TSMldTlnListe.Clear;
+//==============================================================================
+// kein StepProgressCounter
+begin
+  if FItems <> nil then
+    while FItems.Count > 0 do
+    begin
+      //FreeItem(FItems.Last);  keine Funktion
+      FItems.Delete(FItems.Count-1);
+    end;
+end;
+
+//==============================================================================
+procedure TSMldTlnListe.Sortieren(ModeNeu:TSortMode; WettkNeu:TWettkObj;
+                          AkNeu: TAkObj; StatusNeu: TStatus);
+//==============================================================================
+// sicherheitshalber immer sortieren
+var i: integer;
+begin
+  {if (FSortMode     <> ModeNeu)   or
+     (FSortWettk    <> WettkNeu)  or
+     (FSortKlasse   <> AkNeu)     or
+     (FSortStatus   <> StatusNeu) then
+  begin}
+    FSortMode   := ModeNeu;
+    FSortWettk  := WettkNeu;
+    FSortKlasse := AkNeu;
+    FSortStatus := StatusNeu;
+
+    SortClear;
+    if FSortItems.Capacity < FItems.Capacity then
+      FSortItems.Capacity := FItems.Capacity;
+    for i:=0 to FItems.Count-1 do AddSortItem(GetPItem(i));
+  {end;}
+end;
+
+//==============================================================================
+function TSMldTlnListe.SortString(Item:Pointer): String;
+//==============================================================================
+          if HauptFenster.Sortwettk.SchwimmDistanz > 0 then
+            AppendSortMode(smTlnSBhn);}
+
+var Zt : Integer;
+begin
+  Result := ' ';
+  if Item=nil then Exit;
+  with TTlnObj(Item) do
+    case FSortMode of
+
+      smTlnErstellt:
+        if IndexOf(Item) >= 0 then
+          Result := Format('%4u',[IndexOf(Item)])
+        else
+          Result := Format('X %s  %s  %s  %s',
+                           [Name,VName,MannschName,Wettk.Name]);
+
+      smTlnBearbeitet:
+        with Bearbeitet do
+        if Date > 0 then
+          Result := Format('%8d %8d %4u %s  %s  %s  %s',
+                           [Date,Time,IndexOf(Item),
+                            Name,VName,MannschName,Wettk.Name])
+        else
+          Result := Format('Z %8d %8d %4u %s  %s  %s  %s',
+                           [Date,Time,IndexOf(Item),
+                            Name,VName,MannschName,Wettk.Name]);
+
+      smTlnName:
+        Result := Format('%s  %s  %s  %s',[Name,VName,MannschName,Wettk.Name]);
+
+      smTlnSnr:
+        if Snr>0 then
+          Result := Format('%4u  %s  %s  %s  %s',
+                           [Snr,Name,VName,MannschName,Wettk.Name])
+        else Result := Format('Z  %s  %s  %s  %s',
+                           [Name,VName,MannschName,Wettk.Name]);
+
+      smTlnRfid:
+        if Length(RfidCode) > 0 then
+          Result := Format('A  %s  %s  %s  %s  %s',
+                           [RfidCode,Name,VName,MannschName,Wettk.Name])
+        else
+          Result := Format('Z  %s  %s  %s  %s',
+                           [Name,VName,MannschName,Wettk.Name]);
+
+      smTlnAlter:
+        Result := Format('%2u %s  %s  %s  %s',
+                         [GetAlter,
+                          Name,VName,MannschName,Wettk.Name]);
+
+      smTlnAk:
+        Result := Format('%2u %u %s  %s  %s  %s',
+                         [WertungsKlasse(kwAltKl,tmTln).AlterVon,5-Integer(Sex),
+                          Name,VName,MannschName,Wettk.Name]);
+
+      smTlnMschName:
+        Result := Format('%s  %s  %s  %s',[MannschName,Wettk.Name,Name,VName]);
+
+      smTlnMldZeit:
+      begin
+        Zt := MldZeit; //Zmax = cnZeit100 = 3600000 (7 Ziffern)
+        if Zt >= 0 then
+          Result := Format('%8d  %s  %s  %s  %s',
+                           [Zt,Name,VName,MannschName,Wettk.Name])
+        else Result := Format('Z  %s  %s  %s  %s',
+                           [Name,VName,MannschName,Wettk.Name]);
+      end;
+
+      smTlnAbs1Startzeit..smTlnAbs8Startzeit:
+      begin
+        Zt := StrtZeit(TWkAbschnitt(Integer(FSortMode)-Integer(smTlnAbs1Startzeit)+1));
+        if Zt >= 0 then // Zmax = cnZeit24_00 = 8640000 (7 Ziffern)
+          Result := Format('%7d  %4u  %s  %s  %s  %s',
+                           [Zt,Snr,Name,VName,MannschName,Wettk.Name])
+        else Result := Format('Z  %s  %s  %s  %s',
+                           [Name,VName,MannschName,Wettk.Name]);
+      end;
+
+      smTlnStartgeld:
+        if Startgeld>0 then
+          Result := Format('%5u  %s  %s  %s  %s',
+                           [Startgeld,
+                            Name,VName,MannschName,Wettk.Name])
+        else Result := Format('Z  %s  %s  %s  %s',
+                           [Name,VName,MannschName,Wettk.Name]);
+
+      smTlnSBhn:;
+
+    end;
+end;
+
+//==============================================================================
+function TSMldTlnListe.AddItem(Item:Pointer): Integer;
+//==============================================================================
+begin
+  Result := FItems.Add(Item);
+  FSortItems.Capacity := FItems.Capacity;
+  AddSortItem(Item);
+  //if Item<>nil then TTlnObj(Item).SMld := FSMldPtr; wird über TlnObj gesetzt
+end;
+
+//==============================================================================
+function TSMldTlnListe.AddSortItem(Item: Pointer): Integer;
+//==============================================================================
+begin
+  Result := -1;
+  if (FSortMode=smNichtSortiert) or (Item=nil) then Exit;
+  with TTlnObj(Item) do
+  begin
+    if (FSortWettk <> WettkAlleDummy) and (Wettk <> FSortWettk) then Exit;
+    if not TlnInKlasse(FSortKlasse,tmTln) then Exit;
+    if not TlnInStatus(FSortStatus) then Exit;
+  end;
+  Result := inherited AddSortItem(Item);
+end;
+
+(*============================================================================*)
+function TSMldTlnListe.CollSize: Integer;
+(*============================================================================*)
+begin
+  Result := cnMinCollSize + FItems.Count * FItemSize;
+end;
+
+(******************************************************************************)
+(*                      Methoden von TSMldObj                                 *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+function TSMldObj.GetBPObjType: Word;
+//----------------------------------------------------------------------------
+// Object Types aus Version 7.4 Stream Registration Records
+begin
+  Result := rrSMldObj;
+end;
+
+//------------------------------------------------------------------------------
+procedure TSMldObj.SetName(NameNeu:String);
+//------------------------------------------------------------------------------
+begin
+  SortRemove;
+  FName := NameNeu;
+  SortAdd;
+end;
+
+//------------------------------------------------------------------------------
+procedure TSMldObj.SetVName(VNameNeu:String);
+//------------------------------------------------------------------------------
+begin
+  SortRemove;
+  FVName := VNameNeu;
+  SortAdd;
+end;
+
+// public Methoden
+
+//==============================================================================
+constructor TSMldObj.Create(Veranst:Pointer;Coll:TTriaObjColl;Add:TOrtAdd);
+//==============================================================================
+begin
+  inherited Create(Veranst,Coll,Add);
+  FLand := '';
+  FTlnListe   := TSMldTlnListe.Create(FVPtr,TTlnObj,Self);
+end;
+
+//==============================================================================
+destructor TSMldObj.Destroy;
+//==============================================================================
+var i : Integer;
+begin
+  if (TVeranstObj(FVPtr) <> nil) and
+     (TVeranstObj(FVPtr).TlnColl <> nil) and
+     (TVeranstObj(FVPtr).TlnColl.Count > 0) then // nicht bei Veranst.Destroy
+    for i:=FTlnListe.Count-1 downto 0 do
+      TTlnObj(FTlnListe[i]).SMld := nil;
+  FreeAndNil(FTlnListe);
+  inherited Destroy;
+end;
+
+//==============================================================================
+procedure TSMldObj.Init(NameNeu,VNameNeu,StrasseNeu,HausNrNeu,PLZNeu,OrtNeu,
+                        VereinNeu,EMailNeu:String);
+//==============================================================================
+begin
+  SetName(NameNeu);
+  SetVName(VNameNeu);
+  FStrasse := StrasseNeu;
+  FHausNr  := HausNrNeu;
+  FPLZ     := PLZNeu;
+  FOrt     := OrtNeu;
+  EMail    := EMailNeu;
+  SetMannschName(VereinNeu);
+end;
+
+//==============================================================================
+function TSMldObj.Load: Boolean;
+//==============================================================================
+var Buff : SmallInt;
+begin
+  Result := false;
+
+  try
+    if FVPtr <> EinlVeranst then Exit;
+    if not inherited Load then Exit;
+    with TriaStream do
+    begin
+      ReadStr(FName);
+      ReadStr(FVName);
+      ReadStr(FStrasse);
+      //ab 2005-0.4 HausNr und PLZ in VeranObj, ab 2008-2.0 hier
+      with TriDatei.Version do
+        if (Jahr>'2008')or(Jahr='2008')and(Nr>='2.0') then
+        begin
+          ReadStr(FHausNr);
+          ReadStr(FPLZ);
+        end;
+      ReadStr(FOrt);
+      ReadStr(FLand);
+      ReadBuffer(Buff, cnSizeOfSmallInt);
+      if Buff>-1 then
+        if Buff<TVeranstObj(FVPtr).MannschNameColl.Count then
+          FMannschName := TVeranstObj(FVPtr).MannschNameColl[Buff]
+        else Exit
+      else FMannschName := nil;
+      with TriDatei.Version do
+        if (Jahr>'2010')or(Jahr='2010')and(Nr>='0.2') then
+          ReadStr(EMail);
+    end;
+
+  except
+    Result := false;
+    Exit;
+  end;
+
+  Result := true;
+  (*if MemAvail<cnLowMemSize then S.Error(stLowMemError,0); *)
+end;
+
+//==============================================================================
+function TSMldObj.Store: Boolean;
+//==============================================================================
+var Buff : SmallInt;
+begin
+  Result := false;
+  try
+    if not inherited Store then Exit;
+    with TriaStream do
+    begin
+      WriteStr(FName);
+      WriteStr(FVName);
+      WriteStr(FStrasse);
+      //ab 2005-0.4 HausNr und PLZ in VeranObj, ab 2008-2.0 hier
+      WriteStr(FHausNr);
+      WriteStr(FPLZ);
+      WriteStr(FOrt);
+      WriteStr(FLand);
+      if Assigned(FMannschName)
+        then Buff:=TVeranstObj(FVPtr).MannschNameColl.SortIndexOf(FMannschName)
+       else Buff:=-1;
+      WriteBuffer(Buff, cnSizeOfSmallInt);
+      WriteStr(EMail);
+    end;
+  except
+    Result := false;
+    Exit;
+  end;
+  Result := true;
+end;
+
+//==============================================================================
+function TSMldObj.NameVName: String;
+//==============================================================================
+begin
+  Result := FName + ', ' + FVName;
+end;
+
+//==============================================================================
+function TSMldObj.VNameName: String;
+//==============================================================================
+begin
+  Result := FVName + ' ' + FName;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure TSMldObj.SetMannschNamePtr(MannschNamePtrNeu: PString);
+(*----------------------------------------------------------------------------*)
+begin
+  if FMannschName <> MannschNamePtrNeu then
+  begin
+    SortRemove;
+    FMannschName := MannschNamePtrNeu;
+    SortAdd;
+  end;
+end;
+
+//==============================================================================
+procedure TSMldObj.SetMannschName(MannschNameNeu: String);
+//==============================================================================
+var MannschAlt : String;
+begin
+  if FMannschName<>nil then MannschAlt := FMannschName^
+                       else MannschAlt := '';
+  if MannschAlt = Trim(MannschNameNeu) then Exit;
+  // nur Groß/Klein-Unterschied wird überschrieben
+  TVeranstObj(FVPtr).MannschNameColl.InsertName(MannschNameNeu);
+  SortRemove;
+  FMannschName := TVeranstObj(FVPtr).MannschNameColl.GetNamePtr(MannschNameNeu);
+  SortAdd;
+  // alter Name löschen, wenn nicht mehr benutzt
+  if MannschAlt <> '' then
+    TVeranstObj(FVPtr).MannschNameColl.NameLoeschen(MannschAlt);
+end;
+
+//==============================================================================
+function TSMldObj.Verein: String;
+//==============================================================================
+begin
+  if FMannschName <> nil then Result := FMannschName^
+                         else Result :='';
+end;
+
+//==============================================================================
+procedure TSMldObj.OrtCollAdd;
+//==============================================================================
+begin
+  // dummy, damit Compiler keine Warnung bringt
+end;
+
+//==============================================================================
+procedure TSMldObj.OrtCollClear(Indx:Integer);
+//==============================================================================
+begin
+  // dummy, damit Compiler keine Warnung bringt
+end;
+
+//==============================================================================
+procedure TSMldObj.OrtCollExch(Idx1,Idx2:Integer);
+//==============================================================================
+begin
+  // dummy, damit Compiler keine Warnung bringt
+end;
+
+//==============================================================================
+function TSMldObj.ObjSize: Integer;
+//==============================================================================
+begin
+  Result := 8*cnSizeOfString; //FName,FVName,FStrasse,FHausNR,FPLZ,FOrt,FLand,EMail
+end;
+
+
+(******************************************************************************)
+(* Methoden von TSMldColl                                                     *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+function TSMldColl.GetBPObjType: Word;
+//------------------------------------------------------------------------------
+(* Object Types aus Version 7.4 Stream Registration Records *)
+begin
+  Result := rrSMldColl;
+end;
+
+//------------------------------------------------------------------------------
+function TSMldColl.GetPItem(Indx:Integer): TSMldObj;
+//------------------------------------------------------------------------------
+begin
+  Result := TSMldObj(inherited GetPItem(Indx));
+end;
+
+//------------------------------------------------------------------------------
+procedure TSMldColl.SetPItem(Indx:Integer; Item:TSMldObj);
+//------------------------------------------------------------------------------
+begin
+  inherited SetPItem(Indx,Item);
+end;
+
+//------------------------------------------------------------------------------
+function TSMldColl.GetSortItem(Indx:Integer): TSMldObj;
+//------------------------------------------------------------------------------
+begin
+  Result := TSMldObj(inherited GetSortItem(Indx));
+end;
+
+// public Methoden
+
+//==============================================================================
+Constructor TSMldColl.Create(Veranst:Pointer; ItemClass:TTriaObjClass);
+//==============================================================================
+begin
+  inherited Create(Veranst,ItemClass);
+  FStepProgressBar := true;
+  FSortItems.Duplicates := true; (* Count von Items und SortItems gleich *)
+  FSortTlnColl := smOhneTlnColl;
+end;
+
+//==============================================================================
+function TSMldColl.SortString(Item:Pointer): String;
+//==============================================================================
+begin
+  with TSMldObj(Item) do
+    case SortMode of
+      smSMldName   : Result := FName+' '+FVName+' '+Verein;
+      smSMldVerein : Result := Verein+' '+FName+' '+VName;
+      else           Result := '';
+    end;
+end;
+
+//==============================================================================
+procedure TSMldColl.ClearIndex(Indx:Integer);
+//==============================================================================
+var MannschAlt : String;
+    SMld     : TSMldObj;
+begin
+  if (Indx<0)or(Indx>=Count) then Exit;
+  SMld := GetPItem(Indx);
+  if SMld = nil then Exit;
+  if SMld.FMannschName <> nil then MannschAlt := SMld.FMannschName^
+                              else MannschAlt := '';
+
+  inherited ClearIndex(Indx);
+
+  // alter Name löschen, wenn nicht mehr benutzt
+  if MannschAlt <> '' then
+    TVeranstObj(FVPtr).MannschNameColl.NameLoeschen(MannschAlt);
+end;
+
+//==============================================================================
+function TSMldColl.Belegt(Item: TSMldObj): Boolean;
+//==============================================================================
+var i : Integer;
+begin
+  Result := false;
+  for i:=0 to TVeranstObj(FVPtr).TlnColl.Count-1 do
+    if TVeranstObj(FVPtr).TlnColl[i].SMld = Item then
+    begin
+      Result := true;
+      Exit;
+    end;
+end;
+
+//==============================================================================
+function TSMldColl.MannschNameVorhanden(MannschNameObj:PString): Boolean;
+//==============================================================================
+var i : Integer;
+begin
+  Result := false;
+  for i:=0 to Count-1 do
+    if GetPItem(i).FMannschName = MannschNameObj then
+    begin
+      Result := true;
+      Exit;
+    end;
+end;
+
+//==============================================================================
+function TSMldColl.GetSMld(NameNeu,VNameNeu,VereinNeu:String): TSMldObj;
+//==============================================================================
+var i : Integer;
+begin
+  Result := nil;
+  for i:=0 to Count-1 do with GetPItem(i) do
+    if StrGleich(FName,NameNeu) and StrGleich(FVName,VNameNeu) and StrGleich(Verein,VereinNeu) then
+    begin
+      Result := GetPItem(i);
+      Exit;
+    end;
+end;
+
+
+//==============================================================================
+procedure TSMldColl.Sortieren(ModeNeu:TSortMode;SortTlnCollNeu:TMannschSortMode);
+//==============================================================================
+// Mode smMitTlnColl momentan nicht benutzt. Wird benötigt für eine Liste
+// über alle SMld. Sonst wird nur SMld.TlnListe sortiert.
+var i : integer;
+begin
+  FSortMode    := ModeNeu;
+  FSortTlnColl := SortTlnCollNeu;
+  SortClear;
+  if FSortItems.Capacity < FItems.Capacity then
+    FSortItems.Capacity := FItems.Capacity;
+  for i:=0 to FItems.Count-1 do AddSortItem(GetPItem(i))
+end;
+
+
+end.
+

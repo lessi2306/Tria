@@ -1,0 +1,224 @@
+object DruckerDialog: TDruckerDialog
+  Left = 0
+  Top = 0
+  BorderIcons = [biSystemMenu]
+  Caption = 'Drucken'
+  ClientHeight = 214
+  ClientWidth = 420
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  Position = poMainFormCenter
+  PixelsPerInch = 96
+  TextHeight = 13
+  object DruckerLabel: TLabel
+    Left = 15
+    Top = 16
+    Width = 37
+    Height = 13
+    Caption = 'Drucker'
+  end
+  object ExemplareGB: TGroupBox
+    Left = 15
+    Top = 75
+    Width = 146
+    Height = 79
+    Caption = 'Exemplare'
+    TabOrder = 0
+    object AnzahlLabel: TLabel
+      Left = 12
+      Top = 26
+      Width = 32
+      Height = 13
+      HelpContext = 2506
+      Caption = 'Anzahl'
+    end
+    object AnzahlEdit: TTriaMaskEdit
+      Left = 53
+      Top = 23
+      Width = 32
+      Height = 22
+      HelpContext = 2506
+      EditMask = '999;0; '
+      Font.Charset = ANSI_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Courier New'
+      Font.Style = []
+      MaxLength = 3
+      ParentFont = False
+      TabOrder = 0
+      Text = '888'
+      OnChange = AnzahlEditChange
+      UpDown = AnzahlUpDown
+    end
+    object AnzahlUpDown: TTriaUpDown
+      Left = 85
+      Top = 22
+      Width = 17
+      Height = 24
+      HelpContext = 2506
+      Min = 1
+      Max = 999
+      Position = 88
+      TabOrder = 1
+      Edit = AnzahlEdit
+    end
+    object SortierCB: TCheckBox
+      Left = 53
+      Top = 51
+      Width = 71
+      Height = 17
+      HelpContext = 2506
+      Caption = 'Sortieren'
+      TabOrder = 2
+    end
+  end
+  object DrBereichGB: TGroupBox
+    Left = 178
+    Top = 75
+    Width = 226
+    Height = 80
+    Caption = 'Druckbereich'
+    TabOrder = 1
+    object PgBisLabel: TLabel
+      Left = 143
+      Top = 51
+      Width = 13
+      Height = 13
+      HelpContext = 2505
+      Caption = 'bis'
+      OnClick = PgBisLabelClick
+    end
+    object PgAlleRB: TRadioButton
+      Left = 12
+      Top = 26
+      Width = 113
+      Height = 17
+      HelpContext = 2505
+      Caption = 'Alle Seiten'
+      TabOrder = 0
+      OnClick = PgAlleRBClick
+    end
+    object PgVonBisRB: TRadioButton
+      Left = 12
+      Top = 51
+      Width = 73
+      Height = 17
+      HelpContext = 2505
+      Caption = 'Seiten von'
+      TabOrder = 1
+      OnClick = PgVonBisRBClick
+    end
+    object PgVonEdit: TTriaMaskEdit
+      Left = 87
+      Top = 48
+      Width = 32
+      Height = 22
+      HelpContext = 2505
+      EditMask = '999;0; '
+      Font.Charset = ANSI_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Courier New'
+      Font.Style = []
+      MaxLength = 3
+      ParentFont = False
+      TabOrder = 2
+      Text = '888'
+      OnClick = PgEditClick
+      UpDown = PgVonUpDown
+    end
+    object PgBisEdit: TTriaMaskEdit
+      Left = 160
+      Top = 48
+      Width = 32
+      Height = 22
+      HelpContext = 2505
+      EditMask = '999;0; '
+      Font.Charset = ANSI_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Courier New'
+      Font.Style = []
+      MaxLength = 3
+      ParentFont = False
+      TabOrder = 4
+      Text = '888'
+      OnClick = PgEditClick
+      UpDown = PgBisUpDown
+    end
+    object PgVonUpDown: TTriaUpDown
+      Left = 119
+      Top = 47
+      Width = 17
+      Height = 24
+      HelpContext = 2505
+      Min = 1
+      Max = 999
+      Position = 888
+      TabOrder = 3
+      OnClick = PgVonUpDownClick
+      Edit = PgVonEdit
+    end
+    object PgBisUpDown: TTriaUpDown
+      Left = 192
+      Top = 47
+      Width = 17
+      Height = 24
+      HelpContext = 2505
+      Min = 1
+      Max = 999
+      Position = 88
+      TabOrder = 5
+      OnClick = PgBisUpDownClick
+      Edit = PgBisEdit
+    end
+  end
+  object OkButton: TButton
+    Left = 239
+    Top = 175
+    Width = 75
+    Height = 25
+    HelpContext = 2512
+    Caption = 'OK'
+    Default = True
+    TabOrder = 2
+    TabStop = False
+    OnClick = OkButtonClick
+  end
+  object CancelButton: TButton
+    Left = 329
+    Top = 175
+    Width = 75
+    Height = 25
+    HelpContext = 2511
+    Caption = 'Abbrechen'
+    ModalResult = 2
+    TabOrder = 3
+    TabStop = False
+  end
+  object DruckerCB: TComboBox
+    Left = 15
+    Top = 30
+    Width = 389
+    Height = 21
+    AutoComplete = False
+    AutoCloseUp = True
+    Sorted = True
+    TabOrder = 4
+  end
+  object Button1: TButton
+    Left = 88
+    Top = 176
+    Width = 75
+    Height = 25
+    Caption = 'Button1'
+    TabOrder = 5
+    OnClick = Button1Click
+  end
+end

@@ -1,0 +1,226 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+<!-- Sitemap 1.0 -->
+</HEAD><BODY>
+<OBJECT type="text/site properties">
+	<param name="ImageType" value="Folder">
+</OBJECT>
+<UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="&Uuml;bersicht">
+		<param name="Local" value="html\Hlp0100.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Installation">
+		<param name="Local" value="html\Hlp0200.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Veranstaltung">
+		<param name="Local" value="html\Hlp0300.htm">
+		<param name="ImageNumber" value="11">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Wettk&auml;mpfe">
+		<param name="Local" value="html\Hlp0500.htm">
+		<param name="ImageNumber" value="1">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Allgemein">
+			<param name="Local" value="html\Hlp0510.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Wertung">
+			<param name="Local" value="html\Hlp0530.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Abschnitte">
+			<param name="Local" value="html\Hlp0520.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Teilnehmer">
+			<param name="Local" value="html\Hlp0540.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Mannschaften">
+			<param name="Local" value="html\Hlp0550.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Schwimmbad">
+			<param name="Local" value="html\Hlp0560.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Serienwertung">
+		<param name="Local" value="html\Hlp1400.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Wertungsklassen">
+		<param name="Local" value="html\Hlp1300.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Startgruppen">
+		<param name="Local" value="html\Hlp0600.htm">
+		<param name="ImageNumber" value="1">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Allgeimein">
+			<param name="Local" value="html\Hlp0610.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Start Abschnitt 1">
+			<param name="Local" value="html\Hlp0620.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Start Abschnitte 2-8">
+			<param name="Local" value="html\Hlp0630.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Teilnehmer">
+		<param name="Local" value="html\Hlp0700.htm">
+		<param name="ImageNumber" value="1">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Vereinsmeldung">
+			<param name="Local" value="html\Hlp0701.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Anmeldung">
+			<param name="Local" value="html\Hlp0710.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Optionen">
+			<param name="Local" value="html\Hlp0712.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Staffel/Team">
+			<param name="Local" value="html\Hlp0715.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Einteilung">
+			<param name="Local" value="html\Hlp0720.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Zusatzangaben">
+			<param name="Local" value="html\Hlp0730.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Zeitnahme">
+			<param name="Local" value="html\Hlp0740.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Wertung">
+			<param name="Local" value="html\Hlp0750.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Sonderwertung">
+			<param name="Local" value="html\Hlp0760.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Serienwertung">
+			<param name="Local" value="html\Hlp0770.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Teilnehmer einteilen">
+		<param name="Local" value="html\Hlp1500.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Einteilung von Teilnehmern l&ouml;schen">
+		<param name="Local" value="html\Hlp1600.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Zeitnahme">
+		<param name="Local" value="html\Hlp0800.htm">
+		<param name="ImageNumber" value="1">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Zeiten Einlesen">
+			<param name="Local" value="html\Hlp0810.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Live Zeiterfassung">
+			<param name="Local" value="html\Hlp0830.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Zeiten L&ouml;schen">
+			<param name="Local" value="html\Hlp0820.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="RFID-Codes Importieren">
+		<param name="Local" value="html\Hlp1700.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Ansicht">
+		<param name="Local" value="html\Hlp0900.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Ausgabe">
+		<param name="Local" value="html\Hlp1000.htm">
+		<param name="ImageNumber" value="1">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Liste Drucken">
+			<param name="Local" value="html\Hlp1010.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Liste Exportieren">
+			<param name="Local" value="html\Hlp1015.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Einzeldruck von Urkunden">
+			<param name="Local" value="html\Hlp1019.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Seriendruck von Urkunden">
+			<param name="Local" value="html\Hlp1020.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Seriendruck von Etiketten">
+			<param name="Local" value="html\Hlp1030.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Optionen">
+		<param name="Local" value="html\Hlp1100.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Daten-Import">
+		<param name="Local" value="html\Hlp1200.htm">
+		<param name="ImageNumber" value="1">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Import aus Tria-Datei">
+			<param name="Local" value="html\Hlp1210.htm">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Import in Einzelveranstaltung">
+				<param name="Local" value="html\Hlp1211.htm">
+				<param name="URL" value="html\Hlp1211.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Import in Serienveranstaltung">
+				<param name="Local" value="html\Hlp1212.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Import aus Excel-Datei">
+			<param name="Local" value="html\Hlp1220.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Import aus Textdatei">
+			<param name="Local" value="html\Hlp1230.htm">
+			</OBJECT>
+	</UL>
+</UL>
+</BODY></HTML>

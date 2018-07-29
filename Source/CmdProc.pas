@@ -1,0 +1,447 @@
+unit CmdProc;
+
+interface
+
+uses Forms,Dialogs,StdCtrls,Controls;
+
+
+procedure SetzeCommands;
+
+implementation
+
+uses AllgConst,TriaMain,DateiDlg,VeranObj,LstFrm,TlnErg,SMldFrm,AllgObj,
+     TriaConfig,VstOrtDlg,WettkObj;
+
+procedure   DateiMenueCommands(Setzen:Boolean);         forward;
+procedure   VeranstaltungMenueCommands(Setzen:Boolean); forward;
+procedure   AnsichtMenueCommands(Setzen:Boolean);       forward;
+procedure   TeilnehmerMenueCommands(Setzen:Boolean);    forward;
+procedure   ZeitnahmeMenueCommands(Setzen:Boolean);     forward;
+procedure   DruckenMenueCommands(Setzen:Boolean);       forward;
+
+
+(******************************************************************************)
+procedure SetzeCommands;
+(******************************************************************************)
+begin
+  with HauptFenster do
+  begin
+    if (Veranstaltung = nil) or
+       (Active and ProgressBar.Visible and (Screen.Cursor=crHourGlass)) then
+    begin
+      BeendenAction.Enabled := false;
+      DateiMenueCommands(false);
+      VeranstaltungMenueCommands(false);
+      //LstFrame.TriaGrid.Enabled := false;
+    end else
+    begin
+      BeendenAction.Enabled := true;
+      if not ImpFrame.Visible then
+      begin
+        if LstFrame.Visible then
+        begin
+          if TriDatei.Geladen then
+          begin
+            DateiMenueCommands(true);
+            VeranstaltungMenueCommands(true);
+          end else
+          begin
+            DateiMenueCommands(false);
+            VeranstaltungMenueCommands(false);
+          end
+        end else // PrevFrame visible
+        begin
+          DateiMenueCommands(false);
+          VeranstaltungMenueCommands(false);
+        end;
+      end else // ImpFrame visible
+      begin
+        DateiMenueCommands(false);
+        VeranstaltungMenueCommands(false);
+        if not ImpFrame.ImpTlnVisible then
+        begin
+          if Veranstaltung.Serie then OrtCB.Enabled := true;
+          LstFrame.AnsFrame.WettkampfCB.Enabled := true;
+        end;
+      end;
+    end;
+  end;
+  Application.ProcessMessages;
+end;
+
+(******************************************************************************)
+procedure DateiMenueCommands(Setzen:Boolean);
+(******************************************************************************)
+begin
+  with HauptFenster do
+  begin
+    if Setzen then
+    // TriDatei.Geladen
+    begin
+      TriDatNeuAction.Enabled     := true;
+      TriDatOeffnenAction.Enabled := true;
+      if TriDatei.Modified then TriDatSpeichernAction.Enabled := true
+                           else TriDatSpeichernAction.Enabled := false;
+      TriDatSpeichernUnterAction.Enabled := true;
+      if Veranstaltung.Definiert then ImportAction.Enabled := true
+                                 else ImportAction.Enabled := false;
+      MruAction1.Enabled    := true;
+      MruAction2.Enabled    := true;
+      MruAction3.Enabled    := true;
+      MruAction4.Enabled    := true;
+      MruAction5.Enabled    := true;
+      MruAction6.Enabled    := true;
+      MruAction7.Enabled    := true;
+      MruAction8.Enabled    := true;
+      //BeendenAction.Enabled := true;
+    end else (* not Setzen *)
+    begin
+      TriDatNeuAction.Enabled            := false;
+      TriDatOeffnenAction.Enabled        := false;
+      TriDatSpeichernAction.Enabled      := false;
+      TriDatSpeichernUnterAction.Enabled := false;
+      ImportAction.Enabled               := false;
+      MruAction1.Enabled                 := false;
+      MruAction2.Enabled                 := false;
+      MruAction3.Enabled                 := false;
+      MruAction4.Enabled                 := false;
+      MruAction5.Enabled                 := false;
+      MruAction6.Enabled                 := false;
+      MruAction7.Enabled                 := false;
+      MruAction8.Enabled                 := false;
+      //BeendenAction.Enabled              := false;
+    end;
+  end;
+end;
+
+(******************************************************************************)
+procedure VeranstaltungMenueCommands(Setzen:Boolean);
+(******************************************************************************)
+begin
+  with HauptFenster do
+  begin
+    // OrtCBLabel nur abhängig von VstArt
+    if (Veranstaltung = nil) or (not Veranstaltung.Serie) then
+      OrtCBLabel.Enabled := false
+    else OrtCBLabel.Enabled := true;
+
+    if Setzen then
+    // TriDatei.Geladen, Veranstaltung <> nil
+    begin
+      VeranstaltungAction.Enabled := true;
+
+      if Veranstaltung.NameDefiniert and Veranstaltung.Serie and
+         (Veranstaltung.OrtColl.Count >= seOrtMin) then
+        OrtCB.Enabled := true
+      else OrtCB.Enabled := false;
+
+      if Veranstaltung.NameDefiniert and
+         (not Veranstaltung.Serie or(Veranstaltung.OrtColl.Count>=seOrtMin))
+        then WettkEingebenAction.Enabled := true
+        else WettkEingebenAction.Enabled := false;
+
+      if WettkEingebenAction.Enabled and (Veranstaltung.WettkColl.Count>0) then
+      begin
+        if Veranstaltung.Serie
+          then SerWrtgAction.Enabled := true
+          else SerWrtgAction.Enabled := false;
+        StartgruppenAction.Enabled := true;
+        KlassenAction.Enabled      := true;
+      end else
+      begin
+        SerWrtgAction.Enabled      := false;
+        StartgruppenAction.Enabled := false;
+        KlassenAction.Enabled      := false;
+      end;
+
+      if StartgruppenAction.Enabled and Veranstaltung.SGrpColl.Definiert
+        then AnsichtMenueCommands(true)
+        else AnsichtMenueCommands(false);
+
+      OptionenAction.Enabled := true;
+      UpdateAction.Enabled   := true;
+
+      if HelpDateiVerfuegbar then HilfeAction.Enabled := true
+                             else HilfeAction.Enabled := false;
+      InfoAction.Enabled     := true;
+      TriaImWeb.Enabled      := true;
+
+    end else (* not Setzen *)
+    begin
+      VeranstaltungAction.Enabled := false;
+      OrtCB.Enabled               := false;
+      WettkEingebenAction.Enabled := false;
+      SerWrtgAction.Enabled       := false;
+      StartgruppenAction.Enabled  := false;
+      KlassenAction.Enabled       := false;
+      AnsichtMenueCommands(false);
+      OptionenAction.Enabled      := false;
+      UpdateAction.Enabled        := false;
+      HilfeAction.Enabled         := false;
+      InfoAction.Enabled          := false;
+      TriaImWeb.Enabled           := false;
+    end;
+  end;
+end;
+
+(******************************************************************************)
+procedure AnsichtMenueCommands(Setzen:Boolean);
+(******************************************************************************)
+begin
+  with HauptFenster do
+    if Setzen then
+    // TriDatei.Geladen
+    // Veranstaltung.Definiert
+    // Veranstaltung.SGrpColl.Count > 0
+    begin
+      AnmEinzelAction.Enabled      := true;
+      AnmSammelAction.Enabled      := true;
+      TlnStartAction.Enabled       := true;
+      if LstFrame.AnsFrame.ZeigeMschAnsicht(SortWettk) then
+        MschStartAction.Enabled    := true
+      else
+        MschStartAction.Enabled    := false;
+      TlnErgAction.Enabled         := true;
+      if LstFrame.AnsFrame.ZeigeMschAnsicht(SortWettk) then
+        MschErgDetailAction.Enabled := true
+      else
+        MschErgDetailAction.Enabled := false;
+      if LstFrame.AnsFrame.ZeigeMschKompakt(SortWettk) then
+        MschErgKompaktAction.Enabled := true
+      else
+        MschErgKompaktAction.Enabled := false;
+      if Veranstaltung.Serie then
+      begin
+        TlnErgSerieAction.Enabled := true;
+        if LstFrame.AnsFrame.ZeigeMschAnsicht(SortWettk) then
+          MschErgSerieAction.Enabled := true
+        else MschErgSerieAction.Enabled := false;
+      end else
+      begin
+        TlnErgSerieAction.Enabled := false;
+        MschErgSerieAction.Enabled := false;
+      end;
+      TlnUhrzeitAction.Enabled     := true;
+      TlnRndKntrlAction.Enabled    := true;
+      if LstFrame.AnsFrame.ZeigeTlnSchwDist(SortWettk) then
+        TlnSchwBhnAction.Enabled := true
+      else TlnSchwBhnAction.Enabled := false;
+
+      LstFrame.AnsFrame.SetEnable(true); // ToolBar
+      if Ansicht <> anAnmSammel then TeilnehmerMenueCommands(true)
+      else
+        // bei SMldAnsicht während Änderung und während Neueingabe disablen
+        if not SMldFrame.SMldAendButton.Enabled and
+           SMldFrame.SMldNeuButton.Enabled then TeilnehmerMenueCommands(true)
+        else TeilnehmerMenueCommands(false);
+    end else
+    begin
+      AnmEinzelAction.Enabled      := false;
+      AnmSammelAction.Enabled      := false;
+      TlnStartAction.Enabled       := false;
+      TlnErgAction.Enabled         := false;
+      TlnUhrzeitAction.Enabled     := false;
+      TlnRndKntrlAction.Enabled    := false;
+      TlnErgSerieAction.Enabled    := false;
+      MschStartAction.Enabled      := false;
+      MschErgDetailAction.Enabled  := false;
+      MschErgKompaktAction.Enabled := false;
+      MschErgSerieAction.Enabled   := false;
+      TlnSchwBhnAction.Enabled     := false;
+
+      LstFrame.AnsFrame.SetEnable(false); // ToolBar
+      TeilnehmerMenueCommands(false);
+      //if Ansicht<>anEinzelAnmeldung then Init; Problem bei Preview
+      //Ansicht := anKein; Problem bei DisableCommands in TriaListe
+    end;
+end;
+
+(******************************************************************************)
+procedure TeilnehmerMenueCommands(Setzen:Boolean);
+(******************************************************************************)
+begin
+  with HauptFenster do
+    if Setzen then
+    // TriDatei.Geladen
+    // Veranstaltung.Definiert
+    // Veranstaltung.SGrpColl.Count > 0
+    begin
+
+      if Ansicht = anAnmSammel then
+        if Veranstaltung.SMldColl.Count > 0 then DruckenMenueCommands(true)
+                                            else DruckenMenueCommands(false)
+      else
+        if LstFrame.TriaGrid.ItemCount > 0 then DruckenMenueCommands(true)
+                                           else DruckenMenueCommands(false);
+
+      if LstFrame.TriaGrid.ItemCount > 0 then
+      begin
+        if (Ansicht=anMschStart)and(SortStatus=stKein) or
+           (Ansicht=anMschErgKompakt) or
+           (Ansicht=anMschErgSerie) then
+        begin
+          TlnHinzufuegenAction.Enabled     := false;
+          TlnBearbeitenAction.Enabled      := false;
+          TlnEntfernenAction.Enabled       := false;
+          TlnDisqualAction.Enabled         := false;
+          TlnEinteilenAction.Enabled       := false;
+          EinteilungLoeschenAction.Enabled := false;
+          RfidCodeAction.Enabled           := false;
+          ErsetzenAction.Enabled           := false
+        end else
+        begin
+          TlnHinzufuegenAction.Enabled     := true;
+          TlnBearbeitenAction.Enabled      := true;
+          TlnEntfernenAction.Enabled       := true;
+          if Veranstaltung.SGrpColl.SGrpZahl(WettkAlleDummy) > 0 then
+            TlnEinteilenAction.Enabled := true
+          else
+            TlnEinteilenAction.Enabled := false;
+          if Veranstaltung.TlnColl.TlnEingeteilt(WettkAlleDummy) > 0 then
+            EinteilungLoeschenAction.Enabled := true
+          else
+            EinteilungLoeschenAction.Enabled := false;
+          if RfidModus then
+            RfidCodeAction.Enabled := true
+          else
+            RfidCodeAction.Enabled := false;
+          if Veranstaltung.TlnColl.TlnEingeteilt(SortWettk) > 0 then
+            TlnDisqualAction.Enabled := true
+          else
+            TlnDisqualAction.Enabled := false;
+          ErsetzenAction.Enabled := true;
+        end;
+        SuchenAction.Enabled := true;
+      end else
+      begin
+        if (Ansicht=anMschStart)and(SortStatus=stKein) or
+           (Ansicht=anMschErgKompakt) or
+           (Ansicht=anMschErgSerie) then TlnHinzufuegenAction.Enabled := false
+                                    else TlnHinzufuegenAction.Enabled := true;
+        TlnBearbeitenAction.Enabled      := false;
+        TlnEntfernenAction.Enabled       := false;
+        TlnEinteilenAction.Enabled       := false;
+        EinteilungLoeschenAction.Enabled := false;
+        RfidCodeAction.Enabled           := false;
+        TlnDisqualAction.Enabled         := false;
+        SuchenAction.Enabled             := false;
+        ErsetzenAction.Enabled           := false;
+      end;
+      //cmMeldestatistik.Enabled   := true;
+      if Veranstaltung.TlnColl.TlnEingeteilt(WettkAlleDummy) > 0 then
+        ZeitnahmeMenueCommands(true)
+      else
+        ZeitnahmeMenueCommands(false);
+    end else
+    begin
+      TlnHinzufuegenAction.Enabled     := false;
+      TlnBearbeitenAction.Enabled      := false;
+      TlnEntfernenAction.Enabled       := false;
+      TlnEinteilenAction.Enabled       := false;
+      EinteilungLoeschenAction.Enabled := false;
+      RfidCodeAction.Enabled           := false;
+      TlnDisqualAction.Enabled         := false;
+      SuchenAction.Enabled             := false;
+      ErsetzenAction.Enabled           := false;
+      //cmMeldeStatistik.Enabled         := false;
+      ZeitnahmeMenueCommands(false);
+      DruckenMenueCommands(false);
+    end;
+end;
+
+(******************************************************************************)
+procedure ZeitnahmeMenueCommands(Setzen:Boolean);
+(******************************************************************************)
+begin
+  with HauptFenster do
+    if Setzen then
+    // TriDatei.Geladen
+    // Veranstaltung.TlnColl.Count > 0
+    begin
+      ZtErfEinlAction.Enabled    := true;
+      LiveEinlesenAction.Enabled := true;
+      ZeitLoeschenAction.Enabled := true;
+    end else
+    begin
+      ZtErfEinlAction.Enabled    := false;
+      LiveEinlesenAction.Enabled := false;
+      ZeitLoeschenAction.Enabled := false;
+    end;
+end;
+
+(******************************************************************************)
+procedure DruckenMenueCommands(Setzen:Boolean);
+(******************************************************************************)
+begin
+  with HauptFenster do
+  begin
+    if Setzen then
+    // TriDatei.Geladen
+    // Veranstaltung.TlnColl.Count > 0
+      case Ansicht of
+        anAnmEinzel, anAnmSammel:
+        begin
+          ListeDruckAction.Enabled   := false;
+          VorschauAction.Enabled     := false;
+          PDFDateiAction.Enabled     := false;
+          HTMLDateiAction.Enabled    := false;
+          ExcelDateiAction.Enabled   := true;
+          TextDateiAction.Enabled    := true;
+          WordUrkundeAction.Enabled  := true;
+          UrkTextDateiAction.Enabled := true;
+          EtikTxtDateiAction.Enabled := true;
+        end;
+        anTlnUhrZeit,anTlnRndKntrl:
+        begin
+          ListeDruckAction.Enabled   := true;
+          VorschauAction.Enabled     := true;
+          PDFDateiAction.Enabled     := true;
+          HTMLDateiAction.Enabled    := false;
+          ExcelDateiAction.Enabled   := true; // Export für 24h-Lauf
+          TextDateiAction.Enabled    := true;
+          WordUrkundeAction.Enabled  := false;
+          UrkTextDateiAction.Enabled := false;
+          EtikTxtDateiAction.Enabled := false;
+        end;
+        anTlnSchwDist:
+        begin
+          ListeDruckAction.Enabled   := true;
+          VorschauAction.Enabled     := true;
+          PDFDateiAction.Enabled     := true;
+          HTMLDateiAction.Enabled    := false;
+          ExcelDateiAction.Enabled   := false;
+          TextDateiAction.Enabled    := false;
+          WordUrkundeAction.Enabled  := false;
+          UrkTextDateiAction.Enabled := false;
+          EtikTxtDateiAction.Enabled := false;
+        end;
+        else //anTlnStart,anTlnErg,anTlnErgSerie,anMschStart,anMschErgDetail,anMschErgKompakt,anMschErgSerie
+        begin
+          ListeDruckAction.Enabled   := true;
+          VorschauAction.Enabled     := true;
+          PDFDateiAction.Enabled     := true;
+          HTMLDateiAction.Enabled    := true;
+          ExcelDateiAction.Enabled   := true;
+          TextDateiAction.Enabled    := true;
+          WordUrkundeAction.Enabled  := true;
+          UrkTextDateiAction.Enabled := true;
+          EtikTxtDateiAction.Enabled := false;
+        end;
+      end
+    else
+    begin
+      ListeDruckAction.Enabled      := false;
+      VorschauAction.Enabled        := false;
+      PDFDateiAction.Enabled        := false;
+      HTMLDateiAction.Enabled       := false;
+      ExcelDateiAction.Enabled      := false;
+      TextDateiAction.Enabled       := false;
+      WordUrkundeAction.Enabled     := false;
+      UrkTextDateiAction.Enabled    := false;
+      EtikTxtDateiAction.Enabled    := false;
+    end;
+  end;
+end;
+
+
+end.

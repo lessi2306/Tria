@@ -1,0 +1,746 @@
+unit RaveUnit;
+                                                                        
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, Math,
+  RpDefine, RpCon, RpRave, RpBase, {RpSystem,} RpRender,
+  RpRenderCanvas, RpRenderPreview, RpFiler, RpRenderRTF, RpRenderHTML,
+  RpRenderPDF, RpRenderPrinter, RpRenderText, RpDevice,
+  RVCsRpt,RVProj, RVClass,RvDirectDataView,RvData,RvCsData,
+
+  AllgConst,AllgObj,WettkObj,TlnObj,MannsObj;
+
+type
+
+  TRaveForm = class(TForm)
+
+  published
+    TriaRvCustomConnection: TRvCustomConnection;
+    TriaRaveProject: TRvProject;
+    RvNDRWriter: TRvNDRWriter;
+    RvRenderPreview: TRvRenderPreview;
+    RvRenderPDF: TRvRenderPDF;
+    RvRenderHTML: TRvRenderHTML;
+    RvRenderRTF: TRvRenderRTF;
+    RvRenderPrinter: TRvRenderPrinter;
+    RvRenderText: TRvRenderText;
+    procedure TriaRvCustomConnectionGetRow(Connection: TRvCustomConnection);
+    procedure TriaRvCustomConnectionGetCols(Connection: TRvCustomConnection);
+    procedure TriaRvCustomConnectionOpen(Connection: TRvCustomConnection);
+    procedure TriaRvCustomConnectionNext(Connection: TRvCustomConnection);
+    procedure RvNDRWriterPrint(Sender: TObject);
+  private
+    SpaltenZahl:Integer;
+    function  ColName(C:TColType):String;
+  public
+    RvReportType  : TListType;
+    RvReportName  : String;
+    RvReportWettk : TReportWkObj;
+    RvReportPage  : TRavePage;
+    //RvOddPage     : TRavePage;
+    //RvOddRect     : TRaveRectangle; unbekannt
+    constructor Create(AOwner: TComponent); override;
+    destructor  Destroy; override;
+    function  ErstelleNDRdatei: Boolean;
+    procedure ClearNDRDatei;
+    function  ReportNameStr(Report:TListType): String;
+    function  ReportModeCaption: String;
+  end;
+
+var
+  RaveForm      : TRaveForm;
+  TriaNDRStream : TMemoryStream;
+
+implementation
+
+uses TriaMain, VeranObj, AllgFunc,AkObj,ListFmt, History;
+
+{$R *.dfm}
+
+{==============================================================================}
+constructor TRaveForm.Create(AOwner: TComponent);
+{==============================================================================}
+begin
+  inherited Create(AOwner);
+  TriaNDRStream := TMemoryStream.Create;
+  ReportNewWkPage := false;
+  ReportNewAkPage := false;
+end;
+
+{==============================================================================}
+destructor TRaveForm.Destroy;
+{==============================================================================}
+begin
+  TriaNDRStream.Free;
+  inherited Destroy;
+end;
+
+{==============================================================================}
+function TRaveForm.ErstelleNDRDatei: Boolean;
+{==============================================================================}
+var BarMax,BarPos : Integer;
+begin
+  Result := false;
+
+  try
+    // Progressbar nach Sortierung bis zur Hälfte gefüllt
+    if HauptFenster.TlnAnsicht then
+      BarPos := Veranstaltung.TlnColl.Count * 2
+    else BarPos := Veranstaltung.MannschColl.Count * 2;
+    BarMax := BarPos * (ReportWkListe.Count+1);// 1 extra für Anfang
+    HauptFenster.ProgressBarInit(ReportModeCaption + ' wird vorbereitet',BarMax);
+
+    if (ReportWkListe.Count = 0) or (ReportAkListe.Count = 0) then Exit;
+    RvReportWettk := ReportWkListe[0];
+    RvReportType := GetListType(lmReport,RvReportWettk.Wettk,RvReportWettk.Wrtg,
+                                RvReportWettk.Wettk.MschGroesse[TAkObj(ReportAkListe[0]).Sex]);
+    if RvReportType = ltFehler then Exit;
+    RvReportName := ReportNameStr(RvReportType)+'Report';
+
+    // RpDev.Copies und Collate haben nur beim Drucken eine Funktion (RvRenderPrinter)
+    // müssen aber schon in RvNDRWriter gesetzt sein, funktioniert nicht bei RvRenderPrinter
+    RpDev.Copies  := ReportAnzahlKopien;
+    RpDev.Collate := ReportKopienSortieren;
+    TriaNDRStream.Clear;
+    with RvNDRWriter do
+    begin
+      StreamMode := smUser;
+      Stream     := TriaNDRStream;
+      FirstPage  := ReportSeiteVon;
+      LastPage   := ReportSeiteBis;
+      Title      := 'Tria ' + ' - ' + Veranstaltung.Name;//für PrintQueue
+    end;
+
+    with TriaRaveProject do
+    begin
+      Open;
+      if not SelectReport(RvReportName,false) then
+      begin
+        TriaMessage('Reporttype '+RvReportName+' noch nicht implementiert.',
+                     mtInformation,[mbOk]);
+        Exit;
+      end;
+      RvReportPage := TRavePage(ProjMan.FindRaveComponent(RvReportName+'.Page1',nil));
+      if RvReportPage = nil then
+      begin
+        TriaMessage('Reporttype '+RvReportName+' kann nicht gedruckt werden.',
+                     mtInformation,[mbOk]);
+        Exit;
+      end;
+      {RvOddPage := TRavePage(ProjMan.FindRaveComponent(RvReportName+'.Page2',nil));
+      if RvOddPage <> nil then
+      begin
+        RvOddRect := RvOddPage.FindComponent('OddRectangle2');
+        if RvOddRect <> nil then
+          RvOddRect.
+      end;}
+
+      RvNDRWriter.Orientation := RvReportPage.Orientation;
+      Engine := RvNDRWriter;
+      SetParam('Titel1',Veranstaltung.Name);
+      TriaRaveProject.SetParam('Druckdatum',SystemDatum + '  -  ' + SystemZeit);
+      //SetParam('Version',ProgVersion.Jahr);
+      if HauptFenster.TlnAnsicht then
+        SetParam('MschSpalte',Veranstaltung.TlnMschSpalteUeberschrift(WettkAlleDummy))
+      else
+        SetParam('MschSpalte',Veranstaltung.MschSpalteUeberschrift(WettkAlleDummy));
+    end;
+
+    HauptFenster.ProgressBarStep(BarPos);
+    RvNDRWriter.Execute;
+
+    TriaNDRStream.Position := 0;
+    if RvNDRWriter.JobPages = 0 then
+    begin
+      TriaMessage('Keine Seiten vorhanden.',mtInformation,[mbOk]);
+      Exit;
+    end;
+    Result := true;
+  finally
+    HauptFenster.StatusBarClear;
+  end;
+end;
+
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+procedure TRaveForm.RvNDRWriterPrint(Sender: TObject);
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+var i,k,BarMax : Integer;
+
+//------------------------------------------------------------------------------
+procedure ReportErstellen;
+var WkBand,AkBand : TRaveBand;
+begin
+  with TriaRaveProject do
+  begin
+    with ProjMan do
+    begin
+      WkBand := FindRaveComponent('WkNewPageBand',RvReportPage) as TRaveBand;
+      AkBand := FindRaveComponent('AkNewPageBand',RvReportPage) as TRaveBand;
+      if (WkBand=nil)or(AkBand=nil) then
+      begin
+        TriaMessage('Reporttype '+RvReportName+' kann nicht gedruckt werden.',
+                     mtInformation,[mbOk]);
+        Exit;
+      end;
+      // NewPage nach jeder ExecuteReport, abhängig von ReportNewWkPage
+      WkBand.StartNewPage := false;
+
+      if HauptFenster.Ansicht <> anTlnSchwDist then
+        // NewPage nach jeder ExecuteReport, abhängig von ReportNewAkPage
+        AkBand.StartNewPage := false
+      else
+        // gemeinsamer ExecuteReport pro Wettk (ReportNewAkPage = false)
+        // bei Bahn- und Startzeit-Änderung (in Titel3) immer neue Seite
+        AkBand.StartNewPage := true;
+
+      if HauptFenster.TlnAnsicht then
+        SetParam('MschSpalte',Veranstaltung.TlnMschSpalteUeberschrift(RvReportWettk.Wettk))
+      else
+        SetParam('MschSpalte',Veranstaltung.MschSpalteUeberschrift(RvReportWettk.Wettk));
+    end;
+
+    SpaltenZahl := 0;
+    while GetColType(RvReportType,RvReportWettk.Wettk,SpaltenZahl,lmReport) <> spLeer do
+      SpaltenZahl := SpaltenZahl +1;
+
+    ExecuteReport(RvReportName);
+  end;
+end;
+
+//------------------------------------------------------------------------------
+begin
+  if ReportWkListe.Count > 0 then
+  with Sender as TBaseReport do
+  //begin
+
+   if not ReportNewWkPage and not ReportNewAkPage then // gemeinsamer Report für alle Listen
+    begin
+      // alle Listtypen sind gleich
+      // ProgressbarMax Updaten, Sortierung bis zur Hälfte pro Wk füllen
+      if HauptFenster.TlnAnsicht then
+        BarMax := Veranstaltung.TlnColl.Count * 2
+      else BarMax := Veranstaltung.MannschColl.Count * 2;
+      // BarPos bleibt erhalten
+      HauptFenster.ProgressBarMaxUpdate(BarMax);
+      if HauptFenster.TlnAnsicht then Veranstaltung.TlnColl.ReportSortieren
+                                 else Veranstaltung.MannschColl.ReportSortieren;
+      if Veranstaltung.TlnColl.ReportCount = 0 then Exit;// gilt auch bei Msch
+
+      // BarPos bleibt erhalten (50%), Report immer von TlnColl erstellt
+      HauptFenster.ProgressBarMaxUpdate(Veranstaltung.TlnColl.ReportCount);
+      ReportErstellen;
+    end
+    else
+    if not ReportNewAkPage then // Report getrennt pro Wettk, Klassen gemeinsam
+      for i:=0 to ReportWkListe.Count - 1 do
+      begin
+        // ProgressbarMax Updaten, Sortierung bis zur Hälfte pro Wk füllen
+        if HauptFenster.TlnAnsicht then
+          BarMax := Veranstaltung.TlnColl.Count * 2 * (ReportWkListe.Count-i)
+        else BarMax := Veranstaltung.MannschColl.Count * 2 * (ReportWkListe.Count-i);
+        // BarPos bleibt erhalten
+        HauptFenster.ProgressBarMaxUpdate(BarMax);
+        if HauptFenster.TlnAnsicht then
+          Veranstaltung.TlnColl.ReportSortieren(TReportWkObj(ReportWkListe[i]).Wettk,TReportWkObj(ReportWkListe[i]).Wrtg)
+        else
+          Veranstaltung.MannschColl.ReportSortieren(TReportWkObj(ReportWkListe[i]).Wettk);
+        if Veranstaltung.TlnColl.ReportCount = 0 then Continue;// gilt auch bei Msch
+
+        // BarPos bleibt erhalten (50%), Report immer von TlnColl erstellt
+        HauptFenster.ProgressBarMaxUpdate(Veranstaltung.TlnColl.ReportCount*(ReportWkListe.Count-i));
+
+        if i > 0 then // für i=0 bereits vorher definiert
+        begin
+          // ReportType abhängig von Wettk, für alle Ak gleich
+          RvReportWettk := ReportWkListe[i];
+          RvReportType := GetListType(lmReport,RvReportWettk.Wettk,RvReportWettk.Wrtg,
+                                      RvReportWettk.Wettk.MschGroesse[TAkObj(ReportAkListe[0]).Sex]);
+          if RvReportType = ltFehler then Exit;
+          RvReportName := ReportNameStr(RvReportType)+'Report';
+          with TriaRaveProject do
+          begin
+            if not SelectReport(RvReportName,false) then
+            begin
+              TriaMessage('Reporttype '+RvReportName+' noch nicht implementiert.',
+                           mtInformation,[mbOk]);
+              Exit;
+            end;
+            RvReportPage := TRavePage(ProjMan.FindRaveComponent(RvReportName+'.Page1',nil));
+            if RvReportPage = nil then
+            begin
+              TriaMessage('Reporttype '+RvReportName+' kann nicht gedruckt werden.',
+                           mtInformation,[mbOk]);
+              Exit;
+            end;
+          end;
+
+          // Ausrichtung (Hochformat/Querformat) anpassen, geht nur vor NewPage
+          RvNDRWriter.Orientation := RvReportPage.Orientation;
+          NewPage;
+        end;
+        ReportErstellen;
+      end
+
+    else // Report getrennt pro Wettk, getrennt pro Klasse
+    for i:=0 to ReportWkListe.Count - 1 do
+      for k:=0 to ReportAkListe.Count - 1 do
+      begin
+        // ProgressbarMax Updaten, Sortierung bis zur Hälfte pro Wk füllen
+        if HauptFenster.TlnAnsicht then
+          BarMax := Veranstaltung.TlnColl.Count * 2 * (ReportWkListe.Count-i)
+        else BarMax := Veranstaltung.MannschColl.Count * 2 * (ReportWkListe.Count-i)*(ReportAkListe.Count-k);
+        // BarPos bleibt erhalten
+        HauptFenster.ProgressBarMaxUpdate(BarMax);
+        if HauptFenster.TlnAnsicht then
+          Veranstaltung.TlnColl.ReportSortieren(TReportWkObj(ReportWkListe[i]).Wettk,TReportWkObj(ReportWkListe[i]).Wrtg,ReportAkListe[k])
+        else
+          Veranstaltung.MannschColl.ReportSortieren(TReportWkObj(ReportWkListe[i]).Wettk,ReportAkListe[k]);
+        if Veranstaltung.TlnColl.ReportCount = 0 then Continue;// gilt auch bei Msch
+
+        // BarPos bleibt erhalten (50%), Report immer von TlnColl erstellt
+        HauptFenster.ProgressBarMaxUpdate(Veranstaltung.TlnColl.ReportCount*(ReportWkListe.Count-i));
+
+        if (i > 0) or (k > 0) then // für i=k=0 bereits vorher definiert
+        begin
+          // ReportType abhängig von Wettk, für alle Ak gleich
+          RvReportWettk := TReportWkObj(ReportWkListe[i]);
+          RvReportType := GetListType(lmReport,RvReportWettk.Wettk,RvReportWettk.Wrtg,
+                                      RvReportWettk.Wettk.MschGroesse[TAkObj(ReportAkListe[k]).Sex]);
+          if RvReportType = ltFehler then Exit;
+          RvReportName := ReportNameStr(RvReportType)+'Report';
+          with TriaRaveProject do
+          begin
+            if not SelectReport(RvReportName,false) then
+            begin
+              TriaMessage('Reporttype '+RvReportName+' noch nicht implementiert.',
+                           mtInformation,[mbOk]);
+              Exit;
+            end;
+            RvReportPage := TRavePage(ProjMan.FindRaveComponent(RvReportName+'.Page1',nil));
+            if RvReportPage = nil then
+            begin
+              TriaMessage('Reporttype '+RvReportName+' kann nicht gedruckt werden.',
+                           mtInformation,[mbOk]);
+              Exit;
+            end;
+          end;
+
+          // Ausrichtung (Hochformat/Querformat) anpassen, geht nur vor NewPage
+          RvNDRWriter.Orientation := RvReportPage.Orientation;
+          NewPage;
+        end;
+        ReportErstellen;
+      end
+
+  //end;
+end;
+
+{==============================================================================}
+procedure TRaveForm.ClearNDRDatei;
+{==============================================================================}
+begin
+  Veranstaltung.TlnColl.ReportClear;
+  TriaRaveProject.Close;
+  TriaNDRStream.Clear;
+end;
+
+//==============================================================================
+function TRaveForm.ReportModeCaption: String;
+//==============================================================================
+begin
+  case ReportMode of
+    rmVorschau     : Result := 'Seitenansicht';
+    rmDrucken,
+    rmPrevDrucken  : Result := 'Drucken';
+    rmPDFDatei,
+    rmPrevPDFDatei : Result := 'PDF-Datei';
+    else Result := '';
+  end;
+end;
+
+{------------------------------------------------------------------------------}
+function  TRaveForm.ReportNameStr(Report:TListType): String;
+{------------------------------------------------------------------------------}
+begin
+  case Report of
+    //ltMldLstTln           : Result := 'MldLstTln';
+    ltStLstTlnA           : Result := 'StLstTln';           // v
+    ltStLstTlnABn         : Result := 'StLstTlnBn';         // v
+    ltStLstTlnAT          : Result := 'StLstTlnAT';         // v
+    ltStLstTlnATBn        : Result := 'StLstTlnATBn';       // v
+    ltStLstTlnAS          : Result := 'StLstTlnAS';         // v
+    ltStLstTlnASBn        : Result := 'StLstTlnASBn';       // v
+    ltStLstTlnATS         : Result := 'StLstTlnATS';        // v
+    ltStLstTlnATSBn       : Result := 'StLstTlnATSBn';      // v
+    ltStLstTlnALnd        : Result := 'StLstTlnLnd';        // v
+    ltStLstTlnABnLnd      : Result := 'StLstTlnBnLnd';      // v
+    ltStLstTlnATLnd       : Result := 'StLstTlnATLnd';      // v
+    ltStLstTlnATBnLnd     : Result := 'StLstTlnATBnLnd';    // v
+    ltStLstTlnASLnd       : Result := 'StLstTlnASLnd';      // v
+    ltStLstTlnASBnLnd     : Result := 'StLstTlnASBnLnd';    // v
+    ltStLstTlnATSLnd      : Result := 'StLstTlnATSLnd';     // v
+    ltStLstTlnATSBnLnd    : Result := 'StLstTlnATSBnLnd';   // v
+    ltStLstStaffelTln2    : Result := 'StLstStaffelTln2';   // v
+    ltStLstStaffelTln3    : Result := 'StLstStaffelTln3';   // v
+    ltStLstStaffelTln4    : Result := 'StLstStaffelTln4';   // v
+    ltStLstStaffelTln5    : Result := 'StLstStaffelTln5';   // v
+    ltStLstStaffelTln6    : Result := 'StLstStaffelTln6';   // v
+    ltStLstStaffelTln7    : Result := 'StLstStaffelTln7';   // v
+    ltStLstStaffelTln8    : Result := 'StLstStaffelTln8';   // v
+    ltStLstMsch           : Result := 'StLstMsch';          // v
+    ltStLstMschZt         : Result := 'StLstMschZt';        // v
+    //ltStLstMschWk         : Result := 'StLstMschWk';
+    //ltStLstMschZtWk       : Result := 'StLstMschZtWk';
+    ltStLstMschTln        : Result := 'StLstMschTln';       // x
+    ltStLstMschTlnZt      : Result := 'StLstMschTlnZt';     // v
+    ltErgLstTlnAbs1Ak     : Result := 'ErgLstTlnAkLauf';    // v
+    ltErgLstTlnAbs1LAk    : Result := 'ErgLstTlnLAkLauf';   // v
+    ltErgLstTlnAbs2Ak     : Result := 'ErgLstTlnAkSR';      // v
+    ltErgLstTlnAbs3Ak     : Result := 'ErgLstTlnAk';        // v
+    ltErgLstTlnAbs4Ak     : Result := 'ErgLstTlnAkQuad';    // v
+    ltErgLstTlnAbs5Ak     : Result := 'ErgLstTlnAbs5Ak';    // v
+    ltErgLstTlnAbs6Ak     : Result := 'ErgLstTlnAbs6Ak';    // v
+    ltErgLstTlnAbs7Ak     : Result := 'ErgLstTlnAbs7Ak';    // v
+    ltErgLstTlnAbs8Ak     : Result := 'ErgLstTlnAbs8Ak';    // v
+    ltErgLstTlnAbs1       : Result := 'ErgLstTlnLauf';      // v
+    ltErgLstTlnAbs2       : Result := 'ErgLstTlnSR';        // v
+    ltErgLstTlnAbs3       : Result := 'ErgLstTln';          // v
+    ltErgLstTlnAbs4       : Result := 'ErgLstTlnQuad';      // v
+    ltErgLstTlnAbs5       : Result := 'ErgLstTlnAbs5';      // v
+    ltErgLstTlnAbs6       : Result := 'ErgLstTlnAbs6';      // v
+    ltErgLstTlnAbs7       : Result := 'ErgLstTlnAbs7';      // v
+    ltErgLstTlnAbs8       : Result := 'ErgLstTlnAbs8';      // v
+    ltErgLstTlnAbs1AkLnd  : Result := 'ErgLstTlnAkLndLauf'; // v
+    ltErgLstTlnAbs1LAkLnd : Result := 'ErgLstTlnLAkLndLauf';// v
+    ltErgLstTlnAbs2AkLnd  : Result := 'ErgLstTlnAkLndSR';   // v
+    ltErgLstTlnAbs3AkLnd  : Result := 'ErgLstTlnAkLnd';     // v
+    ltErgLstTlnAbs4AkLnd  : Result := 'ErgLstTlnAkLndQuad'; // v
+    ltErgLstTlnAbs5AkLnd  : Result := 'ErgLstTlnAbs5AkLnd'; // v
+    ltErgLstTlnAbs6AkLnd  : Result := 'ErgLstTlnAbs6AkLnd'; // v
+    ltErgLstTlnAbs7AkLnd  : Result := 'ErgLstTlnAbs7AkLnd'; // v
+    ltErgLstTlnAbs8AkLnd  : Result := 'ErgLstTlnAbs8AkLnd'; // v
+    ltErgLstTlnAbs1Lnd    : Result := 'ErgLstTlnLndLauf';   // v
+    ltErgLstTlnAbs2Lnd    : Result := 'ErgLstTlnLndSR';     // v
+    ltErgLstTlnAbs3Lnd    : Result := 'ErgLstTlnLnd';       // v
+    ltErgLstTlnAbs4Lnd    : Result := 'ErgLstTlnLndQuad';   // v
+    ltErgLstTlnAbs5Lnd    : Result := 'ErgLstTlnAbs5Lnd';   // v
+    ltErgLstTlnAbs6Lnd    : Result := 'ErgLstTlnAbs6Lnd';   // v
+    ltErgLstTlnAbs7Lnd    : Result := 'ErgLstTlnAbs7Lnd';   // v
+    ltErgLstTlnAbs8Lnd    : Result := 'ErgLstTlnAbs8Lnd';   // v
+    //ltErgLstTlnAbs1LigaAk : Result := 'ErgLstTlnLigaAkLauf'; nicht implementiert
+    //ltErgLstTlnAbs2LigaAk : Result := 'ErgLstTlnLigaAkSR'; // v
+    //ltErgLstTlnAbs3LigaAk : Result := 'ErgLstTlnLigaAk';   // v
+    //ltErgLstTlnAbs1Liga   : Result := 'ErgLstTlnLigaLauf'; nicht implementiert
+    //ltErgLstTlnAbs2Liga   : Result := 'ErgLstTlnLigaSR';   // v
+    //ltErgLstTlnAbs3Liga   : Result := 'ErgLstTlnLiga';     // v
+    ltErgLstStaffelTln2   : Result := 'ErgLstStaffelTln2';  // v
+    ltErgLstStaffelTln3   : Result := 'ErgLstStaffelTln3';  // v
+    ltErgLstStaffelTln4   : Result := 'ErgLstStaffelTln4';  // v
+    ltErgLstStaffelTln5   : Result := 'ErgLstStaffelTln5';  // v
+    ltErgLstStaffelTln6   : Result := 'ErgLstStaffelTln6';  // v
+    ltErgLstStaffelTln7   : Result := 'ErgLstStaffelTln7';  // v
+    ltErgLstStaffelTln8   : Result := 'ErgLstStaffelTln8';  // v
+    ltErgLstTlnRndAkLnd   : Result := 'ErgLstTlnRndAkLnd';  // v
+    ltErgLstTlnRndAk      : Result := 'ErgLstTlnRndAk';     // v
+    ltErgLstTlnRndLnd     : Result := 'ErgLstTlnRndLnd';    // v
+    ltErgLstTlnRnd        : Result := 'ErgLstTlnRnd';       // v
+    ltErgLstTlnRndLAkLnd  : Result := 'ErgLstTlnRndLAkLnd'; // v
+    ltErgLstTlnRndLAk     : Result := 'ErgLstTlnRndLAk';    // v
+
+    ltKtLstUhrZeit1..ltKtLstUhrZeit8   : Result := 'KtLstUhrZeit' + IntToStr(Integer(Report)-Integer(ltKtLstUhrZeit1)+1);
+    ltKtLstRunden                      : Result := 'KtLstRunden';
+    ltSerWertTln2..ltSerWertTln20      : Result := 'SerWertTln' + IntToStr(Integer(Report)-Integer(ltSerWertTln2)+2);
+    ltSerWertTlnAk2..ltSerWertTlnAk20  : Result := 'SerWertTlnAk' + IntToStr(Integer(Report)-Integer(ltSerWertTlnAk2)+2);
+    ltErgLstMschTln                    : Result := 'ErgLstMschTln';
+    ltErgLstMschTlnRnd                 : Result := 'ErgLstMschTlnRnd';
+    ltErgLstMschTlnRndL                : Result := 'ErgLstMschTlnRndL';
+    ltErgLstMschTln2..ltErgLstMschTln8 : Result := 'ErgLstMschTln' + IntToStr(Integer(Report)-Integer(ltErgLstMschTln2)+2);
+    ltSerWertMsch2..ltSerWertMsch20    : Result := 'SerWertMsch' + IntToStr(Integer(Report)-Integer(ltSerWertMsch2)+2);
+    ltChkLstSchwBhn                    : Result := 'ChkLstSchwBhn';
+    else                                 Result := '';
+  end;
+end;
+
+
+{------------------------------------------------------------------------------}
+function TRaveForm.ColName(C:TColType):String;
+{------------------------------------------------------------------------------}
+begin
+  case C of
+    spLeer           : Result := '';
+    spSnr            : Result := 'Snr';
+    spNameVName      : Result := 'Name';
+    spLand           : Result := 'Land';
+    spMannsch        : Result := 'Mannschaft';
+    spJg             : Result := 'Jg';
+    spAk             : Result := 'Ak';
+    spWettk          : Result := 'Wettkampf';
+    spStZeit         : Result := 'Startzeit';
+    //spSGrpStZeit  : Result := 'Startzeit';
+    spStBahn         : Result := 'Bn';
+    spMeldeZeit      : Result := 'MldZt';
+    spSerWrtg        : Result := 'S';
+    spAusKonkAllg    : Result := 'A';
+    spSammelMelder   : Result := 'Sammelmelder';
+    //spSMldName    : Result := 'Sammelmelder';
+    spSMldVerein     : Result := 'Verein';
+    spRng            : Result := 'Rang';
+    spAkRng          : Result := 'AkRng';
+    //spLiga           : Result := 'Liga';
+    //spLigaRng        : Result := 'LigaRng';
+    spAbs1Rng        : Result := 'SwimRng';
+    spAbs2Rng        : Result := 'BikeRng';
+    spAbs3Rng        : Result := 'RunRng';
+    spAbs4Rng        : Result := 'Abs4Rng';
+    spAbs5Rng        : Result := 'Abs5Rng';
+    spAbs6Rng        : Result := 'Abs6Rng';
+    spAbs7Rng        : Result := 'Abs7Rng';
+    spAbs8Rng        : Result := 'Abs8Rng';
+    spAbs1Zeit,
+    spMschTlnZt0     : Result := 'Swim';
+    spAbs2Zeit,
+    spMschTlnZt1     : Result := 'Bike';
+    spAbs3Zeit,
+    spMschTlnZt2     : Result := 'Run';
+    spAbs4Zeit,
+    spMschTlnZt3     : Result := 'Abs4Zeit';
+    spAbs5Zeit,
+    spMschTlnZt4     : Result := 'Abs5Zeit';
+    spAbs6Zeit,
+    spMschTlnZt5     : Result := 'Abs6Zeit';
+    spAbs7Zeit,
+    spMschTlnZt6     : Result := 'Abs7Zeit';
+    spAbs8Zeit,
+    spMschTlnZt7     : Result := 'Abs8Zeit';
+    spAbs1UhrZeit    : Result := 'Abs1UhrZeit'; // vor 2008-2.0: 'Swim'
+    spAbs2UhrZeit    : Result := 'Abs2UhrZeit'; // vor 2008-2.0: 'Bike'
+    spAbs3UhrZeit    : Result := 'Abs3UhrZeit'; // vor 2008-2.0: 'Run'
+    spAbs4UhrZeit    : Result := 'Abs4UhrZeit'; // vor 2008-2.0: 'Abs4Zeit'
+    spAbs5UhrZeit    : Result := 'Abs5UhrZeit';
+    spAbs6UhrZeit    : Result := 'Abs6UhrZeit';
+    spAbs7UhrZeit    : Result := 'Abs7UhrZeit';
+    spAbs8UhrZeit    : Result := 'Abs8UhrZeit';
+
+    spAbs1Runden..spAbs8Runden     : Result := 'AbsRunden';
+    spAbs1StrtZeit..spAbs8StrtZeit : Result := 'AbsStrtZeit';
+    spAbs1StopZeit..spAbs8StopZeit : Result := 'AbsStopZeit';
+    spAbs1MinZeit..spAbs8MinZeit   : Result := 'AbsMinZeit';
+    spAbs1MaxZeit..spAbs8MaxZeit   : Result := 'AbsMaxZeit';
+    spAbs1EffZeit..spAbs8EffZeit   : Result := 'AbsEffZeit';
+
+    //spMschAbs1Zeit   : Result := 'MschAbs1';
+    //spMschAbs2Zeit   : Result := 'MschAbs2';
+    spTlnEndZeit,
+    spTlnEndStrecke,
+    spMschTlnEndZeit,
+    spMschTlnStrecke,
+    spMschTlnPunkte  : Result := 'Endzeit';
+    spStatus         : Result := 'Status';
+    spRngSer         : Result := 'Rng';
+    spAkRngSer       : Result := 'AkRng';
+    spSumSer         : Result := 'Pkt';
+    spOrt1..spOrt20  : Result := 'Rng'+IntToStr((Integer(C)-Integer(spOrt1))+1);
+    spMschName       : Result := 'MschName';
+    spMschKlasse     : Result := 'MschKlasse';
+    spMschWettk      : Result := 'MschWettk';
+    spMschStZeit     : Result := 'MschStZeit';
+    //spMschSerieTln: Result := 'S';
+    //spMschAusKonk : Result := 'A';
+    spMschRngGes     : Result := 'MschRng';
+    //spMschPktTag  : Result := 'MschPkt';
+    spMschEndzeit,
+    spMschStrecke,
+    spMschPunkte     : Result := 'MschZeit';
+    spMschRngSer     : Result := 'MschRngSer';
+    spMschSumSer     : Result := 'MschPktSer';
+    spMschTln0       : Result := 'MschTln0';
+    spMschTln1       : Result := 'MschTln1';
+    spMschTln2       : Result := 'MschTln2';
+    spMschTln3       : Result := 'MschTln3';
+    spMschTln4       : Result := 'MschTln4';
+    spMschTln5       : Result := 'MschTln5';
+    spMschTln6       : Result := 'MschTln6';
+    spMschTln7       : Result := 'MschTln7';
+    spMschRunden     : Result := 'MschRnd';
+    spMschTlnRunden  : Result := 'TlnRnd';
+  end;
+end;
+
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+procedure TRaveForm.TriaRvCustomConnectionGetCols(Connection: TRvCustomConnection);
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+var i : Integer;
+begin
+  {TriaRvCustomConnection.WriteField(Name:String;DataType:TRPDataType;
+                           Width:Integer;FullName:String;Description:String); }
+  with TriaRvCustomConnection do
+  begin
+    if HauptFenster.Ansicht <> anTlnSchwDist then
+      WriteField('OddEven',dtString,2,'','')
+    else WriteField('BahnCount',dtString,2,'',''); // SchwimmDistanz
+    WriteField('Titel2',dtString,60,'','');
+    WriteField('Titel3',dtString,60,'','');
+    // variable Spaltennamen
+    case HauptFenster.Ansicht of
+      anTlnStart:
+        WriteField('Opt',dtString,6,'','');
+      anTlnErg:
+      begin
+        for i:=1 to 8 do // einfachheitshalber immer 8 Abschnitte
+          WriteField('Abs'+IntToStr(i),dtString,4,'','');
+        WriteField('Opt',dtString,6,'','');
+        WriteField('ZeitStrafe',dtString,2,'','');
+        WriteField('Summe',dtString,7,'','');
+      end;
+      anTlnUhrZeit:
+        for i:=1 to 8 do // einfachheitshalber immer 8 Abschnitte
+          WriteField('Abs'+IntToStr(i),dtString,4,'','');
+      anTlnRndKntrl:
+        WriteField('AbsZeit',dtString,10,'','');
+      anTlnErgSerie,anMschErgSerie:
+        for i:=1 to Veranstaltung.OrtZahl do
+          WriteField('Ort'+IntToStr(i),dtString,16,'','');
+      anMschErgDetail,anMschErgKompakt:
+      begin
+        if Veranstaltung.WettkColl.MannschWettk or
+           (HauptFenster.Ansicht=anMschErgDetail) then
+          WriteField('ZeitStrafe',dtString,2,'','');
+        WriteField('Summe',dtString,7,'','');
+        if HauptFenster.Ansicht = anMschErgDetail then
+          WriteField('TlnWrtg',dtString,4,'','');
+      end;
+    end;
+    for i := 0 to SpaltenZahl-1 do
+      WriteField(ColName(GetColType(RvReportType,RvReportWettk.Wettk,i,lmReport)),dtString,cnReportFieldLengthMax,'','');
+    //if RvReportType=ltErgLstTlnAbs3LigaAk then
+    //  WriteField(ColName(spLand),dtString,6,'','');
+  end;
+end;
+
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+procedure TRaveForm.TriaRvCustomConnectionGetRow(Connection:TRvCustomConnection);
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+var i : Integer;
+    RepTln : TReportTlnObj;
+    Bool : Boolean;
+    AbsCnt : TWkAbschnitt;
+begin
+  with TriaRvCustomConnection do
+  begin
+    RepTln := Veranstaltung.TlnColl.ReportItems[DataIndex];
+    with RepTln do
+    begin
+      if HauptFenster.Ansicht <> anTlnSchwDist then
+      begin
+        if Odd(DataIndex) then WriteStrData('','O')
+                          else WriteStrData('','E');
+        WriteStrData('',GetTitel2(ReportWk,ReportWrtg) + '  am  ' + ReportWk.Datum);
+        WriteStrData('',GetTitel3(RvReportType,ReportWk,ReportAk));
+      end else
+      begin
+        WriteStrData('',IntToStr(TlnPtr.Wettk.SchwimmDistanz));
+        WriteStrData('',GetTitel2(ReportWk,ReportWrtg) + '  am  ' + ReportWk.Datum);
+        WriteStrData('','Checkliste    Bahn '+IntToStr(TlnPtr.SBhn) +
+                     '  -  Startzeit ' + UhrZeitStr(TlnPtr.StrtZeit(wkAbs1)));
+      end;
+      // variable Spaltennamen
+      case HauptFenster.Ansicht of
+        anTlnStart:
+          // name optionale Spalte immer übertragen
+          WriteStrData('',ReportWk.TlnTxt);
+        anTlnErg:
+        begin
+          // einfachheitshalber immer alle Abschnitte
+          for AbsCnt:=wkAbs1 to wkAbs8 do
+            WriteStrData('',ReportWk.AbschnName[AbsCnt]);
+          // Name optionale Spalte immer übertragen
+          WriteStrData('',ReportWk.TlnTxt);
+          if Veranstaltung.TlnColl.ZeitStrafe(ReportWk,
+                      ReportWrtg,ReportAk,HauptFenster.SortStatus) then
+            WriteStrData('','*')
+          else WriteStrData('','-');
+          if ReportWk.WettkArt = waStndRennen then
+            WriteStrData('','km')
+          else
+            WriteStrData('','Endzeit');
+        end;
+        anTlnUhrZeit:
+        begin
+          // einfachheitshalber immer alle Abschnitte
+          if ReportWk.AbSchnZahl > 1 then
+            WriteStrData('',ReportWk.AbschnName[wkAbs1])
+          else WriteStrData('','Endzeit');
+          for AbsCnt:=wkAbs2 to wkAbs8 do
+            WriteStrData('',ReportWk.AbschnName[AbsCnt]);
+        end;
+        anTlnRndKntrl:
+          if ReportWk.AbschnZahl = 1 then
+            WriteStrData('','Endzeit')
+          else
+            WriteStrData('','Abs.' +
+                             IntToStr(Integer(HauptFenster.SortStatus)-Integer(stAbs1Zeit)+1) +
+                            '-Zeit');
+        anTlnErgSerie,anMschErgSerie:
+          for i:=0 to Veranstaltung.OrtZahl-1 do
+            WriteStrData('',Veranstaltung.OrtColl[i].Name);
+        anMschErgDetail,anMschErgKompakt:
+        begin
+          if Veranstaltung.WettkColl.MannschWettk then
+            if Veranstaltung.MannschColl.ZeitStrafe(ReportWk,
+                                          ReportAk,HauptFenster.SortStatus) then
+              WriteStrData('','*')
+            else WriteStrData('','-')
+          else
+          if Hauptfenster.Ansicht=anMschErgDetail then
+            if Veranstaltung.TlnColl.ZeitStrafe(ReportWk,
+                              wgStandWrtg,ReportAk,HauptFenster.SortStatus) then
+              WriteStrData('','*')
+            else WriteStrData('','-');
+          if ReportWk.MschWrtgMode = wmTlnZeit then
+            if ReportWk.WettkArt = waStndRennen then
+              WriteStrData('','km')
+            else
+              WriteStrData('','Endzeit')
+          else // wmTlnPlatz, wmSchultour
+            WriteStrData('','Punkte');
+          if HauptFenster.Ansicht = anMschErgDetail then
+            if ReportWk.MschWrtgMode = wmTlnZeit then
+              if ReportWk.WettkArt = waStndRennen then
+                WriteStrData('','km')
+              else
+                WriteStrData('','Zeit')
+            else // wmTlnPlatz, wmSchultour
+              WriteStrData('','Rng');
+         end;
+      end;
+
+      for i:=0 to SpaltenZahl-1 do
+        WriteStrData('',GetColData(ReportWk,ReportWrtg,ReportAk,TlnPtr,
+                                   GetColType(RvReportType,RvReportWettk.Wettk,i,lmReport),Bool,lmReport));
+      // weil DataView DVErgLstTlnLigaAk für alle ErgLst Reports benutzt wird und
+      // spLand nicht in ltErgLstTlnLigaAk enthalten ist
+      //if RvReportType=ltErgLstTlnAbs3LigaAk then
+      //  WriteStrData('',GetColData(ReportWk,ReportWrtg,ReportAk,TlnPtr,
+      //                             spLand,Bool,lmReport));
+    end;
+  end;
+  HauptFenster.ProgressBarStep(1);
+end;
+
+procedure TRaveForm.TriaRvCustomConnectionNext(Connection: TRvCustomConnection);
+begin
+  //showmessage('Next, Index = '+ IntToStr(Connection.DataIndex));
+end;
+
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+procedure TRaveForm.TriaRvCustomConnectionOpen(Connection: TRvCustomConnection);
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+begin
+  {if HauptFenster.TlnAnsicht then}
+    TriaRvCustomConnection.DataRows := Veranstaltung.TlnColl.ReportCount
+  {else TriaRvCustomConnection.DataRows := Veranstaltung.MannschColl.SortCount};
+end;
+
+end.

@@ -1,0 +1,662 @@
+unit AkObj;
+          
+interface
+
+uses
+  Classes,SysUtils,Dialogs,
+  AllgConst,AllgObj;
+
+type
+
+  TAkObj = Class(TTriaObj)
+  protected
+    FName     : String;  // in Überschrift der Listen und KlasseCB
+    FKuerzel  : String;  // Spalten-Überschrift in Listen
+    FAlterVon : Integer; // M/W+AlterVon in Spalten der Listen
+    FAlterBis : Integer;
+    function  GetBPObjType: Word; override;
+    procedure SetName(NameNeu:String);
+    procedure SetKuerzel(KuerzelNeu:String);
+    procedure SetAlterVon(AlterNeu:Integer);
+    procedure SetAlterBis(AlterNeu:Integer);
+    function  DefaultKuerzel: String;
+  public
+    Sex      : TSex;
+    Wertung  : TKlassenWertung;
+    constructor Create(Veranst:Pointer;Coll:TTriaObjColl;Add:TOrtAdd);override;
+    function  Load: Boolean; override;
+    function  Store: Boolean; override;
+    procedure OrtCollAdd; override;
+    procedure OrtCollClear(IndexNeu:Integer); override;
+    procedure OrtCollExch(Idx1,Idx2:Integer); override;
+    procedure Init(NameNeu,KuerzelNeu:String; AlterVonNeu,AlterBisNeu:Integer;
+                   SexNeu:TSex; WertgNeu:TKlassenWertung);
+    function  ObjSize: Integer; override;
+    property  Name: String read FName write SetName;
+    property  Kuerzel: String read FKuerzel write SetKuerzel;
+    property  AlterVon: Integer read FAlterVon write SetAlterVon;
+    property  AlterBis: Integer read FAlterBis write SetAlterBis;
+    //property  Kuerzel: String read GetKuerzel;
+  end;
+
+  TAkColl = Class(TTriaObjColl)
+  protected
+    function    GetBPObjType: Word; override;
+    function    GetPItem(Indx:Integer): TAkObj;
+    procedure   SetPItem(Indx:Integer; Item:TAkObj);
+    function    GetSortItem(Indx:Integer): TAkObj;
+    procedure   InsertAk(NameNeu,KuerzelNeu:String;AlterVonNeu,AlterBisNeu:Integer;
+                         SexNeu:TSex; WertgNeu:TKlassenWertung);
+    procedure   InsertAkAlle;
+    procedure   InsertSexKlassen(Sx:TSex);
+    procedure   InsertAltersKlassen(ListeNeu:TDefaultAkListe;Sx:TSex);
+    procedure   InsertSonderKlassen(ListeNeu:TDefaultAkListe;Sx:TSex);
+  public
+    constructor Create(Veranst:Pointer;Wrtg:TKlassenWertung;Sx:TSex;ListeNeu:TDefaultAkListe);
+    function    Load: Boolean; override;
+    procedure   SetzeAkLimits(AkMin,AkMax:Integer);
+    function    SortString(Item: Pointer): String; override;
+    property    Items[Indx: Integer]: TAkObj read GetPItem write SetPItem; default;
+    property    SortItems[Indx:Integer]:TAkObj read GetSortItem;
+  end;
+
+var
+  AkAlle,AkMixed,AkMaenner,AkFrauen,AkUnbekannt,AkMannUnbek,AkFrauUnbek: TAkObj;
+  DTU_M_AkListe, DTU_W_AkListe, DTU_M_SkListe, DTU_W_SkListe,
+  DLV_M_AkListe, DLV_W_AkListe, DLV_M_SkListe, DLV_W_SkListe: TAkColl;
+
+procedure InitAllgAk;
+procedure ClearAllgAk;
+
+implementation
+
+uses VeranObj,WettkObj,TriaMain,AllgFunc;
+
+(******************************************************************************)
+procedure InitAllgAk;
+(******************************************************************************)
+begin
+  AkAlle      := TAkObj.Create(nil,nil,oaAdd);
+  AkMixed     := TAkObj.Create(nil,nil,oaAdd);
+  AkMaenner   := TAkObj.Create(nil,nil,oaAdd); // 2005 in WettkObj, nur noch
+  AkFrauen    := TAkObj.Create(nil,nil,oaAdd); // als Default zum Vergleich
+  AkUnbekannt := TAkObj.Create(nil,nil,oaAdd);
+  AkMannUnbek := TAkObj.Create(nil,nil,oaAdd);
+  AkFrauUnbek := TAkObj.Create(nil,nil,oaAdd);
+
+  AkAlle.Init('Alle','',00,cnAlterMax,cnSexBeide,kwAlle);
+  AkMixed.Init('Mixed','',00,cnAlterMax,cnMixed,kwSex);
+  AkMaenner.Init('Männer','',00,cnAlterMax,cnMaennlich,kwSex);
+  AkFrauen.Init('Frauen','',00,cnAlterMax,cnWeiblich,kwSex);
+  AkUnbekannt.Init(' - ','',00,cnAlterMax,cnKeinSex,kwKein);
+  AkMannUnbek.Init(' M ','',00,cnAlterMax,cnMaennlich,kwKein);
+  AkFrauUnbek.Init(' W ','',00,cnAlterMax,cnWeiblich,kwKein);
+
+  DTU_M_AkListe := TAkColl.Create(nil,kwAltkl,cnMaennlich,alDTU);
+  DTU_W_AkListe := TAkColl.Create(nil,kwAltkl,cnWeiblich,alDTU);
+  DTU_M_SkListe := TAkColl.Create(nil,kwSondkl,cnMaennlich,alDTU);
+  DTU_W_SkListe := TAkColl.Create(nil,kwSondkl,cnWeiblich,alDTU);
+  DLV_M_AkListe := TAkColl.Create(nil,kwAltkl,cnMaennlich,alDLV);
+  DLV_W_AkListe := TAkColl.Create(nil,kwAltkl,cnWeiblich,alDLV);
+  DLV_M_SkListe := TAkColl.Create(nil,kwSondkl,cnMaennlich,alDLV);
+  DLV_W_SkListe := TAkColl.Create(nil,kwSondkl,cnWeiblich,alDLV);
+end;
+
+(******************************************************************************)
+procedure ClearAllgAk;
+(******************************************************************************)
+begin
+  FreeAndNil(AkAlle);
+  FreeAndNil(AkMixed);
+  FreeAndNil(AkMaenner);
+  FreeAndNil(AkFrauen);
+  FreeAndNil(AkUnbekannt);
+  FreeAndNil(AkMannUnbek);
+  FreeAndNil(AkFrauUnbek);
+
+  FreeAndNil(DTU_M_AkListe);
+  FreeAndNil(DTU_W_AkListe);
+  FreeAndNil(DTU_M_SkListe);
+  FreeAndNil(DTU_W_SkListe);
+  FreeAndNil(DLV_M_AkListe);
+  FreeAndNil(DLV_W_AkListe);
+  FreeAndNil(DLV_M_SkListe);
+  FreeAndNil(DLV_W_SkListe);
+end;
+
+
+(******************************************************************************)
+(*                       Methoden von TAkObj                                  *)
+(******************************************************************************)
+
+// protected Methoden
+
+//------------------------------------------------------------------------------
+function TAkObj.GetBPObjType: Word;
+//------------------------------------------------------------------------------
+(* Object Types aus Version 7.4 Stream Registration Records *)
+begin
+  Result := rrAkObj;
+end;
+
+//------------------------------------------------------------------------------
+procedure TAkObj.SetName(NameNeu:String);
+//------------------------------------------------------------------------------
+begin
+  SortRemove;
+  FName := NameNeu;
+  SortAdd;
+end;
+
+//------------------------------------------------------------------------------
+procedure TAkObj.SetKuerzel(KuerzelNeu:String);
+//------------------------------------------------------------------------------
+begin
+  SortRemove;
+  FKuerzel := KuerzelNeu;
+  SortAdd;
+end;
+
+//------------------------------------------------------------------------------
+procedure TAkObj.SetAlterVon(AlterNeu:Integer);
+//------------------------------------------------------------------------------
+begin
+  SortRemove;
+  FAlterVon := AlterNeu;
+  SortAdd;
+end;
+
+//------------------------------------------------------------------------------
+procedure TAkObj.SetAlterBis(AlterNeu:Integer);
+//------------------------------------------------------------------------------
+begin
+  SortRemove;
+  FAlterBis := AlterNeu;
+  SortAdd;
+end;
+
+//------------------------------------------------------------------------------
+function TAkObj.DefaultKuerzel: String;
+//------------------------------------------------------------------------------
+// für Ak-Spalte in Listen und TlnDlg
+begin
+  if Wertung = kwAltKl then // nur gültige Ak's
+    case Sex of
+      cnMaennlich : Result := Format('M%.2u',[FAlterVon]);
+      cnWeiblich  : Result := Format('W%.2u',[FAlterVon]);
+      else Result := '';
+    end
+  else Result := '';
+end;
+
+// public Methoden
+
+(*============================================================================*)
+constructor TAkObj.Create(Veranst:Pointer;Coll:TTriaObjColl;Add:TOrtAdd);
+(*============================================================================*)
+begin
+  inherited Create(Veranst,Coll,Add);
+  FName     := ' ?? ';
+  FKuerzel  := '';
+  FAlterVon := 0;
+  FAlterBis := cnAlterMax;
+  Sex       := cnKeinSex;
+  Wertung   := kwKein;
+end;
+
+(*============================================================================*)
+function TAkObj.Load: Boolean;
+(*============================================================================*)
+var Buff : SmallInt;
+begin
+  Result := false;
+
+  try
+    if FVPtr <> EinlVeranst then Exit;
+    if not inherited Load then Exit;
+    with TriaStream do
+    begin
+      ReadStr(FName);
+      ReadBuffer(Buff, cnSizeOfSmallInt);
+      if (Buff>=0)and(Buff<=cnAlterMax) then FAlterVon := Buff
+                                        else FAlterVon := 0;
+      ReadBuffer(Buff, cnSizeOfSmallInt);
+      if (Buff>=0)and(Buff<=cnAlterMax) then FAlterBis := Buff
+                                        else FAlterBis := cnAlterMax;
+      ReadBuffer(Buff, cnSizeOfSmallInt);
+      case Buff of
+        0: Sex := cnMaennlich;
+        1: Sex := cnWeiblich;
+        2: Sex := cnSexBeide;
+        3: if (TriDatei.Version.Jahr<'2011') or
+              (TriDatei.Version.Jahr='2011') and (TriDatei.Version.Nr < '2.4') then
+             Sex := cnKeinSex
+           else Sex := cnMixed;
+        else Sex := cnKeinSex;
+      end;
+      ReadBuffer(Buff, cnSizeOfSmallInt);
+      case Buff of
+        1: //Wertung := kwGesamt; nur Versionen bis 2007-1.6
+           if (Sex = cnMaennlich) or (Sex = cnweiblich) then
+             Wertung := kwSex
+           else Wertung := kwAlle;
+        2: Wertung := kwAltKl;
+        3: Wertung := kwSondKl;
+        4: Wertung := kwAlle; // neu ab 2007-1.6
+        5: Wertung := kwSex;  // neu ab 2007-1.6
+        else Wertung := kwKein;
+      end;
+      if (TriDatei.Version.Jahr<'2005') or
+         (TriDatei.Version.Jahr='2005') and (TriDatei.Version.Nr <= '0.1')
+        then FKuerzel := DefaultKuerzel  // Wertung vorher gesetzt
+
+      else
+      if (TriDatei.Version.Jahr='2005')and(TriDatei.Version.Nr = '0.2') or
+         ((TriDatei.Version.Jahr>'2008')or
+          (TriDatei.Version.Jahr='2008')and(TriDatei.Version.Nr >= '2.0')) then
+        ReadStr(FKuerzel);
+      // bis 2008-2.0  Kuerzel in VeranstObj einlesen
+    end;
+  except
+    Result := false;
+    Exit;
+  end;
+
+  Result := true;
+end;
+
+(*============================================================================*)
+function TAkObj.Store: Boolean;
+(*============================================================================*)
+var Buff : SmallInt;
+begin
+  Result := false;
+
+  try
+    if not inherited Store then Exit;
+    with TriaStream do
+    begin
+      WriteStr(FName);
+      Buff := FAlterVon;
+      WriteBuffer(Buff, cnSizeOfSmallInt);
+      Buff := FAlterBis;
+      WriteBuffer(Buff, cnSizeOfSmallInt);
+      case Sex of
+        cnMaennlich : Buff := 0;
+        cnWeiblich  : Buff := 1;
+        cnSexBeide  : Buff := 2;
+        cnMixed     : Buff := 3;
+        else          Buff := 4; // cnKeinSex
+      end;
+      WriteBuffer(Buff, cnSizeOfSmallInt);
+      case Wertung of
+        //kwGesamt : Buff := 1;
+        kwAltKl  : Buff := 2;
+        kwSondKl : Buff := 3;
+        kwAlle   : Buff := 4;
+        kwSex    : Buff := 5;
+        else Buff := 0;
+      end;
+      WriteBuffer(Buff, cnSizeOfSmallInt);
+      WriteStr(FKuerzel); // bis 2008-2.0 in VeranstObj
+    end;
+    //HauptFenster.StepProgressBar(FCollection.ItemSize); in wetkObj
+  except
+    Result := false;
+    Exit;
+  end;
+  Result := true;
+end;
+
+
+(*============================================================================*)
+procedure TAkObj.OrtCollAdd;
+(*============================================================================*)
+begin
+  // nicht benutzt
+end;
+
+(*============================================================================*)
+procedure TAkObj.OrtCollClear(IndexNeu:Integer);
+(*============================================================================*)
+begin
+  // nicht benutzt
+end;
+
+(*============================================================================*)
+procedure TAkObj.OrtCollExch(Idx1,Idx2:Integer);
+(*============================================================================*)
+begin
+  // nicht benutzt
+end;
+
+(*============================================================================*)
+procedure TAkObj.Init(NameNeu,KuerzelNeu:String; AlterVonNeu,AlterBisNeu:Integer;
+                      SexNeu:TSex; WertgNeu:TKlassenWertung);
+(*============================================================================*)
+begin
+  SortRemove;
+  FName     := NameNeu;
+  FKuerzel  := KuerzelNeu;
+  FAlterVon := AlterVonNeu;
+  FAlterBis := AlterBisNeu;
+  Sex       := SexNeu;
+  Wertung   := WertgNeu;
+  SortAdd;
+end;
+
+(*============================================================================*)
+function TAkObj.ObjSize: Integer;
+(*============================================================================*)
+begin
+  Result := SizeOf(FName) + SizeOf(FKuerzel) + SizeOf(FAlterVon) +
+            SizeOf(FAlterBis) + SizeOf(Sex) + SizeOf(Wertung);
+end;
+
+
+(******************************************************************************)
+(* Methoden von TAkColl                                                       *)
+(******************************************************************************)
+
+(*----------------------------------------------------------------------------*)
+function TAkColl.GetBPObjType: Word;
+(*----------------------------------------------------------------------------*)
+(* Object Types aus Version 7.4 Stream Registration Records *)
+begin
+  Result := rrAkColl;
+end;
+
+(*----------------------------------------------------------------------------*)
+function TAkColl.GetPItem(Indx:Integer): TAkObj;
+(*----------------------------------------------------------------------------*)
+begin
+  Result := TAkObj(inherited GetPItem(Indx));
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure TAkColl.SetPItem(Indx:Integer; Item:TAkObj);
+(*----------------------------------------------------------------------------*)
+begin
+  inherited SetPItem(Indx,Item);
+end;
+
+(*----------------------------------------------------------------------------*)
+function TAkColl.GetSortItem(Indx:Integer): TAkObj;
+(*----------------------------------------------------------------------------*)
+begin
+  Result := TAkObj(inherited GetSortItem(Indx));
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure TAkColl.InsertAk(NameNeu,KuerzelNeu:String; AlterVonNeu,AlterBisNeu:Integer;
+                           SexNeu:TSex; WertgNeu:TKlassenWertung);
+(*----------------------------------------------------------------------------*)
+var P:TAkObj;
+begin
+  P := TAkObj.Create(FVPtr,Self,oaAdd);
+  P.Init(NameNeu,KuerzelNeu,AlterVonNeu,AlterBisNeu,SexNeu,WertgNeu);
+  AddItem(P);
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure TAkColl.InsertAkAlle;
+(*----------------------------------------------------------------------------*)
+begin
+  with AkAlle do InsertAk(FName,FKuerzel,FAlterVon,FAlterBis,Sex,Wertung);
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure TAkColl.InsertSexKlassen(Sx:TSex);
+(*----------------------------------------------------------------------------*)
+begin
+  case Sx of
+    cnMaennlich : with AkMaenner do InsertAk(FName,FKuerzel,FAlterVon,FAlterBis,Sex,Wertung);
+    cnWeiblich  : with AkFrauen do InsertAk(FName,FKuerzel,FAlterVon,FAlterBis,Sex,Wertung);
+    else Exit;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+procedure TAkColl.InsertAltersKlassen(ListeNeu:TDefaultAkListe;Sx:TSex);
+//------------------------------------------------------------------------------
+// Ak's von Alter 06 bis 84
+begin
+  case ListeNeu of
+    alTria: // Kürzellänge = 3, Abschnitte beliebig
+      case Sx of
+        cnWeiblich:
+        begin
+          InsertAk('W 06-07','W06',6,7,Sx,kwAltKl);
+          InsertAk('W 08-09','W08',8,9,Sx,kwAltKl);
+          InsertAk('W 10-11','W10',10,11,Sx,kwAltKl);
+          InsertAk('W 12-13','W12',12,13,Sx,kwAltKl);
+          InsertAk('W 14-15','W14',14,15,Sx,kwAltKl);
+          InsertAk('W 16-17','W16',16,17,Sx,kwAltKl);
+          InsertAk('W 18-19','W18',18,19,Sx,kwAltKl);
+          InsertAk('W 20-24','W20',20,24,Sx,kwAltKl);
+          InsertAk('W 25-29','W25',25,29,Sx,kwAltKl);
+          InsertAk('W 30-34','W30',30,34,Sx,kwAltKl);
+          InsertAk('W 35-39','W35',35,39,Sx,kwAltKl);
+          InsertAk('W 40-44','W40',40,44,Sx,kwAltKl);
+          InsertAk('W 45-49','W45',45,49,Sx,kwAltKl);
+          InsertAk('W 50-54','W50',50,54,Sx,kwAltKl);
+          InsertAk('W 55-59','W55',55,59,Sx,kwAltKl);
+          InsertAk('W 60-64','W60',60,64,Sx,kwAltKl);
+          InsertAk('W 65-69','W65',65,69,Sx,kwAltKl);
+          InsertAk('W 70-74','W70',70,74,Sx,kwAltKl);
+          InsertAk('W 75-79','W75',75,79,Sx,kwAltKl);
+          InsertAk('W 80-84','W80',80,84,Sx,kwAltKl);
+          InsertAk('W 85-89','W85',85,89,Sx,kwAltKl);
+        end;
+        else
+        begin
+          InsertAk('M 06-07','M06',6,7,Sx,kwAltKl);
+          InsertAk('M 08-09','M08',8,9,Sx,kwAltKl);
+          InsertAk('M 10-11','M10',10,11,Sx,kwAltKl);
+          InsertAk('M 12-13','M12',12,13,Sx,kwAltKl);
+          InsertAk('M 14-15','M14',14,15,Sx,kwAltKl);
+          InsertAk('M 16-17','M16',16,17,Sx,kwAltKl);
+          InsertAk('M 18-19','M18',18,19,Sx,kwAltKl);
+          InsertAk('M 20-24','M20',20,24,Sx,kwAltKl);
+          InsertAk('M 25-29','M25',25,29,Sx,kwAltKl);
+          InsertAk('M 30-34','M30',30,34,Sx,kwAltKl);
+          InsertAk('M 35-39','M35',35,39,Sx,kwAltKl);
+          InsertAk('M 40-44','M40',40,44,Sx,kwAltKl);
+          InsertAk('M 45-49','M45',45,49,Sx,kwAltKl);
+          InsertAk('M 50-54','M50',50,54,Sx,kwAltKl);
+          InsertAk('M 55-59','M55',55,59,Sx,kwAltKl);
+          InsertAk('M 60-64','M60',60,64,Sx,kwAltKl);
+          InsertAk('M 65-69','M65',65,69,Sx,kwAltKl);
+          InsertAk('M 70-74','M70',70,74,Sx,kwAltKl);
+          InsertAk('M 75-79','M75',75,79,Sx,kwAltKl);
+          InsertAk('M 80-84','M80',80,84,Sx,kwAltKl);
+          InsertAk('M 85-89','M85',85,89,Sx,kwAltKl);
+        end;
+      end;
+    alDTU: // Kürzellänge = 3, Abschnitte beliebig
+      case Sx of
+        cnWeiblich:
+        begin
+          InsertAk('Schülerinnen D','W06',6,7,Sx,kwAltKl);
+          InsertAk('Schülerinnen C','W08',8,9,Sx,kwAltKl);
+          InsertAk('Schülerinnen B','W10',10,11,Sx,kwAltKl);
+          InsertAk('Schülerinnen A','W12',12,13,Sx,kwAltKl);
+          InsertAk('Jugend B weibl.','W14',14,15,Sx,kwAltKl);
+          InsertAk('Jugend A weibl.','W16',16,17,Sx,kwAltKl);
+          InsertAk('Juniorinnen','W18',18,19,Sx,kwAltKl);
+          InsertAk('Alterskl. 1 weibl.','W20',20,24,Sx,kwAltKl);
+          InsertAk('Alterskl. 2 weibl.','W25',25,29,Sx,kwAltKl);
+          InsertAk('Alterskl. 3 weibl.','W30',30,34,Sx,kwAltKl);
+          InsertAk('Alterskl. 4 weibl.','W35',35,39,Sx,kwAltKl);
+          InsertAk('Seniorinnen 1','W40',40,44,Sx,kwAltKl);
+          InsertAk('Seniorinnen 2','W45',45,49,Sx,kwAltKl);
+          InsertAk('Seniorinnen 3','W50',50,54,Sx,kwAltKl);
+          InsertAk('Seniorinnen 4','W55',55,59,Sx,kwAltKl);
+          InsertAk('Seniorinnen 5','W60',60,64,Sx,kwAltKl);
+          InsertAk('Seniorinnen 6','W65',65,69,Sx,kwAltKl);
+          InsertAk('Seniorinnen 7','W70',70,74,Sx,kwAltKl);
+          InsertAk('Seniorinnen 8','W75',75,79,Sx,kwAltKl);
+          InsertAk('Seniorinnen 9','W80',80,84,Sx,kwAltKl);
+          InsertAk('Seniorinnen 10','W85',85,89,Sx,kwAltKl);
+        end;
+        else
+        begin
+          InsertAk('Schüler D','M06',6,7,Sx,kwAltKl);
+          InsertAk('Schüler C','M08',8,9,Sx,kwAltKl);
+          InsertAk('Schüler B','M10',10,11,Sx,kwAltKl);
+          InsertAk('Schüler A','M12',12,13,Sx,kwAltKl);
+          InsertAk('Jugend B männl.','M14',14,15,Sx,kwAltKl);
+          InsertAk('Jugend A männl.','M16',16,17,Sx,kwAltKl);
+          InsertAk('Junioren','M18',18,19,Sx,kwAltKl);
+          InsertAk('Alterskl. 1 männl.','M20',20,24,Sx,kwAltKl);
+          InsertAk('Alterskl. 2 männl.','M25',25,29,Sx,kwAltKl);
+          InsertAk('Alterskl. 3 männl.','M30',30,34,Sx,kwAltKl);
+          InsertAk('Alterskl. 4 männl.','M35',35,39,Sx,kwAltKl);
+          InsertAk('Senioren 1','M40',40,44,Sx,kwAltKl);
+          InsertAk('Senioren 2','M45',45,49,Sx,kwAltKl);
+          InsertAk('Senioren 3','M50',50,54,Sx,kwAltKl);
+          InsertAk('Senioren 4','M55',55,59,Sx,kwAltKl);
+          InsertAk('Senioren 5','M60',60,64,Sx,kwAltKl);
+          InsertAk('Senioren 6','M65',65,69,Sx,kwAltKl);
+          InsertAk('Senioren 7','M70',70,74,Sx,kwAltKl);
+          InsertAk('Senioren 8','M75',75,79,Sx,kwAltKl);
+          InsertAk('Senioren 9','M80',80,84,Sx,kwAltKl);
+          InsertAk('Senioren 10','M85',85,89,Sx,kwAltKl);
+        end;
+      end;
+    alDLV: // Kürzellänge = 6, nur 1 Abschnitt
+      case Sx of
+        cnWeiblich:
+        begin
+          InsertAk('Weibl. Kinder U 8','WK U8',6,7,Sx,kwAltKl);
+          InsertAk('Weibl. Kinder U10','WK U10',8,9,Sx,kwAltKl);
+          InsertAk('Weibl. Kinder U12','WK U12',10,11,Sx,kwAltKl);
+          InsertAk('Weibl. Jugend U14','WJ U14',12,13,Sx,kwAltKl);
+          InsertAk('Weibl. Jugend U16','WJ U16',14,15,Sx,kwAltKl);
+          InsertAk('Weibl. Jugend U18','WJ U18',16,17,Sx,kwAltKl);
+          InsertAk('Weibl. Jugend U20','WJ U20',18,19,Sx,kwAltKl);
+          InsertAk('Frauen Hauptkl.','W HK',20,29,Sx,kwAltKl);
+          InsertAk('Seniorinnen W 30','W 30',30,34,Sx,kwAltKl);
+          InsertAk('Seniorinnen W 35','W 35',35,39,Sx,kwAltKl);
+          InsertAk('Seniorinnen W 40','W 40',40,44,Sx,kwAltKl);
+          InsertAk('Seniorinnen W 45','W 45',45,49,Sx,kwAltKl);
+          InsertAk('Seniorinnen W 50','W 50',50,54,Sx,kwAltKl);
+          InsertAk('Seniorinnen W 55','W 55',55,59,Sx,kwAltKl);
+          InsertAk('Seniorinnen W 60','W 60',60,64,Sx,kwAltKl);
+          InsertAk('Seniorinnen W 65','W 65',65,69,Sx,kwAltKl);
+          InsertAk('Seniorinnen W 70','W 70',70,74,Sx,kwAltKl);
+          InsertAk('Seniorinnen W 75','W 75',75,79,Sx,kwAltKl);
+          InsertAk('Seniorinnen W 80','W 80',80,84,Sx,kwAltKl);
+          InsertAk('Seniorinnen W 85','W 85',85,89,Sx,kwAltKl);
+        end;
+        else
+        begin
+          InsertAk('Männl. Kinder U 8','MK U8',6,7,Sx,kwAltKl);
+          InsertAk('Männl. Kinder U10','MK U10',8,9,Sx,kwAltKl);
+          InsertAk('Männl. Kinder U12','MK U12',10,11,Sx,kwAltKl);
+          InsertAk('Männl. Jugend U14','MJ U14',12,13,Sx,kwAltKl);
+          InsertAk('Männl. Jugend U16','MJ U16',14,15,Sx,kwAltKl);
+          InsertAk('Männl. Jugend U18','MJ U18',16,17,Sx,kwAltKl);
+          InsertAk('Männl. Jugend U20','MJ U20',18,19,Sx,kwAltKl);
+          InsertAk('Männer Hauptkl.','M HK',20,29,Sx,kwAltKl);
+          InsertAk('Senioren M 30','M 30',30,34,Sx,kwAltKl);
+          InsertAk('Senioren M 35','M 35',35,39,Sx,kwAltKl);
+          InsertAk('Senioren M 40','M 40',40,44,Sx,kwAltKl);
+          InsertAk('Senioren M 45','M 45',45,49,Sx,kwAltKl);
+          InsertAk('Senioren M 50','M 50',50,54,Sx,kwAltKl);
+          InsertAk('Senioren M 55','M 55',55,59,Sx,kwAltKl);
+          InsertAk('Senioren M 60','M 60',60,64,Sx,kwAltKl);
+          InsertAk('Senioren M 65','M 65',65,69,Sx,kwAltKl);
+          InsertAk('Senioren M 70','M 70',70,74,Sx,kwAltKl);
+          InsertAk('Senioren M 75','M 75',75,79,Sx,kwAltKl);
+          InsertAk('Senioren M 80','M 80',80,84,Sx,kwAltKl);
+          InsertAk('Senioren M 85','M 85',85,89,Sx,kwAltKl);
+        end;
+      end;
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure TAkColl.InsertSonderKlassen(ListeNeu:TDefaultAkListe;Sx:TSex);
+(*----------------------------------------------------------------------------*)
+begin
+  case ListeNeu of
+    alTria,
+    alDTU:
+      case Sx of
+        cnWeiblich:
+        begin
+          InsertAk('U 23 weiblich','',18,23,Sx,kwSondKl);
+          InsertAk('Seniorinnen','',40,cnAlterMax,Sx,kwSondKl);
+        end;
+        else
+        begin
+          InsertAk('U 23 männlich','',18,23,Sx,kwSondKl);
+          InsertAk('Senioren','',40,cnAlterMax,Sx,kwSondKl);
+        end;
+      end;
+    alDLV:
+      case Sx of
+        cnWeiblich:
+        begin
+          InsertAk('Juniorinnen U 23','',20,23,Sx,kwSondKl);
+          InsertAk('Seniorinnen','',30,cnAlterMax,Sx,kwSondKl);
+        end;
+        else
+        begin
+          InsertAk('Junioren U 23','',20,23,Sx,kwSondKl);
+          InsertAk('Senioren','',30,cnAlterMax,Sx,kwSondKl);
+        end;
+      end;
+  end;
+end;
+
+(*============================================================================*)
+Constructor TAkColl.Create(Veranst:Pointer;Wrtg:TKlassenWertung;Sx:TSex;ListeNeu:TDefaultAkListe);
+(*============================================================================*)
+// unabhängig vom Jahr, immer aktuelle Liste als Default
+begin
+  inherited Create(Veranst,TAkObj);
+  // StepProgressBar bleibt false
+  FSortMode := smTlnName; // Dummy, wird nicht benutzt
+  case Wrtg of
+    kwAlle   : InsertAkAlle;
+    kwSex    : InsertSexKlassen(Sx);
+    kwAltKl  : InsertAltersKlassen(ListeNeu,Sx);
+    kwSondKl : InsertSonderKlassen(ListeNeu,Sx);
+    else ;
+  end;
+end;
+
+(*============================================================================*)
+function TAkColl.Load: Boolean;
+(*============================================================================*)
+begin
+  Clear;
+  Result := inherited Load;
+end;
+
+(*============================================================================*)
+procedure TAkColl.SetzeAkLimits(AkMin,AkMax:Integer);
+(*============================================================================*)
+// für DTUAk's, nur nach Load von alten Dateien (<2004-1.10)
+var i : Integer;
+begin
+  if (AkMin>=0) and (AkMax>=AkMin) and (AkMax<Count) then
+  begin
+    for i:=Count-1 downto AkMax+1 do ClearIndex(i);
+    for i:=AkMin-1 downto 0 do ClearIndex(i);
+  end;
+end;
+
+(*============================================================================*)
+function TAkColl.SortString(Item:Pointer): String;
+(*============================================================================*)
+begin
+  Result := Format('%.2u %.2u %s',[TAkObj(Item).FAlterVon,
+                                   TAkObj(Item).FAlterBis,
+                                   TAkObj(Item).FName]);
+end;
+
+
+end.

@@ -1,0 +1,595 @@
+unit UpdateDlg;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StrUtils, ComCtrls, StdCtrls, ExtCtrls, ShellApi,
+  IdComponent, IdTCPConnection, IdTCPClient, IdBaseComponent,
+  IdAntiFreezeBase, IdAntiFreeze, IdHTTP, IdStack,IdSSLOpenSSL,
+  IdSSLOpenSSLHeaders, IdCTypes, // von http://stackoverflow.com/questions/29875664/eidosslunderlyingcryptoerror-exception
+  xmldom, XMLIntf, msxmldom, XMLDoc,ShlObj,
+  AllgConst;
+
+procedure InternetUpdate(Modus:TUpdateModus);
+
+type
+
+  // von http://stackoverflow.com/questions/29875664/eidosslunderlyingcryptoerror-exception
+  TCustomIdHTTP = class(TIdHTTP)
+  public
+    constructor Create(AOwner: TComponent);
+  private
+    procedure OnStatusInfoEx(ASender: TObject; const AsslSocket: PSSL; const AWhere, Aret: TIdC_INT; const AType, AMsg: String);
+  end;
+
+  TUpdateStatus = (usStart,usPadLesen,usUpTodate,usPadFehler,usNotUpToDate,
+                   usDownload,usExeFehler,usExeLoaded,usSetup,usSetupFehler,
+                   usAuto);
+
+  TUpdateDialog = class(TForm)
+    WeiterBtn: TButton;
+    IdHTTP: TIdHTTP;
+    TrennPanel: TPanel;
+    StartPanel: TPanel;
+    Label1: TLabel;
+    Image: TImage;
+    TitelLabel: TLabel;
+    Panel1: TPanel;
+    Label1a: TLabel;
+    Label3: TLabel;
+    XMLDocument: TXMLDocument;
+    Label2: TLabel;
+    Label2a: TLabel;
+    ProgressBar: TProgressBar;
+    Label4: TLabel;
+    Label5: TLabel;
+    IdAntiFreeze: TIdAntiFreeze;
+    CancelBtn: TButton;
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure IdHTTPWorkBegin(ASender:TObject; AWorkMode:TWorkMode; AWorkCountMax:Int64);
+    procedure IdHTTPWork(ASender:TObject; AWorkMode:TWorkMode; AWorkCount:Int64);
+    procedure CancelBtnClick(Sender: TObject);
+    procedure WeiterBtnClick(Sender: TObject);
+  private
+    DisableButtons : Boolean;
+    FProgram : String;
+    FPadDatName : String;
+    FPadString  : String;
+    FPadProgName : String; // bis 2010 mit Jahr, dann immer gleich Application.Title
+    FPadProgVersion : String; // bis 2010 ohne Jahr
+    FPadExeURL : String;
+    FPadExeSize : Integer;
+    FPadExeKSize : Integer;
+    FSourceDatei : String;
+    FZielDatei: String;
+    FLabel5Str : String;
+    FProgressBarStartPos : Integer;
+    procedure SetStatus(StatusNeu:TUpdateStatus);
+    function PadFileLesen: Boolean;
+    function ExeDownloaden: Boolean;
+  public
+    Status : TUpdateStatus;
+    constructor Create(AOwner: TComponent); override;
+    //destructor  Destroy; override;
+  end;
+
+
+var
+  UpdateDialog : TUpdateDialog;
+  UpdateModus  : TUpdateModus;
+  LHandler: TIdSSLIOHandlerSocketOpenSSL;
+  MyHTTP: TCustomIdHTTP;// von http://stackoverflow.com/questions/29875664/eidosslunderlyingcryptoerror-exception
+
+//const cnStep = 1024 * 70; // in 70k-Schritte laden
+
+implementation
+
+uses AllgObj,AllgFunc,DateiDlg,VistaFix, TriaMain;
+//DateiDlg benötigt wegen 'DateiSichern' ==> einziger Unterschied zu TztUpdDlg
+
+{$R *.dfm}
+
+{ TCustomIdHTTP }
+
+constructor TCustomIdHTTP.Create(AOwner: TComponent);
+begin
+  IOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
+  with IOHandler as TIdSSLIOHandlerSocketOpenSSL do begin
+    OnStatusInfoEx := Self.OnStatusInfoEx;
+    SSLOptions.Method := sslvSSLv23;
+    SSLOptions.SSLVersions := [{sslvTLSv1_2, sslvTLSv1_1,} sslvTLSv1];
+                             //  (sslvSSLv2, sslvSSLv23, sslvSSLv3, sslvTLSv1)
+  end;
+  inherited Create(AOwner);
+end;
+
+procedure TCustomIdHTTP.OnStatusInfoEx(ASender: TObject; const AsslSocket: PSSL; const AWhere, Aret: TIdC_INT;
+  const AType, AMsg: String);
+begin
+  SSL_set_tlsext_host_name(AsslSocket, Request.Host);
+end;
+//////////////////
+
+
+(******************************************************************************)
+procedure InternetUpdate(Modus:TUpdateModus);
+(******************************************************************************)
+// Funktion sowohl von Tria als TriaZeit benutzt
+begin
+  SetupGestartet := false;
+  UpdateModus    := Modus;
+  // IOHandler definieren wegen HTTPS / SSL auf www.selten.de
+  try
+    LHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
+  except
+    // keine Meldung, Fehler wird in PadFileLesen erkannt: IdHttp.Get exception
+  end;
+
+  UpdateDialog := TUpdateDialog.Create(HauptFenster);
+  try
+    with UpdateDialog do
+    begin
+      if UpdateModus = umAuto then
+        HauptFenster.StatusBarText('',' Es wird geprüft ob ein Update im Internet verfügbar ist...');
+      HauptFenster.Refresh;
+      if (UpdateModus = umManuell) or
+         PadFileLesen and (Status=usNotUpToDate) then
+      begin
+        HauptFenster.StatusBarClear;
+        ShowModal;
+      end;
+    end;
+  finally
+    LHandler.Free;
+    HauptFenster.StatusBarClear;
+    FreeAndNil(UpdateDialog);
+    //HauptFenster.Refresh;
+  end;
+end;
+
+//==============================================================================
+constructor TUpdateDialog.Create(AOwner: TComponent);
+//==============================================================================
+begin
+  inherited Create(AOwner);
+  DisableButtons := false;
+
+  MyHTTP := TCustomIdHTTP.Create(nil);// von http://stackoverflow.com/questions/29875664/eidosslunderlyingcryptoerror-exception
+  with MyHTTP do
+  //with IdHttp do
+  begin
+    IOHandler         := LHandler;
+    Request.Referer   := Application.Title+'_'+ProgVersion.JrNr;
+    Request.UserAgent := Application.Title+'/'+ProgVersion.JrNr+'/Update';
+    //Request.Referer   := '';
+    //Request.UserAgent := '';
+    //Request.Referer   := '';
+    //Request.UserAgent := 'ZoomSpider - wrensoft.com [ZSEBOT]';
+    Request.Pragma    := 'no-cache';
+    HandleRedirects   := True;
+    ReadTimeout       := 10000; // (10 seconds)
+    //ReadTimeout       := 180; // (180 msec, peprüfte Untergrenze)
+    //ConnectTimeout    := 10000;
+    //ConnectTimeout    := 200; geprüfte Untergrenze
+  end;
+
+  Image.Picture.Icon := Application.Icon;
+  FLabel5Str := '';
+  if Application.Title = cnTrzProg then
+  begin
+    FProgram := cnTrzProg;
+    FPadDatName := cnTrzPadDatei;
+  end else
+  begin
+    FProgram := cnTriProg;
+    FPadDatName := cnTriPadDatei;
+  end;
+  SetzeFonts(Font);
+  SetzeFonts(TitelLabel.Font);
+  SetzeFonts(Label1a.Font);
+  SetzeFonts(Label2a.Font);
+  SetzeFonts(Label3.Font);
+  case UpdateModus of
+    umManuell : SetStatus(usStart);
+    umAuto    : SetStatus(usAuto);
+  end;
+  
+end;
+
+//------------------------------------------------------------------------------
+procedure TUpdateDialog.SetStatus(StatusNeu:TUpdateStatus);
+//------------------------------------------------------------------------------
+begin
+  Status := StatusNeu;
+  case Status of
+    usStart:
+    begin
+      TitelLabel.Caption := Application.Title + '  -  Version prüfen';
+      Label1.Caption := 'Momentan verwenden Sie Version: ';
+      Label1a.Caption := ProgVersion.JrNr;
+      Label2.Hide;
+      Label2a.Hide;
+      Label3.Font.Color := clWindowText;
+      Label3.Font.Style := [];
+      Label3.Caption := 'Klicken Sie auf "Weiter", um zu prüfen ob eine neuere '+
+                        'Version verfügbar ist.';
+      ProgressBar.Hide;
+      Label4.Top := ProgressBar.Top;
+      Label4.Hide;
+      Label5.Top := Label4.Top + 20;
+      Label5.Hide;
+      WeiterBtn.Enabled := true;
+    end;
+
+    usPadLesen:
+    begin
+      Label3.Caption := 'Es wird nun überprüft, ob eine neuere '+
+                        'Version verfügbar ist...';
+      ProgressBar.Show;
+      FProgressBarStartPos := ProgressBar.Max DIV 10;
+      ProgressBar.Position := FProgressBarStartPos;
+      ProgressBar.Position := ProgressBar.Position-1; // Position in Vista sichtbar machen
+      ProgressBar.Position := ProgressBar.Position+1;
+      WeiterBtn.Enabled := false;
+    end;
+
+    usUpTodate:
+    begin
+      Label3.Font.Color := clGreen;
+      Label3.Font.Style := [fsBold];
+      Label3.Caption := 'Ihre Version ist auf dem neuesten Stand.';
+      ProgressBar.Hide;
+      WeiterBtn.Enabled := false;
+      CancelBtn.Default := true;
+      CancelBtn.Caption := '&Schließen';
+    end;
+
+    usPadFehler:
+    begin
+      Label3.Font.Color := clRed;
+      Label3.Font.Style := [fsBold];
+      Label3.Caption    := 'Die neueste Version konnte nicht ermittelt werden.';
+      ProgressBar.Hide;
+      WeiterBtn.Enabled := false;
+      CancelBtn.Default := true;
+      CancelBtn.Caption := '&Schließen';
+    end;
+
+    usNotUpToDate:
+    begin
+      TitelLabel.Caption := Application.Title + '  -  Neuere Version verfügbar';
+      Label2.Caption := 'Aktuelle Version auf  ' +
+                        Copy(cnHomePage,8,Length(cnHomePage)-7) + ':';
+      Label2.Show;
+      Label2a.Caption := FPadProgVersion;
+      Label2a.Show;
+      Label3.Font.Color := clWindowText;
+      Label3.Font.Style := [];
+      Label3.Caption := 'Klicken Sie auf "Weiter", um die Version  ' +
+                         FPadProgVersion +
+                        '  zu downloaden ('+ IntToStr(FPadExeKSize) + ' KB).';
+      ProgressBar.Hide;
+
+      WeiterBtn.Enabled := true;
+    end;
+
+    usDownLoad:
+    begin
+      TitelLabel.Caption := Application.Title + ' - ' + FPadProgVersion +
+                           '   downloaden';
+      Label1.Caption := 'Download von: ';
+      Label1a.Caption := FSourceDatei;
+      Label2.Caption := 'Website: ';
+      Label2a.Caption := Copy(cnHomePage,8,Length(cnHomePage)-7);
+      Label3.Font.Style := [];
+      Label3.Caption := 'Die Datei '+ExtractFileName(FZielDatei) +
+                        ' wird gespeichert...';
+      //ProgressBar.Max := FPadExeSize;
+      ProgressBar.Show;
+      FProgressBarStartPos := ProgressBar.Max DIV 10;
+      ProgressBar.Position := FProgressBarStartPos;
+      ProgressBar.Position := ProgressBar.Position-1; // Position in Vista sichtbar machen
+      ProgressBar.Position := ProgressBar.Position+1;
+      Label5.Caption := '0' + FLabel5Str;
+      Label5.Show;
+      WeiterBtn.Enabled := false;
+    end;
+
+    usExeLoaded:
+    begin
+      Label3.Font.Style := [];
+      Label3.Caption := 'Download ist abgeschlossen.';
+      ProgressBar.Hide;
+      Label4.Caption := 'Klicken Sie auf "Weiter", um  ' +
+                         Application.Title + ' - ' + ProgVersion.JrNr + '  zu beenden und ';
+      Label4.Show;
+      Label5.Caption := 'Version  ' + FPadProgVersion + '  zu installieren.';
+      Label5.Show;
+      WeiterBtn.Enabled := true;
+    end;
+
+    usExeFehler:
+    begin
+      Label3.Font.Color := clRed;
+      Label3.Font.Style := [fsBold];
+      Label3.Caption := 'Die Datei '+ExtractFileName(FZielDatei) +
+                        ' konnte nicht kopiert werden.';
+      ProgressBar.Hide;
+      Label4.Hide;
+      Label5.Hide;
+      WeiterBtn.Enabled := false;
+      CancelBtn.Default := true;
+      CancelBtn.Caption := '&Schließen';
+    end;
+
+    usSetup:
+    begin
+      TitelLabel.Caption := Application.Title + ' - ' + FPadProgVersion +
+                            '  Setup starten';
+      Label1.Caption := 'Momentan verwenden Sie Version: ';
+      Label1a.Caption := ProgVersion.JrNr;
+      Label2.Caption := 'Installierte Version: ';
+      Label2.Show;
+      Label2a.Caption := FPadProgVersion;
+      Label2a.Show;
+      Label3.Font.Style := [];
+      Label3.Caption := 'Das Installationsprogramm wird gestartet...';
+      ProgressBar.Max := 100;
+      ProgressBar.Position := 10;
+      ProgressBar.Show;
+      ProgressBar.Position := ProgressBar.Position-1; // Position in Vista sichtbar machen
+      ProgressBar.Position := ProgressBar.Position+1;
+      Label4.Hide;
+      Label5.Hide;
+      WeiterBtn.Enabled := false;
+    end;
+
+    usSetupFehler:
+    begin
+      Label3.Font.Color := clRed;
+      Label3.Font.Style := [fsBold];
+      Label3.Caption := 'Das Installationsprogramm konnte nicht gestartet werden.';
+      ProgressBar.Hide;
+      Label4.Hide;
+      Label5.Hide;
+      WeiterBtn.Enabled := false;
+      CancelBtn.Default := true;
+      CancelBtn.Caption := '&Schließen';
+    end;
+
+    usAuto: // optional beim programmstart
+    begin
+      // erst angezeigt in Status usNotUpToDate
+      TitelLabel.Caption := Application.Title + '  -  Neuere Version verfügbar';
+      Label1.Caption := 'Momentan verwenden Sie Version: ';
+      Label1a.Caption := ProgVersion.JrNr;
+      Label2.Hide;
+      Label2a.Hide;
+      Label3.Font.Color := clWindowText;
+      Label3.Font.Style := [];
+      Label3.Caption := 'Es wird überprüft, ob eine neuere '+
+                        'Version verfügbar ist...';
+      ProgressBar.Hide;
+      Label4.Top := ProgressBar.Top;
+      Label4.Hide;
+      Label5.Top := Label4.Top + 20;
+      Label5.Hide;
+      WeiterBtn.Enabled := false;
+      // automatisch starten in OnShow-Event
+    end;
+  end;
+  Refresh; // damit ProgressBar sichtbar wird
+end;
+
+//------------------------------------------------------------------------------
+function TUpdateDialog.PadFileLesen: Boolean;
+//------------------------------------------------------------------------------
+var PADNode1,PadNode2 : IXMLNode;
+    Offset,Pos : Integer;
+begin
+  try
+    try
+      // SSL IOHandler: TIdSSLIOHandlerSocketOpenSSL, sollte auch ohne SSL funktionioeren
+      // http wird auf WebSite automatisch auf https umgeleitet
+      //FPadString := IdHTTP.Get(cnHomePage +'/'+ FPadDatName);
+      FPadString := MyHTTP.Get(cnHomePage +'/'+ FPadDatName);
+    except
+      //IdHTTP.IOHandler := nil; // ohne SSL-Handler probieren, falls zukünftig kein SSL auf Website
+      MyHTTP.IOHandler := nil; // ohne SSL-Handler probieren, falls zukünftig kein SSL auf Website
+      //FPadString := IdHTTP.Get(cnHomePage +'/'+ FPadDatName);
+      FPadString := MyHTTP.Get(cnHomePage +'/'+ FPadDatName);
+    end;
+
+    XMLDocument.LoadFromXML(FPadString);
+    PADNode1 := XMLDocument.DocumentElement.ChildNodes['Program_Info'];
+    FPadProgName := PadNode1.ChildValues['Program_Name'];
+    FPadProgVersion := PadNode1.ChildValues['Program_Version'];
+    PADNode2 := PADNode1.ChildNodes['File_Info'];
+    FPadExeSize := StrToIntDef(PADNode2.ChildValues['File_Size_Bytes'],0);
+    FPadExeKSize := FPadExeSize DIV 1024;
+    FLabel5Str := ' KB von ' + IntToStr(FPadExeKSize) + ' KB kopiert';
+    // uptodate wenn jahr und version gleich, sonst immer not uptodate
+    // einfacher für test von neueren Ausg., größer kommt sonst nicht vor
+    // Jahr ab 2010 nicht mehr in ProgName, sondern in ProgVersion
+    if AnsiContainsStr(FPadProgName, Application.Title) and // Tria/TriaZeit
+       AnsiSameStr(FPadProgVersion,ProgVersion.JrNr) then SetStatus(usUpToDate)
+    else
+    begin
+      //FPadProgName := Copy(FPadProgName,1,Length(Application.Title)); // ab 2010
+      // URL DownloadDatei
+      PADNode1 := XMLDocument.DocumentElement.ChildNodes['Web_Info'];
+      PADNode2 := PADNode1.ChildNodes['Download_URLs'];
+      FPadExeURL := PADNode2.ChildValues['Primary_Download_URL'];
+      // http://www.selten.de/tria...
+      // suche Anfang PadDaieiName
+      Offset := 8;
+      repeat
+        Pos := PosEx('/',FPadExeURL,Offset);
+        if Pos > 0 then Offset := Pos+1;
+      until (Pos=0);
+      FSourceDatei := Copy(FPadExeURL,Offset,Length(FPadExeURL)-Offset+1);
+      SetStatus(usNotUpToDate);
+    end;
+    Result := true;
+  except
+    Result := false;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+function TUpdateDialog.ExeDownloaden: Boolean;
+//------------------------------------------------------------------------------
+var ZielStream: TFileStream;
+begin
+  Result := false;
+  // fmCreate - Es wird eine Datei mit dem angegebenen Namen angelegt. Ist eine
+  // Datei mit diesem Namen bereits vorhanden, wird die Datei geleert und zum
+  // Schreiben geöffnet.
+  // fmShareDenyNone - Andere Anwendungen können die Datei ohne Einschränkungen
+  // zum Lesen oder Schreiben öffnen.
+  ZielStream := TFileStream.Create(FZielDatei,fmCreate or fmShareDenyNone);
+  try
+    try
+      //IdHTTP.Get(FPadExeURL, ZielStream);
+      MyHTTP.Get(FPadExeURL, ZielStream);
+    except
+      Exit;
+    end;
+    Result := true;
+    SetStatus(usExeLoaded);
+  finally
+    ZielStream.Free;
+  end;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TUpdateDialog.IdHTTPWork(ASender:TObject; AWorkMode:TWorkMode; AWorkCount:Int64);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  Label5.Caption := IntToStr(AWorkCount div 1024) + FLabel5Str;
+  ProgressBar.Position := AWorkCount + FProgressBarStartPos;
+  ProgressBar.Position := ProgressBar.Position-1; // Position in Vista sichtbar machen
+  ProgressBar.Position := ProgressBar.Position+1;
+  Application.ProcessMessages;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TUpdateDialog.IdHTTPWorkBegin(ASender:TObject; AWorkMode:TWorkMode; AWorkCountMax:Int64);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  ProgressBar.Max := AWorkCountMax + AWorkCountMax DIV 10;
+  FProgressBarStartPos := AWorkCountMax DIV 10;
+  ProgressBar.Position := FProgressBarStartPos;
+  ProgressBar.Position := ProgressBar.Position-1; // Position in Vista sichtbar machen
+  ProgressBar.Position := ProgressBar.Position+1;  
+  Application.ProcessMessages;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TUpdateDialog.WeiterBtnClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// siehe http://www.delphi-source.de/tutorials/indy/?page=5
+var
+  StartInfo : TStartupInfo;
+  ProcInfo  : TProcessInformation;
+  Pfad : String;
+begin
+  // verhindern, dass während Ausgabe ein 2. Mal Ok gedruckt wird
+  if not DisableButtons then
+  try
+    DisableButtons := true;
+    case Status of
+
+      usStart: // PadFile auswerten
+      begin
+        SetStatus(usPadLesen);
+        if not PadFileLesen then SetStatus(usPadFehler);
+      end;
+
+      usNotUpToDate: // Programm downloaden
+      begin
+        Pfad := GetSpecialFolder(CSIDL_DESKTOPDIRECTORY);
+        //Pfad := 'C:';
+        FZielDatei := Pfad + '\' + FSourceDatei;
+        if SaveFileDialog('exe',
+                          'Anwendung (*.exe)|*.exe|Alle Dateien (*.*)|*.*',
+                          SysUtils.ExtractFileDir(FZielDatei),
+                          'Datei  "' + FSourceDatei + '"  speichern unter',
+                          FZielDatei) then
+        begin
+          Refresh;
+          if FZielDatei <> '' then
+          begin
+            SetStatus(usDownload);
+            if not ExeDownloaden then SetStatus(usExeFehler);
+          end;
+        end else
+        begin
+          Refresh;
+        end;
+      end;
+
+      usExeLoaded:
+      begin
+        //if not DateiSichern(100) then Exit;
+        if TriDatei.Modified then
+          case TriaMessage('Änderungen in Datei  "'+TriDatei.Path+'"  speichern?',
+                            mtConfirmation, [mbYes, mbNo, mbCancel]) of
+            mrYes: if not TriDatSpeichern(100) then Exit;
+            mrNo:  ;
+            else Exit;
+          end;
+        Refresh;
+        // Setup starten
+        SetStatus(usSetup);
+        FillChar(StartInfo,SizeOf(TStartupInfo),0);
+        FillChar(ProcInfo,SizeOf(TProcessInformation),0);
+        StartInfo.cb := SizeOf(TStartupInfo);
+        StartInfo.dwFlags := STARTF_USESHOWWINDOW;
+        StartInfo.wShowWindow := SW_NORMAL;
+        if CreateProcess(PChar(FZielDatei),nil,nil,nil,false,
+                         CREATE_NEW_PROCESS_GROUP or NORMAL_PRIORITY_CLASS,
+                         nil,nil,StartInfo,ProcInfo) then
+        begin
+          CloseHandle(ProcInfo.hProcess);
+          CloseHandle(Procinfo.hThread);
+          SetupGestartet := true;
+          Close;
+        end else SetStatus(usSetupFehler);
+      end
+      else ;
+    end;
+
+  finally
+    DisableButtons := false;
+  end;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TUpdateDialog.CancelBtnClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  ModalResult := mrCancel;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TUpdateDialog.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  CanClose := false;
+  if ((Status=usDownload) or (Status=usPadLesen) or (Status=usNotUpToDate) or
+      (Status=usExeLoaded) or ((Status=usSetup)and not SetupGestartet)) and
+     (TriaMessage('Das Update ist nicht abgeschlossen. Wenn Sie jetzt abbrechen, '+#13+
+                  'wird die neueste Version nicht installiert.' +#13+#13+
+                  'Internet Update verlassen?',
+                  mtConfirmation,[mbOk,mbCancel]) <> mrOk) then Exit;
+
+  //IdHttp.Disconnect; // keine Aktion wenn nicht connected
+  MyHttp.Disconnect; // keine Aktion wenn nicht connected
+  MyHTTP.Free;
+  CanClose := true;
+end;
+
+
+end.

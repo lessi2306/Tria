@@ -1,0 +1,4256 @@
+unit History;
+
+interface
+
+const
+  // Version 11.5.8
+  cnVersionsNummer = '5.8';
+  cnVersionsJahr   = '2011'; // bleibt auch in 2012.....
+  cnReleaseJahr    = '2018'; // für Copyright in InfoDlg
+
+implementation
+
+(******************************************************************************)
+(*        History                                                             *)
+(******************************************************************************)
+{
+
+================================================================================
+2003-1.0
+=========
+13.03.2003:  Version 1.0 auf der Homepage
+================================================================================
+
+2003-1.1
+========
+Durchgeführte Änderungen:
+-------------------------
+
+13.03.2003: WettkDlg - WettkGeaendert
+Bei Serie wird Titel2Edit.Text=WkAktuell.Name gesetzt wenn WkAktuell.Titel2=''.
+Dies führte zum Result=true ohne Änderung der daten
+
+13.03.2003: VeranObj - AkMinIndex/AkMaxIndex
+Einschränkungen bei Liga gelöscht.
+
+13.03.2003: WettkDlg - WettkAendern
+Nach Änderung wurde FocusedItem verändert. FocusedItem deshalb neu auf WkAktuell
+gesetzt
+
+13.03.2003: WettkDlg - WettkAendern
+Abfrage eingefügt bei Änderung der MschGrAnm/Strt/Wrtg ob für alle Orte
+geändert werden soll.
+
+13.03.2003: WettkDlg - WettkDialog
+Längenbegrenzung für WettkName/Titel2 entfernt, Für WkKürzel gesetzt
+
+13.03.2003: VeranDlg - VeranDialog
+Längenbegrenzung für Veranstaltungsname gelöscht
+
+13.03.2003: OrtDlg - OrtDialog
+Längenbegrenzung für Ortsname gelöscht
+
+13.03.2003:  Version 1.1 auf der Homepage
+================================================================================
+
+2003-1.2
+========
+Durchgeführte Änderungen:
+-------------------------
+
+14.03.2003: SMldDlg:
+Buttons umbenannt Ändern==>Übernehmen, Schliessen==>Schließen und & entfernt
+& Funktioniert nicht richtig. Vermutlich irgendwo disable, aber nicht klar wo
+
+14.03.2002: DateiDlg/AllgConst
+Variablen StoreMode/LoadMode in AllgConst aufgenommen
+
+14.03.2003: EnvProc - SpeichereEnvironment
+Fehlermeldungen gelöscht. Wenn nicht gespeichert werden kann, wird halt mit
+einer neuen datei geöffnet
+
+14.03.2003: EnvProc/AllgConst:
+EnvDateiName getremnnt in var und const, damit die non-Standard Compiler Option
+Zuweisung von typisierten Constanten nicht mehr benötigt wird
+
+14.03.2003: WettkDlg
+Finetuning bei Namen und Entfernung &-Zeichen
+Buttons an SGrpDlg angepaßt
+
+14.03.2002: TriaMain
+FormCloseQuery eingeführt für Abfrage wenn während Änderung von SMld geschlossen wird
+
+14.03.2003: IdleProc/SMldDlg:
+Sperren von Menues Veranstaltung,Zeitnahme in Ansicht SMldMeldung
+Sperren Von menu Teilnehmer bei neuEingabe und während Änderung
+
+14.03.2003: MannsObj - TMannschObj.OrtCollAdd/Clear  #######
+DummyTln.OrtCollAdd/Clear ergänzt ==> Absturz beim Berechnen beu neuem Ort
+
+14.03.2003: OrtDlg
+Buttons an SGrpDlg angepaßt
+
+15.03.2003: WettkDlg:
+Check fehlendes WettkKürzel für Liga eingebaut
+
+15.03.2003: LstFmt - GetListType
+Bei MschTagWrtgCompact wird TlnZahl von RepWk anstelle von SortWettk abgeleitet,
+damit immer max Spaltenzahl genommen wird
+
+15.03.2003:  Version 1.2 auf der Homepage
+================================================================================
+
+================================================================================
+2003-1.3
+========
+Durchgeführte Änderungen:
+-------------------------
+
+19.3.2003: AllgComp - Paint
+Visibility DummySB geändert. Problem bei TriaZeit wenn HauptFenster mit
+Scrollbalken hochkommt.
+ 
+07.04.2003: TlnDlg
+- TlnFirstButtonClick,TlnBackButtonClick,TlnLastButtonClick:
+Zeile 'if TlnGeAendert and not TlnAendern then Exit;'  entfernt, weil
+Prüfung vorher schon stattfindet
+- SnrDoppel:
+TlnAktuell durch TlnBuffer ersetzt (doppelte Snr in Mengen)
+- SnrGeAendert: entfernt
+
+07.04.03: UrkDrDlg:
+ SerienDruckMschTagesWertungDetail - Felder Veranstaltg und Ort haben gefehlt 
+
+07.04.03: WettkObj
+- Load: Gültigkeit Index für AkMin und AkMax überprüft und im Fehlerfall auf
+0 und AkObjColl.Count-1 gesetzt statt nil
+- Store: AkMin/AkMax index für DOS auf cnDOSAkIndexMax  (=18) begrenzt
+(Fehler Mengen, Abstürz von DOS-Version weil AkMaxIndex = 19)
+- GetOrtMannschGrAnm,GetOrtMannschGrStrt,GetOrtMannschGrWrtg:
+Defaultwerte für non-Liga veranstaltungen auslesen. Bei Änderung von Veranst.Art
+nichts ändern. Problem in Mengen weil 1.Ort nicht initialisiert wurde und beim
+einlesen von mannschaften dort die MschGrWrtg benutzt wird bei Multi-Msch
+
+08.04.03: LstFmt
+GetColType für ErgLstTlnLndSR korrigiert (Spalte Run fehlte)
+
+09.04.03: SGrpObj (und in Folge Tlnerg,TlnObj,MannsObj):
+FErstZeit1, FErstZeit2 durch Abs1ErstTln und Abs2ErstTln ersetzt.
+Für Startzeitberechnung muss effektive Zeiten statt Uhrzeiten benutzt werden,
+weil vesrschiedene Startgruppen mit unterschiedliche Erststartzeiten gleiche
+StartZeit2,3 habne können.
+ErstZeit1,2 werden gespeichert wegen kompatibilität. ErstTln werden nach jedem
+Laden neu gesetzt.
+
+09.04.2003: ListFmt
+GetListType: für Startliste in SortMode=smJagdStartAbschn_2,3 keine Bahn-Spalte
+
+09.04.03; ZtEinlDlg, ZtLoeschDlg:
+- SetAbschnitt: bei WettkAlle AbschnZahlAlle ausgewertet statt AbschnZahl
+
+09.04.03: ImpFrm,ZtEinlDlg,DateiDlg:
+- beim Öffnen der Datei spezifischer Title ergänzt 
+
+09.04.2003:  Version 1.3 auf der Homepage
+================================================================================
+
+================================================================================
+2003-1.4
+========
+Durchgeführte Änderungen:
+-------------------------
+29.04.03 - WettkObj
+- TWettkObj.Load: Titel2 bei non-Serie gleich Name gesetzt
+
+29.04.03: WettkDlg
+- WettkGeAendert; Vergleich Titel2Edit.Text korrigiert
+
+29.04.03: DateiDlg
+- TriDatSpeichernunter: TriDatei.UpdatePath(FileName) an richtige Stelle platziert
+                        Warnung nur bei speichern in DOS-Mode
+- TriDateiSpeichern: Warnung nur bei speichern in DOS-Mode
+
+29.04.03: Sortierproblem Startlisten nach Startzeit
+- es wurde SGRpColl.SortIndex benutzt, diese ist aber je nach Vorgeschichte
+  unterschiedlich sortiert
+  in TlnObj,SMldObj  SortString smStartUhrzeit/smMschStUhrZeit korrigiert
+  in VeranObj SGrpColl.Sortieren entfernt in SetOrtIndex
+
+30.04.03: Sortierung Ergebnislisten:
+- anTlnTagesWertung: neuer SortMode smAkEndZeit für smAltersKlasse
+- anTlnSerienWertung: neuer SortMode smAkSeriePunkte statt smAltersKlasse
+                      neuer SortMode smMschTlnSeriePunkte statt MannschName
+
+30.04.03: Berechnung in alte Dateien nicht immer in Ordnung:
+- nach dem Laden einer älteren/neueren Version grundsätzlich neu Berechnen
+  in DateiDlg.TriDatOeffnen und EnvProc.LeseEnvironment, nicht beim Import.
+
+02.05.03: RaveUnit - Serienwertung Tln (ohne Ak, 6 Orte) korrigiert
+
+02.05.2003: - version 1.4 auf Homepage
+================================================================================
+
+================================================================================
+2003-1.5
+========
+Durchgeführte Änderungen:
+-------------------------
+09.05.03: Mika Timing Format eingeführt:
+- AllgConst: TTztErfDateiFormat erweitert mit fmMikaTiming
+- ZtEinlDlg: neue Funktion MikaDateiLaden
+             Progressbar Stepping in TriaZEDateiLaden korrigiert
+             Zeit=0 in Zeit=-1 umwandeln in TriaZEDateiLaden und dBaseDateiLaden
+             Zeit<0 Fehler, Zeit=0 ist gültige Zeit in TZeObj.Init 
+             TRIAZEDateiLaden: Fehler-Auswertung korrigiert
+- TlnObj: Funktion Abs3Zeit korrigiert (Check auf Uhrzeit<0 hat gefehlt)
+          Funktion Endzeit: Check auf EndUhrzeit hat gefehlt und
+                            Zeit nicht mehr auf <24:00:00 begrenzt
+- AllgFunc: ZeitStr erlaubt bis 99:59:59 statt bisher 23:59:59
+
+10.05.2003: zusätzliche Wertung für Aktive
+- AkObj: Text für AnsFrm-SortKlassen geändert
+- AnsFrm: für TlnStartliste smAkAlle statt smAkMFPlusTMW, damit auch U23/Senioren
+- AllgConst, AkObj, AnsFrm,ListFmt: Aktive Klasse eingeführt
+- TlnObj: neue Collections: FRngAktWkColl, FRngAktAlleWkColl eingeführt,
+          werden wegen kompatibilität nicht gespeichert ==> nach laden neu berechnen
+- TlnErg:
+- RaveUnit,UrkDrDlg: bei Reports/Seriendruck war GesRng falsch für Junioren und
+  Senioren Erg.Liste 
+- TlnObj,SMldObj: smAltersklasse geändert: höchste Jg zuerst
+- AllgObj: Auswertung DOSmode korrigiert
+- AllgConst: Limits TlnMax,MannschMax,SgrpMax,DisqGrundMax auf 9999 erhöht
+
+12.05.2003: DateiDlg (Rainer Rupf, Dettingen/Erms)
+- SpeichernUnter: Fehler korrigiert - es wurde immer unter alter Name gespeichert
+- DateiSpeichern, DateiLaden: bei IO exception wird Standard meldung erzeugt,
+                              deshalb keine Fehlermeldung im programm
+- DateiSpeichernUnter: bei exception wird Path zurückgesetzt
+
+13.05.2003:
+- TlnObj : 'disq' als Rang angezeigt bei Disqualifikation
+- AllgObj : abhängigkeit von anderen Units entfernt um Filesize Triazeit zu
+             verkleinern (mäßigiger Erfolg)
+- ZtEinlDlg: TriaZeit Format eingeführt
+- UrkDrDlg: ZwischenZeiten in UrkundenDruckDatei ergänzt
+
+13.05.2003: - version 1.5 auf Homepage
+================================================================================
+
+
+================================================================================
+2003-1.6
+========
+Durchgeführte Änderungen:
+-------------------------
+14.05.2003:
+- TlnErg - SetzeErstZeit1,2
+- TTlnObj.Abs3StartZeit:
+  Korrektur: Abs2ErstTln wird nach schnellster Gesamtzeit
+             Abs1Zeit+Abs2Zeit und nicht nur nach Abs2Zeit ermittelt
+
+15.05.2003:
+- TlnObj: SetWettkErgModified korrigiert für Indx=-1, damit für alle Orte neu
+          berechnet wird.
+          Deswegen auch neue funktion OrtEndUhrZeit ergänzt
+
+16.05.2003:
+- AllgObj: TVersion.DateiType ersetzt DOSType, dtUnbekannt eingeführt
+           LoadMode gestrichen
+- DateiDlg: Versionscheck auch für dtUnbekannt,
+            Veranst.LoadKorrektur nach Laden aufgerufen benutzt
+- EnvProc:  Veranst.LoadKorrektur nach Laden aufgerufen
+            TriaStream.Create mit fmShareDenyNone
+- LstFrm:   TriaGrid.Colwidths speichern, damit User-Änderungen während
+            Sitzung erhalten bleiben
+            neu: array ColBreite, InitColBreite,StandardColBreite, OrtColBreite,
+            UpdateOrtColBreite, UpdateMschTlnColBreite
+            Setzen ColBreite geändert, damit Fenster nicht mehr sichtbar leer wird
+- WettkDlg: MschGroesseCB/label unsichtbar gesetzt für EinzelVeranstaltung
+            WettkAendern- bei Änderung MschGrWrtg: UpdateMschTlnColBreite
+- WettkObj: Load- Anpassungen für Version <= 7.4 entfernt
+            SetMannschErgModified nach VeranObj.Load
+- VeranObj: Load/Store  - DateiErweiterungen um neu Berechnen zu vermeiden
+            - TlnColl - RngAktWkColl, RngAktAlleWkColl
+            - MannschColl - Abs1,2,3StZeitColl, Abs1,2ZeitColl
+            LoadKorrektur: neu berechnen für:
+            - DOS und Version <> akt. Version: MschModified,OrtErgModified
+            - DOS und Version < 1.6: MschModified,OrtErgModified wenn Tln imZiel
+- TlnDlg: NichtRechen true wenn Dialog aktiv. Erst nach Schliessen neu berechnen
+- WettkDlg: NichtRechen true wenn Dialog aktiv.
+- OrtDlg:  NichtRechen true wenn Dialog aktiv.
+- SGrpDlg: NichtRechen true wenn Dialog aktiv.
+- VeranDlg: NichtRechen true wenn Dialog aktiv.
+
+18.05.2003:
+
+21.05.2003:
+- AllgConst: spSGrpStZeit,spMschStZeit entfernt, nur spStZeit verwenden
+             smStartGruppe, smStartBahn entfernt
+- ListFmt:   spStZeit neu definiert, immer errechnete Abs1Startzeit anzeigen
+- TlnObj:    Funktion SGrpStartZeit entfernt, nur Abs1Startzeit verwenden
+             Abs1Uhrzeit für Abs1-Jagdstart geändert
+- WettkDlg:  bei MschWettkämpfe ist nur Wertung über alle Klassen erlaubt und
+             nur 1 Wertung pro Mannschaft
+             WettkArtRGClick und SetMschAkWertgRG korrigiert
+
+
+22.05.2003:
+- Idleproc:  TeilnehmerMenueCommands geändert, damit ZeitnahmeMenueCommands
+             enabled werden abhängig von OrtTlnEingeteilt statt TriaGrid.Count
+
+26.05.2003:
+- MannsObj:  Fehler in StaffelWertung, Schopfheim99Wertung, Schopfheim00Wertung:
+             lokale Variablele Zeit benutzen statt MammschObj.Zeit
+             Damit nicht unvollständige Mannsch. nicht gewertet werden
+
+30.06.03:
+- TlnObj:    Property RngAktWkColl, RngAktAlleWkColl eingeführt
+             Wenn MschModified, nicht auch WettkErgMod setzen (in WettkObj)
+             In Load Abfrage not DOStype durch dtWIN ersetzt, wegen alte Dateien
+             FRngAktWkColl/FRngAktAlleWkColl speichern und laden
+             SortModi Startzeit geändert
+
+- MannsObj:  Abs1StZeitColl,Abs1ZeitColl,Abs2StZeitColl,Abs2ZeitColl,Abs3StZeitColl
+             eingeführt, benutzt in TlnObj
+             smSeriePktStart für Jagdstart Abschn.1 waTeam neu eingeführt
+
+- TlnErg:    BarPosition korrigiert
+             MschErstZeite1,2 und MschAbs1,2,3Stzeit und MschAbs1,2Zeit berechnen
+
+- SGrpObj:   FAbs1,2ErstTln wieder entfernt und FErstZeit1,2 wieder benutzt,
+             jetzt aber effektive Zeit statt Uhrzeit.
+
+- SuchDlg: Trim-Funktion für Suchtext eingeführt, weil Snr. Leading Blanks hat
+
+30.05.2003: - version 1.6 auf Homepage
+================================================================================
+
+2003-1.7
+========
+Durchgeführte Änderungen:
+-------------------------
+
+18.06.2003:
+MannsObj:  TmannschObj.TlnListeEinlesen entfernt, weil nicht benutzt
+
+24.06.2003:
+VeranObj:  FArt als TVeranstArt (war Integer), FJahr als Integer (war String)
+           Destroy: Collections auf nil abfragen
+AkObj:     an Veranst.Jahr angepaßt
+AllgConst: type TVeranstArt eingeführt
+AllgFunc:   SystemJahr auf integer umgestellt
+AllgObj:    TriaColl: methoden freeitem, loaditem, streitem als abstract definiert
+                      GetItem,SetItem range check entfernt wegen Geschwindigkeit
+                      Clear Delete statt Remove (schneller)
+                      ClearIndex modifiziert (var Item entfernt)
+            TriaObjColl: SetItem auch bei nil Fehlermeldung
+                         FreeItem: prüfung item streichen (schneller)
+MannsObj:   GetTln, TlnlisteEinlesen entfernt
+            MannschTlnListe.freeItem: Tln,MannschPtr nur nil wenn Msch gleich
+            MannschTlnListe.Clear: Deltete statt Remove
+            MannschTlnListe.AddItem: nur für MschIndex=0 Tln.mannschPtr setzen
+            MannschColl.Clear: Delete statt Remove
+            MannschColl.MschTlnLoeschen: neue Funktion für TlnDialog
+SGrpObj:    SGrpColl.Clear: Delete statt Remove
+SMldObj:    SMldColl.Clear, TlnListe.Clear: Delete statt Remove
+TlnObj:     TlnColl.Clear:  delete statt Remove
+TlnDlg:     function MannschLoeschen nach MannsObj
+            TlnEntfernen:  MschTlnLoeschen bevor Tln gelöscht wird, weil dabei
+                           Tln.MannschPtr=nil gesetzt wird
+
+
+
+30.06.2003:
+TWettkObj: SetMannschModified: ErgModified wenn TlnEingeteilt statt TlnGewertet
+           wegen MschAbs1StZeit-Berechnung
+SGrpDlg,   ErgModified wenn TlnEingeteilt statt TlnGewertet
+TlnObj:    TlnObj.Destroy:  TlnListe.ClearItem entfernt, wird in TlnDlg getan
+           TlnObj.SetWettkErgModified MschAbs1StZeit berücksichtigt
+           TlnObj.GetAkStr:  Fomat eingeführt
+           TlnColl.SortString: Format eingeführt,
+                               2 blanks zwischen Strings, damit bei 1 blank in
+                               string richtig sortiert wird
+           OrtTlnEingeteilt: Abfrage Klasse entfernt, weil nicht benutzt
+VeranDlg:  GetVeranstArt, SetVeranstArt eingeführt
+WettkDlg:  WettkAendern: ErgModified wenn TlnEingeteilt statt TlnGewertet
+
+02.07.2003:
+ImpTlnFrm: SucheQuelTln immer ab LetzteGefundene Tln, damit bei gleichem TlnNamen
+           und unterschiedlichem MschName keine Überflüssige Meldungen kommen
+           und die Suche schneller geht
+           BerechneRang entfernt, damit erst am Ende neu berechnet wird
+LstFrm:    ColBreite speichern in GridInit, statt InitAnsicht und UpdateAnsicht,
+           sonst bei z.B. bei SortmodeChange keine Speicherung.
+
+03.07.2003:
+TlnDlg:    SexCB statt SexRG,
+           TabFolge Sex vor Jg damit Sex nicht so leicht übersehen wird
+ImpTlnDlg  wie oben
+
+TlnErg:    SetzeCupRang: Wertung abhängig von Wettk.TlnAkWertg, war nur für
+           awProAk implementiert
+           BerechneRang: bei Liga, WettkAlle wird Wertung nicht nochmals für
+           alle Wettk einzel berechnet (war doppelt)
+           
+04.07.2003: - version 1.7 auf Homepage
+================================================================================
+
+2003-1.8
+========
+Durchgeführte Änderungen:
+-------------------------
+14.07.2003:
+WettkDlg: in WettkLoeschen Mannschaften vor Tln löschen, sonst Absturz in
+          TlnListe.Free
+15.07.2003:
+AnsFrm:   in InitStatusListe stGemeldet ergänzt für SortMode<>Abschn2,3
+
+15.07.2003:
+InfoDlg:  Haftungsklausel geändert
+          siehe:  http://www.tutorials.delphi-source.de/haftung/
+
+15.07.2003: - Version 1.8 auf Homepage (mit TriaZeit 1.1)
+================================================================================
+
+
+################################################################################
+2003-1.9
+========
+Durchgeführte Änderungen:
+-------------------------
+15.07.2003:
+SMldObj:   function getSortedTln entfernt, weil nicht benutzt
+TztAllg:   TztColl.SortString korrigiert (FZeit=String, kein Integer)
+
+21.07.2003:
+WettkObj:  GetDatum: bei Liga immer Result von WettkAlle
+           SetOrtDatum: Aktion nur wenn sich was ändert,
+                        Veranst.Jahr auch für wettkAlle setzen
+           SetOrtWettkArt: Aktion nur wenn sich was ändert
+                           Integer(WklArtNeu) verwenden statt case
+                           SetMannschModified ergänzt
+           SetMschGrAnm: Aktion nur wenn sich was ändert
+                         SetMannschModified ergänzt
+           SetMschGrStrt: Aktion nur wenn sich was ändert
+                         SetMannschModified ergänzt
+           GetOrtAbschnZahl: bei Liga immer Result von WettkAlle
+           GetOrtAbschnName: bei Liga immer Result von WettkAlle
+           function AkJahr: für Liga/WettkAlle korrigiert
+
+22.07.2003:
+ImpTlnFrm: in Import bei Eizelveranstaltungen auf doppelte Tln prüfen
+           function IportTln ergänzt
+ImpFrm:    Var TlnVergleichen durch leereDatei ersetzt
+           ImpStartButtonClick: Bestätigungen ob Änderung für alle Orte oder
+           alle wettkämpfe für Cup und liga ergänzt
+
+23.07.2003:
+WettkDlg:  in SetWettkDaten Datum immer enabled (war bei Liga nur WettkAlle)
+           in SetWettkArtRG RG immer enabled
+           in WettkAbschnGB GB immer enabled
+           in WettkAendern Bestätigungen für Datum,WettkArt,WettkAbschn für
+           Änederung aller wettkämpfe bei Liga
+IdleProc:  in DateiMenueCommands Speichern nur enabled wenn TriDatei.Modified
+           in CommandTrailer HauptFenster.LstFrame.TriaGrid.SetFocus ergänzt,
+           damit Liste immer den Focus bekommt
+           Gleiches in ImpFrm, ImpTlnFrm
+
+24.07.2003:
+VeranObj:  in Load ProgressBarPosition Update bei Datei-Erweiterungen
+
+
+31.08.2003: Änderung RngColl in TlnObj:
+TlnObj:     - ..WkColl ersetzt durch ..Coll, ..AlleWkColl entfällt
+              für Liga wird WkColl für Wertung über alle Wk benutzt, Wertung
+              pro Wk in SerColl (Tln immer in Serienwertung)
+            - ..SenWkColl,JunWkColl,AktWkColl ersetzt durch ZusColl, Sen-, Jun-
+              und Akt-Klassen nicht überlappend, deshalb reicht eine Coll.
+            - ..SerWkColl ersetzt durch ..SerGesColl, ..SerMWColl und ..SerAkColl
+              um Cupwertung (Einzel+Msch) über Alle und MW zu erlauben
+TlnDlg:     SerienWrtgCB disabled für Liga - Tln immer in Serienwertung
+VeranObj:   in Load DateiErweiterung für RngAktWkColl,RngAktAlleWkColl überspringen
+            und später neu berechnen (in RngZusColl)
+
+09.09.2003: TlnObj: smAltersklasse unabhängig von Snr, damit bei Snr-Zuteilung
+            die Reihenfolge unverändert bleibt, wenn nach Altersklasse sortiert
+
+07.10.2003:
+AllgConst: TMschSortWertung,TMannschSortmode eingeführt und Definitionen
+           generell umsortiert
+DruckDlg:  ProgressBar korrigiert (100 durch N ersetzt)
+
+12.10.2003:
+VeranObj: WettkObj.OrtWertg bei Load und Store ergänzt
+ListFmt:  spRng korrigiert
+UrkDrDlg: spRng korrigiert
+TlnObj:   TReportTlnList.Add procedure InsertRepTln korrigiert für RngSer
+          TReportTlnList.GetTlnRng gelöscht weil nicht benutzt
+MannsObj: BerechneSeriePunkte korrigiert für Swim&Run (OrtAbSchnZahl[i] = 2)
+
+Wertung bei Punktgleichheit eingeführt:
+TlnObj,MannsObj: smSeriePunkte modifiziert
+WettkDlg: Serienwertung modifiziert
+
+13.10.2003: - Version 1.9 auf Homepage (mit TriaZeit 1.2)
+================================================================================
+
+
+
+################################################################################
+2003-2.0 - Einführung flexible Altersklassen
+========
+Änderungen schrittweise einbringen:
+-----------------------------------
+
+2003-1.9a :
+MannsObj: umbenennen RngTag ==> RngGes (bei Msch nur Gesamtwertung, keine Alters-
+                                        wertung und Zusatzwertung wie bei Tln)
+                     Klasse ==> GesKlStr
+          dabei Fehler gefunden: FKlasse wird als 4 Char gespeichert, kann aber
+          auch länger sein bei akMaennerStr/akFrauenStr
+          MannschInKlasse für akMaennerStr/akFrauenStr korrigiert
+TlnObj:   RngGesColl ersetzt RngGesColl+RngMWColl für Gesamtwertung
+WettkObj: Tln/MschAkWertg ==> Tln/MschGesWertg
+
+TlnDlg :
+TlnErg :  Berechnung korrigiert für AkAlle
+-------------------------------------------------------
+2003-1.9b :
+TlnErg :  Berechnung Tln-Tageswertungen verbessert
+-------------------------------------------------------
+2003-1.9c :
+TlnDlg:    Wertung verbessert: Gesamt/Altersklassen/Zusatzklasse
+TlnObj:    GetGesAkStr/GetZusAkStr eingeführt
+ImpFrm:    Jahr entfernt
+TlnDlg,    TlnDoppel-Prüfung immer durchführen, dazu TlnColl.SucheTln geändert.
+TlnObj:    Zur Sicherheit, da in Liga-Datei 2003 Tln doppelt definiert sind (XXx).
+           Kann beim Import geschehen, wird jetzt korrigiert:
+ImpTlnFrm: Vor Import nochmals prüfen ob Tln vorhanden ist, damit doppelte Tln
+           nicht mehr möglich sind
+           ImpTlnChange/SetImpTlnColor erst nach Init enablen 
+           SMldCB mit Objects initialisiert um einfacher auslesen zu können in
+           GetImpSMld
+DateiDlg:  bei Opendialog und SaveDialog erganzt: ofFileMustExist,ofEnableSizing
+           Fehler bei Speichern von Neu.Tri korrigiert: bei Abbruch vom
+           Speichernunter wurde statt dessen Neu.tri gespeichert
+SMldFrm:   CommandTrailer entfernt, weil damit TriaGrid focussiert wird
+           SetErgModified vor SetSMldDaten, damit Speicher-Button richtig gesetzt wird
+TriaMain:  Event Handler TriaGridClick,SMldVNameEditChange,SMldGridDraw entfernt,
+           Nur noch in SMldFrm und LstFrm. Dazu musste zuerst in beide gelöscht
+           und dann neu erstellt werden (Delphi Problem)
+           StatusToolBar durch Panel ersetzt (Ränder sehen besser aus)
+           Für Anzeige Sizegrip weiterhin keine Möglichkeit gefunden
+
+09.11.03:  AllgObj: SortIndex mit TList inherited IndexOf statt mit Find.
+           Bei langen Listen möglicherweise langsamer, aber es wird immer der
+           richtige Index zurückgegeben.
+           Bei Find immer der erste Index bei gleicher Sortstring
+
+-------------------------------------------------------
+2003-1.9d :
+DateiDlg:  Options in TriDatOeffnen,TriDatSpeichernUnter korrigiert
+           TriDatSpeichern für TriDatNeu korrigiert
+           DateiSpeichern: Erstellung BackupDatei eingefügt
+ImpTlnFrm: function GetImpSMld ergänzt, SetImpTlnModeGB entfernt
+           Land in Tln-Vergleich aufgenommen
+           SMldCB mit AddObj statt Append initialisieren
+           WeiterButtonClick - Korrektur: nochmals auf Gleichheit prüfen
+SMldFrm:   TriDatModified := true vor SetSMldDaten, damit SpeicherButton enabled wird
+           SetSMldButtons: auch MenueButtons setzen
+           SetSMldDaten: Update LstFrame damit Focus nicht geändert wird
+TlnErg:    Abschn1,2,3-Wertungen bei Liga nur für WettkAlle
+TlnObj:    SucheTln: Self als Parameter ergänzt
+TriaMain   UpdateCaption: nur Dateiname nicht ganzer Pfad anzeigen
+           FormPaint: FocusedItem bleibt auch bei Resize sichtbar
+           FormPaint: GridPanel dimensionieren, sonst erscheint manchmal
+           VertScrollBar bei TlnImport
+IdleProc   TeilnehmerMenueCommands: ErsetzDlg nur Enabled wenn änderbare Spalten
+           vorhanden sind (spMschName nicht änderbar)
+OptDlg     Menüpunkt Extras mit Optionen hinzugefügt: Berechnen und Backup
+TlnDlg     Start- und ErgebnisZeiten Read Only gesetzt
+           Page Disqualifikation in Strafen umbenannt und Zeitstrafen eingeführt
+           DisqGrundText optional. Wenn Häkchen gesetzt und keine Text
+           eingegeben, dann ' '(cnDisqGrundDummy) speichern
+VeranObj,
+WettkObj,
+MannsObj:   MemorySize korrigiert
+AnsFrm:    AnsichtCBChange auf cmExecute umgestellt, identisch zu MenüPkt Ansicht
+TriaMain:  InitAnsicht korrigiert mit LstFrame.RefreshAnsicht
+RaveUnit   Feld ZeitStrafe eingeführt und RaveReports in RaveDesigner geändert
+
+30.11.2003: - Version 2.0 auf Homepage (mit TriaZeit 1.3)
+================================================================================
+
+
+################################################################################
+2003-2.1 - Einführung Altersklassen als TAkObj statt String
+========
+VeranstObj: In Loadkorrektur: bei Dateien <2.0 doppelte Tln löschen
+OptDlg:     In BerechnenButtonClick MschModified gesetzt
+IdleProc:   cmErsetzen disabled bei (Ansicht=anMschStartListe)and(SortStatus=stKein
+WettkObj:   SetMannschModified für WettkAlle korrigiert
+ZtEinlDlg:  Format Tria_ZE entfernt
+TlnDlg:     AlterEdit zusätzlich eingeführt
+            Einteillung: Starzeit in Startzeit korrigiert
+            LigaWertung statt Serienwertungen, nur Alle Klassen Sichtbar
+            Height GesPkt und GesRng korrigiert (AutoSize := false)
+TlnErg:     Serienwertung Cup für alle GesWertng'n korrigiert, war nur für gwProAk
+ZtEinlRep:  Caption mit Abschnitt erweitert
+UrkDrDlg:   Feldnamen Abschn.1/2/3 Punkt durch Unterstrich ersetzt damit Word
+            Trennzeichen ';' automatisch erkennt.
+OptDlg:     Berechnen: 'Alle' auf Schalter hinzugefügt,
+            Platzierungen statt Ergebnisse 
+ImpTlnFrm:  TImpTlnFrame.Init: FocusedItem := ZielTln vor visible:=true, sonst
+            wird Zieltln in LstFrame.TriaGridClick geändert.
+AnsFrm:     SortModeCB wieder an 2. Stelle nach AnsichtCB
+
+20.12.2003: - Version 2.1 auf Homepage (mit TriaZeit 1.3)
+================================================================================
+
+################################################################################
+2003-2.2
+========
+
+AkObj:     AllgAk's in AkObjColl aufgenommen, weil sonst mit EinlVeranst
+           nach Import gelöscht
+ImpTlnFrm: Änderung 2.1 rückgängig, weil nicht korrekt, nur TopRow mindestens
+           FixedRows, statt 0 bleibt, zusätzlich in
+LstFrm:    TriaGridClick geändert: ZielTln nur ändern wenn Update=false,
+
+
+22.12.2003: - Version 2.2 auf Homepage (mit TriaZeit 1.3)
+================================================================================
+23.12.2003: - neue Version 2.2 auf Homepage mit Korrektur TriaGridClick
+
+AkObj:     Fehler in TAkObjColl.Sortieren:  FWettk durch SortWettk ersetzt
+           FWettk generell aus TAkObj entfernt
+================================================================================
+25.12.2003: - neue Version 2.2 auf Homepage mit Korrektur
+
+AkObj    TAkObjColl.GetAltKlasse: prüfung Index für cnWeiblich korrigiert
+         TM/W70 AlterBis von 79 nach 74 korrigiert
+         AkObjColl.Update: WettkAlle entfernt, macht Probleme und wird nicht benutzt
+WettkObj  GetAkMin,Max korrigiert
+          Load, Store:  AkMin,Max korrigiert
+          SetAkLimits korrigiert, nicht für WettkAlle ausführen
+VeranObj: AkObjColl Free/Create nach laden von FJahr, muss vor wettkColl.Load
+          wegen AkMin/MaxIndx
+================================================================================
+25.12.2003: - neue Version 2.2 auf Homepage mit Korrektur
+
+TriaMain  in FormPaint TopRow anpassen statt Row/ItemIndex
+ImpTlnFrm in Init Focussierung in der Mitte, Fenster.Update nach vorne
+
+================================================================================
+28.12.2003: - neue Version 2.2 auf Homepage mit Korrektur
+
+
+
+################################################################################
+2004-1.0
+========
+16.01.04 - Online Hilfe in allen Dialogen
+           Windows XP Design
+
+25.01.04 - TlnStartListe (exc. liga) und MschStartliste nur pro Wettkampf,
+           sonst verwirrend bei Änderung der Ansicht und Wertung pro Ak und
+           Listen sollten auch nur pro Wettk gedruckt werden.
+           TlnStartListe nur getrennt pro Geschlecht, exc. bei gwAlleAk
+25.01.04 - AddSortItem bei TlnColl und MschColl geändert ==> schneller
+           TlnObj.TlnInOrtStatus geändert  ==> schneller
+01.01.04:
+AllgFunc - neue Funktion DatumWert
+WettkDlg - Prüfen ob WettkDatum in richtige Orts-Reihenfolge vergeben wird
+WettkObj - neue Funktion GetOrtDatum
+         - 
+TlnObj   - Alter nach Wettk.datum statt Veranst.Datum berechnet,
+           Ak unverändert nach Veranst.Jahr
+
+================================================================================
+18.02.2004: - neue Version 2004-1.0 auf Homepage (mit TriaZeit 2.0)
+
+
+################################################################################
+2004-1.1
+========
+01.03.04 - TriaMain: TabOrder OrtCBPanel und OrtCBlabel fixiert in Create und
+           CustomAlignInsertBefore eingefügt, weil OrtCBLabel nach Panel
+           positioniert werden muss
+         - TlnObj,LstFmt,UrkDrDlg: neue Funktion GetRngAkStr, weil GetRngStr nur
+           für 1.Spalte/gesamtwertung geeignet ist
+         - TlnObj,TlnDlg: FRngAbs1,2,3ZusColl ergänzt.
+07.03.04 - AnsFrm.InitSexListe: Korrektur:
+           bei Start- und Erg.Listen bei gwAlleAk auch Männer und Frauen zur
+           Auswahl (bislang nur Beide Geschlechter)
+           WettkListe für Liga nur AlleWk bei Start- und Erg-Listen
+11.03.04 - Unterstützung für DOS-Dateitype enfernt 
+18.03.04 - AllgObj,TlnObj,WettkObj,MannschObj:
+           bei Load Collection OrtCollAdd in Create nicht ausführen (TOrtAdd)
+           damit unnötige Adds und Clears vermieden werden
+01.04.04 - MannsObj: beim StaffelWettk Tlnzahl >3 erlaubt
+         - WettkDlg: MschGroesseCB eingeführt => für alle Veranst.Art <> liga
+         - AnsFrm: Korrektur bei WettkCB change: UpdateMschTlnColBreite
+         - WettkObj - GetOrtMannschGrWrtg MschGroesse frei aich wenn <> liga
+05.04.04 - IdleProc,TriaMain: RecreateControls erst nach ActionUpdate um
+           Absturz zu vermeiden, wenn IdleProc vor Ende durchlaufen wird.
+         - AnsFrm:  UhrZeitKontrolliste immer mit Status Abschn1
+16.04.02 - Spalte Land frei definierbar
+         - Altersklassen frei definierbar
+         - Mannschaftsgröße frei definierbar
+================================================================================
+18.02.2004: - neue Version 2004-1.1 auf Homepage (mit TriaZeit 2.0)
+
+
+################################################################################
+2004-1.2
+========
+
+26.04.04 - WettkObj: SetOrtDatum ergänzt mit SetMannschModified(true), da bei
+           Datums-Änderung Klassen geändert werden und neu berechnet werden muss
+
+10.05.04 - TriaMain: OrtCB Label geändert, weil nicht immer sichtbar
+12.05.04 - IdleProc,LstFrm: DisableSMldCommands entfernt, weil schon in
+           TeilnehmerMenueCommands gehandelt
+           TriaMain: PrevNextExecute,etc ohne ToolRand update um schnelles
+           Schalten zu ermöglichen
+22.05.04 - MannschErgListe Kompakt wurde nicht gedruckt:
+           Fehler in MannsObj: in TMannschObj.Init DummyTln.Jg korrigiert und
+           DummyTln.KlassenSetzen ergänzt
+         - Zeitstrafe bei Staffel wirkte nur beim letzten Tln. EndzeitMStr und
+           EndZeitOStr eingeführt statt Endzeit. Startzeit beim Staffel jetzt
+           unabhängig von Strafzeit. Bei waMschSchopfheim funktioniert dies nur
+           bei gewerteten Tln richtig.
+25.05.04 - ImpFrm:  Website und EMail-Adresse als Link
+================================================================================
+02.06.2004: - neue Version 2004-1.2 auf Homepage (mit TriaZeit 2.1)
+
+
+
+################################################################################
+2005-1.0
+========
+
+20.06.04 - AllgFunc: ZeitStr durch EffZeitStr ersetzt, führende Blanks entfernt
+12.07.04 - DruckDlg: InitKlasseGB korrigiert, keine Abhängigkeit von WettkGB
+           anChkLstSchwBhn wie anTlnUhrZeiten behandelt(immer SexBeide)
+           Opt. Spalte nur enabled wenn für Wettk definiert
+           Buttons in PrevFrame mit neuem Hint
+13.07.04 - AnsFrm: nur gewertete Klassen auflisten
+14.07.04 - DruckDlg: InitOptSpalteGB,InitKlasseGB korrigiert
+           TlnObj: TReportTlnList.Add korrigiert
+20.07.04 - Steuerung progressBar korrigiert. In AllgObj neue Funktionen:
+           ObjSize,CollSize,SetItemSize eingeführt.
+10.12.04 - ExpDlg neu, mit Export nach Excel-, HTML- und TextDateien
+17.08.04 - WettkDlg: in WettkArtRGClick keine Fehlermeldung wenn
+           SetWettkDaten ausgeführt wird (Update = true), weil dann die
+           Bedingungen noch nicht stimmen.
+
+12.12.04 - Spalte Mannschaft in TlnAnsicht Variabel: normal 'Verein/Ort', nur
+           bei Liga 'Mannschaft'. Mannschaftswertg pro Tln einstellbar
+           TlnDlg/TlnObj: neue Optionen: MschWertg, SondWertg, Urk.Drucken,
+           Kommentar - Textfeld, Ausgabe in Exportdateien,
+           nicht in SGrp definierte Startnr. zulassen,
+           neuer TAB für Sonderwertung,
+           Snr disabled, wenn Wettk.SBhn definiert und kein Tln.SBhn
+           (in WettkDlg Tln.SBhn gelöscht wenn Wettk.SBhn gelöscht)
+         - WettkDlg,TlnDlg,WettkObj,TlnErg,TlnObj: Sonderwertung pro Wettkampf
+         - ZetErfDlg: neues Format ZERF mit Einlesen von Kommentar,
+           Dateiformat trz,zrf toleranter: CR+LF und nur LF zulässig, und
+           beliebige Trennzeichen
+
+02.02.04 - KlassenDialog: Caption Wertungsklassen statt Altersklassen,
+           Tab für Gesamtwertung ergänzt (Name für Männer/Frauen änderbar)
+           WettkObj: TlnMKlasse..MschWKlasse ergänzt
+
+03.02.05 - IdleProc: Tln ändern/entfernen disabeln wenn nur Msch aufgelistet
+20.02.05 - TlnDlg: KlassenGB eingefügt mit Alters- und Zusatzklasse.Name
+23.02.05 - WettkDlg: Enabeln/Disabeln bei Liga für WettkAlle und EinzelWettk
+           konsequenter
+06.03.05 - TlnObj: TlnInOrtStatus - stAbschn1/2/3,stImZiel,stGewertet nur mit
+           gültigen Zeiten, bei GetAbs2/3StZeit muß Zeit über voriger
+           Abschn. gültig sein, bei Endzeit muß Zeit über letzte Abschn.
+           gültig sein (auch MannsObj)
+         - MannsObj - Gemeinsame MschWkWertung für Team/Staffel/Sigm. mit
+           Nutzung der vorher gespeicherten Abschn-Zeiten
+         - SGrpDlg: Korrektur: OnClick für Abs2/3 Massenst. und Jagdst-RB
+07.03.05 - TlnObj:Abs1/2/3-Zeiten wenn StartZeit=Uhrzeit,dann Zeit:=24St statt 0
+09.03.05 - SGrpDlg: bei Staffel gilt Tln statt Abschnitt
+10.03.05 - RaveUnit: ErgLstMschAbs2 neu erstellt
+11.03.05 - Version 0.4:TlnObj,SMldObj: HausNr und PLZ als eigenständiges Datenfeld
+13.03.05 - ListFmt: Strafzeit bei MschErgListen mit '*' gekennzeichnet
+31.03.05 - WettkAlle nur in Auswahllisten einfügen wenn WettkColl.Count > 1
+02.04.05 - TlnDlg - keine neue Tln wenn nur Groß/Klein-Buchstaben unterschiedlich 
+13.04.05 - MannsObj: Tln nicht in Msch einlesen wenn a.K. oder not SerWrtg
+         - TlnDlg: Optionen MschWrtg,SondWrtg,SerWrtg Update bei Änderung
+         - InfoDlg: Email-adresse entfernt, CopyRight angepaßt 
+         - AllgComp,TlnDlg: TopAbstand in TriaGrid eingeführt, damit Margin
+           einstellbar. In TlnDlg,SGrpGrid/SBgnGrid Rowheights auf 17, damit
+           in Beide gleiche Margin (=2)
+15.04.05 - Update StatusBar eingefügt
+16.04.05 - Context Hilfe-Button korrigiert in verschiedene Dialoge
+17.04.05 - ImpFrm-Darstellung am Anfang korrigiert (passte nicht im Fenster)
+         - TlnObj: Tlngestartet korrigiert
+18.04.05 - AnsFrm: bei Serienwertung nur gewertete Klassen in Liste
+         - KlassenDlg: TabControl2 korrigiert
+================================================================================
+26.04.2005: - neue Version 2005-1.0 auf Homepage (mit TriaZeit 2.2)
+
+
+################################################################################
+2005-1.1
+========
+04.05.05 - TlnDlg:
+           Snr wieder freigegeben, wenn SBhn = 0 weil flexibler
+           RangeSelect für SBhnGrid disabled
+           bei frei definierbare labels (Land, Abschnitte)
+           ShowAccelChar false gesetzt, damit & benutzt werden kann
+           Taborder korrigiert, Tabstop für Buttons disabled
+           entspr. Navigationsbuttons disabled am Anfang und Ende
+           TlnNextBtn als Default statt OkButton
+           Daten ohne Abfrage übernehmen bei Nav.Buttons
+           Jahrgang-Check war falsch ==> korrigiert
+           Jahrg., Snr und Strafzeit löschen ermöglicht
+           mit Tasten Bild auf/ab Tln Scrollen
+           EingabeOk nur wenn TlnGeaendert ausführen um Meldungern zu
+           vermeiden bei Scrollen
+           TriDatei.Modified nur bei Änderung
+           bei Next/Back Grid.Index neu setzen vor Änderung, damit step von
+           Neusortierung des geänderten Tln unabhängig
+         - WettkDlg: AbschnZahlUpDown disabled bei Liga-Einzelwettk.
+         - TlnObj,AnsFrm,TlnDlg: neue Sortmodes smTlnErstellt, smTlnBearbeitet für
+           Anmelde-Ansichten, FBearbeitet/TTimeStamp eingeführt
+           Load: Size von allg LongInt korrigiert cnSizeofLongInt (zukunft)
+11.05.05 - ZtEinlDlg: AbschnZahl bei WettkAlle korrigiert(max aller EinzelWettk
+           statt Wert WettkAlle (bei einzelVeranst. immer 3)
+12.05.05 - DruckDlg: OptSpalte disabled für ErgListe Liga
+         - RaveUnit: neue ErgListen mit 4. Abschn.
+         - ExpDlg: Korrektur: bei AlleWettk gab es keine eigene Liste für
+           Sonderwertung
+         - WettkDlg: Korrektur: bei Änderung AbschnZahl ErgModified setzen
+17.05.05 - TlnObj: Abs1OrtStartZeit für Staffel, 4.Abschn korrigiert
+         - MannsObj: SetzeMschAbs3Zeit,GetEndZeit für Staffel korrigiert
+18.05.05 - AnsFrm: für Startliste zusätzlich WettkAlle und SexBeide zur Auswahl
+19.05.05 - ImpFrm: Snr-Prüfung eingeführt
+================================================================================
+20.05.2005: - neue Version 2005-1.1 auf Homepage (mit TriaZeit 2.3)
+
+
+################################################################################
+2005-1.2
+========
+30.05.05 - ImpDlg: Korrektur: Snr-Prüfung nur für Tln aus QuellWettk
+
+================================================================================
+30.05.2005: - neue Version 2005-1.2 auf Homepage (mit TriaZeit 2.3)
+
+
+################################################################################
+2005-1.3
+========
+03.06.2005: - UrkDrDlg: Prüfung in OkButtonClick korrigiert. UrkDruck war nur
+              bei TlnTageswertung möglich
+================================================================================
+03.06.2005: - neue Version 2005-1.3 auf Homepage (mit TriaZeit 2.3)
+
+
+################################################################################
+2005-1.4
+========
+28.06.2005: - TlnObj-TReportTlnList.Add korrigiert für TlnSerienwertung
+              (keine Sonderwertung)
+            - Pflichtwettk S&R nur ab 2 Wettk mit 2 Abschn.
+              TlnObj-TlnInOrtStatus/BerechneSeriePunkte korrigiert,
+              WettkObj-OrtZahlMit2Abschn neu eingeführt.
+            - WettkTitel auf Listen nicht gedruckt, wenn bei serie OrtsWettkname
+              (und damit (FStandTitelColl) nicht definiert wurde:
+              WettObj: GetOrtStandTitel eingeführt, StandTitel = FName wenn
+              nicht initialisiert (= '').
+              WettkDlg StandTitelEdit.Text angepaßt
+            - ZtEinlDlg: AlleWettk nur einfügen, wenn alle Abschnitte gleich
+================================================================================
+28.06.2005: - neue Version 2005-1.4 auf Homepage (mit TriaZeit 2.3)
+
+
+################################################################################
+2005-1.5
+========
+14.07.2005: - Pflichtwettk S&R nur ab 2 Wettk mit 2 Abschn., war in 1.4 für
+              Serienwertung Mannsch. vergessen
+================================================================================
+14.07.2005: - neue Version 2005-1.5 auf Homepage (mit TriaZeit 2.3)
+
+
+################################################################################
+2006-0.1
+========
+ab 12.01.06:
+
+ImpDlg:
+- Auswahl Excel-Tabellenblatt eingeführt
+  leeres Feld und Wert=0 akzeptieren für Snr, SBhn
+
+ImpFrm:
+- Snr-Überprüfung bei Tria-Import nur für Snr>0
+
+AllgConst,IdleProc,TriaMain,SuchDlg:
+- ToolbuttonRandUpdate entfernt, weil ToolBar-Fehler in Delphi 2006 korrigiert.  wurde .
+
+TriaMain,ImpDlg,SuchDlg:
+- Dlg-Position korrigiert - Desktop-/MainFormCenter statt AsDesigned
+
+RaveUnit/RaveReports:
+- Fehler in Rave 6.5: Horizontale Linie pro Zeile. Entfernt auf
+  durch verkleinern von Even- und OddSections auf Page 2: Gleiche Höhe
+  wie auf Page 1. (5,2=>4,5; 4,3=>3,8).
+  Linie unterhalb wird dann nur für letzte section gedruckt.
+- Datasection Page 1: Lnd Vert.Line zu hoch auf allen Reports
+- Checkliste Schwimmbahnen: Überschrift Bahn x, statt Schwimmbahn x
+
+AllgConst,TriaMain,...:
+- TAnsicht: Namen teilweise geändert und MschErgDetail/Kompakt ergänzt
+- TSortMode: Namen neu sortiert und teilweise geändert
+
+TlnObj:
+- neue Funktion TlnZahl/OrtTlnZahl, u.a. für StatusBar
+  Index für Alle Ortzeiten nicht berücksichtigt ??????
+          
+MannschObj:
+- neue Funktionen: MschAbs1,2,3,4OrtStZeit
+- Funktion MschKlasseEinlesen beschleunigt und nur Einlesen wenn
+  eine vollständige Mannschaft gemeldet wurde
+- Liga: bei zu hohe Starterzahl wird Msch disqualifiziert
+
+LstFrm:
+- Spaltenbreite modifiziert, weil Textwidth ungleich Delphi 7 (breiter)
+
+AnsFrm:
+- AnsichtCB.DropDownCount korrigiert (war zu niedrig)
+- AnsichtCB  Reihenfolge geändert und Trennlinien eingefügt
+- StatusCB: stGemeldet für Msch-Startliste ergänzt, Startliste nur bis
+            stEingeteilt
+
+AllgConst,LstFmt,RaveUnit,...
+- Bei MschWrtgDetail, Spalte TlnRng ersetzt durch Snr, da TlnRng nicht
+  korrekt ist, wenn MschKlassenwertung und TlnKlassenwertung
+  verschieden sind. Rng hat für Wertung sowieso keine Bedeutung
+
+RaveUnit:
+- Fußnote Zeitstrafe bei MschWertung auch wenn Einzelwettk und einer
+  der Teilnehmer Zeitstrafe hat
+
+UrkDrDlg:
+- Spalten mit Abs-zeiten und Rng bei Einzel-Urkunden ergänzt
+
+TriaMain,MannsObj:
+- Statusbar-Anzeige für Mannsch-ansichten korrigiert
+- neue Funktionen (Ort)MschZahl wegen Statusbar-anzeige,
+  ersetzen OrtMschImZiel
+
+AllgConst,LstFmt,LstFrm,TlnObj:
+- Spalte 'Geändert am' in Meldeansicht hinzugefügt,
+  auch bei Create wird Aend.Datum gesetzt
+
+ZtEinlDlg,AllgConst:
+- fmGis, fmSportronic ergänzt
+- Prüfung auf doppelte Snr in ZECollOk eingeführt
+- Hunderstel auf Sek runden; bei Sek-Zeitgleichheit und Hunderstel ungleich
+  Zeit inkrmentieren, damit Reihenfolge gleich bleibt.
+  Überlauf bei 24:00:00 berücksichtigt.
+
+TriaMain,IdleProc
+- HauptFenster.ActionMainMenuBar.PersistentHotKeys := true: in Create und
+  IdleEventHandler gesetzt. Wird sonst bei jedem Menu-zugriff zurückgesetzt
+  (Delphi Fehler?)
+  Muss konstant true sein, damit '&' in MruListe korrekt angezeigt wird.
+
+InfoDlg:
+- TMemo durch TLabel ersetzt, weil Text markiert und gelöscht werden konnte.
+
+AllgFunc, etc. :
+- function ErsetzeEinfachUnd eingeführt um '&' in MessageDlg/MruListe richtig
+  anzuzeigen (Einfach '&' wird als Unterstrich angezeigt).
+- Function TriaMessage als Ersatz für MessageDlg mit ErsetzeEinfachUnd
+
+EnvProc,TRiaConfig:
+- EnvProc entfernt, ersetzt durch TriaConfig
+- Befehlszeilenargumente für Doppelclick auf Tria-Datei auswerten
+- MruListe, Layout, Drucker, Optionen
+
+AllgConst, OptDlg, TriaConfig:
+- neue Option: MruDateiOeffnen auf AllgemeinTS, statt SpeichernTS
+
+ExpDlg,UrkDrDlg:
+- Spalten mit Nettozeit und Strafzeit ergänzt bei TlnErg und MschErgDetail
+  für Exportdateinen (Excel+Text) und Urkunden für TlnTageswertung.
+  Kommentarspalte nur bei Listen mit Tln pro Zeile
+  Korrektur: kein ';' nach letztem Feld
+
+WettkObj:
+- GetOrtAbschnName und GetOrtAbschnZahl für Ansicht mit Alle Wettk korrigiert.
+
+LstFrm:
+- UpdateOrtColBreite, UpdateMschTlnColBreite korrigiert. Werten wurden nur für
+  aktuelle Ansicht neu berechnet, jetzt für alle Ansichten
+
+AnsFrm,IdleProc:
+- SerienAnsicht Tln/Msch disabled für nicht Serie/Cup
+
+  
+################################################################################
+2006-0.2
+========
+ab 14.02.06:
+
+DruckDlg,RaveUnit:
+- Mit PrintDialog experimentiert. XP Dialog kann mit TMPrintDialogEx
+  benutzt werden, aber Übernahme der Settings für rvRenderPrinter nicht
+  möglich.
+  Standard Delphi PrintDialog kann modifiziert werden, aber keine Änderung der
+  Hilfe-Funktion möglich. Auch keine übernahme der erweiterten Settings.
+  Bei RvNDRWriter.ShowPrintDialog ist page range disabled. Keine
+  Möglichkeit gefunden den Dialog zu ändern.
+  Deshalb Aussehen des DruckDialogs flexibel und Printerliste entfernt.
+  Printer Settings können über Button 'Drucker einstellen' mittels
+  ShowPrinterSetupDialog geändert werden.
+
+
+################################################################################
+2006-0.6
+========
+ab 10.03.06:
+
+Zeiten generell auf 1/10 Sek umgestellt ==> Datei nicht abwärts kompatibel
+
+AllgFunc,ZtEinlDlg:
+- function ZeitWert durch UhrZeitWertSek ersetzt
+
+TlnDlg:
+- Tasten Pos1 und Ende zusätzlich zu Bild auf/ab zum Navigieren abgefangen
+- Bei Änderung Zeitstrafe Update Strafzeit auf Seite Zeitnahme korrigiert
+- Tln-Adressen immer eingetragen, auch bei Sammelmeldung, damit TlnGeaendert
+- nicht true wird, wenn bei Sammelmeldung vorher adresse eingetragen wurde
+- Schwimmzeit in hh:mm:ss und von text auf Integer umgestellt (auch in TlnObj)
+
+RaveReports:
+- ZeitstrafeBand  height = 0, section bleibt 3,8
+  Damit wird Zeitstrafesection Text oder Blank immer unter dem Frame geschrieben
+  und nicht auf eine neue Seite, wenn Seite bis unten voll ist
+  Fehler trat auf bei ErgListe mit 60 Tln
+
+IdleProc, Dialoge
+- Nach Öffnen von Dialoge wird Cursor in Editfelder,ComboBoxen nicht richtig, bzw
+  gar nicht angezeigt. Gelöst in Idle durch Ändern von Selection.
+  Funktioniert nicht bei OpenDialog,SaveDialog, weil hier kein IdleEvent auftritt
+  Delphi 2006 Fehler !!!!
+
+TriaMain
+- Neuer Menüeintrag Hilfe/Tria 2006 im Web
+
+VeranObj:
+- Option DecZeiten in Datei speichern und beim Laden übernehmen
+
+WettkDlg, AllgConst:
+- Fehlermeldung für StreichErg korrigiert
+- cnMschGrMax von 8 auf 16 erhöht
+
+SGrpDlg, WettkDlg, TlnDlg, ...:
+- TriaMaskEdit-Felder geändert (neues/modifiziertes ChangeEvent), damit keine
+  ungültige Formate nach Exit auftreten
+
+ZtEinlDlg:
+- neue Funktion: Speichern der Reportdaten
+
+OptDlg:
+- neu: Öffnen mit zuletz benutzte Datei
+- neu: Default Geschlecht
+- neu: Zehntelsek.
+  
+released: 14.04.2006
+################################################################################
+
+2006-1.1
+========
+
+ZtEinlDlg,ZtEinlRep,DateiDlg,DruckDlg,UrkDrDlg,ExpDlg
+- DefaultExt ohne '*.'
+
+ImpFrm,TlnObj:
+- HausNr und PLZ wurden nicht importiert, weil diese in SetTlnAllgDaten fehlten
+
+ZtEinlDlg:
+- in Sportronic-Format Leerzeichen in Snr (und Zeit) entfernt (Fehler M.Weick)
+
+TriaConfig
+- Ini-datei in C:\Dokumente und einstellungen\user\Anwendungsdaten\Tria, weil
+  hier keine Administrator-Rechte zum Erstellen/Schreiben nötig sind
+- Exceptions beim Speichern abfangen, damit das Programm beendet wird
+
+TlnDlg:
+- Begriff Stoppzeit statt Zeitnahme
+
+UpdateDlg
+- Neu: Internet Update
+
+released: 07.05.2006
+
+################################################################################
+2006-1.2
+========
+TlnObj,VeranObj:
+- Load von FBearbeitet korrigiert (WBuff statt Buff)
+- LoadKorrektur für 2006-1.0/1.1
+
+released: 02.06.2006
+
+################################################################################
+2006-1.3
+========
+- AnsFrm: Fehler-Korrektur: in WettkampfCBChange SondWrtg-Change berücksichtigt
+
+released: 15.06.2006
+
+################################################################################
+2006-1.4
+========
+Hilfedatei Hlp1010.htm korrigiert
+
+AllgComp:
+- in TTriaGrid.Paint: kein Exit bei FCollection=nil, damit leeres Fenster
+  dargestellt wird (wegen DateiDlg.TriDatSchliessen).
+  In anderen Modulen Prüfung auf FCollection=nil ergänzt
+
+AllgConst:
+ - neuer Status: stGewertetDisq für TlnErgListe
+ - seMannschPktMax=50000, statt 5000 (< seOrtMax*cnTlnMax/cnMschGrMin = 39.996) 
+
+AnsFrm:
+- AnsichtLeiste füllen wenn Veranstaltung=nil: anAnmEinzel, smTlnErstellt,
+  Wettkdummy, cnSexBeide, AkAlle, stGemeldet:
+- auf Wk=HauptFenster.WettkDummy statt nil abfragen
+- bei ltKtLstUhrZeit1 nur Sortmode 'Endzeit'
+- Ansicht anTlnSchwBhn nur wenn Startbahnen definiert sind
+- bei anTlnSchwBhn AlleWettk nur wenn alle Wk mit Startbahn definiert
+- bei anTlnUhrZeit AlleWettk nur wenn für alle Wk gleiche Abschn. definiert sind
+- Status Disqualifiziert und Gewertet+Disq. ergänzt für MeldeAnsicht und TlnErg
+
+D6OnHelpFix:
+- neue Version mit HelpSelector._Release; ==> prüfen bei neue delphi-Version
+
+DateiDlg:
+- TriDatNeu:
+  - NeuBerechnen (unverändert) aus Loadkorrektur übernommen
+  - nach TriDatSchliessen leeres Fenster bevor Laden begint ((HauptFenster.Init)
+  - TlnGrid nach Laden sofort anzeigen (HauptFenster.Init)
+- TriDatSchliessen: StopPaint statt LstFrame.Schliessen, damit Gridinhalt
+  stehen bleibt solange Fenster sichtbar ist
+
+hh, hh_funcs:
+- neue Version (1.8) für Windows-Vista
+
+IdleProc:
+- SetzeCommands: alles Disabeln bei Veranstaltung=nil
+- DateiMenueCommands: TriDatNeuAction,TriDatOeffnenAction immer disabeln wenn
+  Setzen=false
+- AnsichtMenueCommands: Abfrage SortWettk=DummyWettk statt nil, AnsichtToolBar
+  immer enabled
+
+KlassenDialog:
+- ListeAendern korrigiert: MschAltMKlasseColl war doppelt, in MschAltWKlasseColl
+  geändert
+
+LstFmt:
+- GetListType:
+  - anAnmEinzel für Veranstaltung=nil korrigiert
+  - anTlnErg für DateiNeu/WettkAlle korrigiert (1 Abschn.)
+  - anTlnUhrZeit für DateiNeu/WettkAlle korrigiert (1 Abschn.)
+  - anMschErgKompakt für DateiNeu/WettkAlle korrigiert (3 Tln/Msch)
+- GetColHeader:
+  - gültiger Header auch wenn Veranstaltung=nil,
+  - wenn AbschnZahl=1, Header für spAbs1UhrZeit in KtLstUhrZeit1 fix 'Endzeit'
+- GetColData:
+  - Result='' bei Veranstaltung=nil
+  - spAbs1,2,3,4Zeit/Rng Inhalt leer, wenn Abs nicht definiert für Listen mit
+    allen Wettk
+    
+LstFrm:
+- TListFrame.GetStopPaint/SetStopPaint entfernt
+- TListFrame.Schliessen entfernt (jetzt StopPaint in SMldFrm und DateiDlg)
+- in Create TriaGrid.Hide gelöscht:  Grid immer sichtbar
+- LstFrame.Init: wenn Veranstaltung=nil HauptFenster.WettkDummy als SortWettk
+  statt WettkAlle
+- LstFrame.GridInit auch für Veranstaltung=nil gültig
+
+MannsObj:
+- SerieWertung korrigiert: smMschSerErg statt smMschSerPunkte
+
+RaveUnit:
+- TriaRvCustomConnectionGetRow: Abs1StartZeit in Titel3 für anTlnSchwBhn statt
+  SGrp.StartZeit1 (Exception bei SGrp=nil)  
+
+SMldFrm:
+- Schliessen: LstFrame.TriaGrid.StopPaint statt LstFrame.Schliessen
+
+SMldObj:
+- TSMldTlnListe.SortString korrigiert: smTlnErstellt,smTlnBearbeitet fehlten
+
+TlnDlg:
+- Jahrgang darf 2-Stellig eingegeben werden, wird umgerechnet auf 19../20..
+  Neue Funktion: GetJg
+- wenn nur 1 SGrp für wettk definiert, wird diese bei Neu-Anmeldung
+  voreingestellt (und bei Eingabe gespeichert)
+  Anpassung von: UpdateSGrpListe
+
+TlnErg:
+- Meldung 'Alterskl-k-assen werden definiert' korrigiert
+
+TlnObj:
+- in TlnColl.Create: FSortMode := smTlnErstellt, statt smTlnname, weil dies
+  der Anfangssortierung in AnsFrame ist
+- SerieWertung korrigiert: smMschSerErg statt smMschSerPunkte
+- AddSortItem: bei smTlnSBhn nur einfügen wenn Startbahnen für Wk definiert sind
+- TReportTlnList.Add: für Ansichten anTlnSchwBhn und anTlnUhrZeit wird Liste
+  bei rmWkAlle getrennt pro Wettk gedruckt statt eine gemeinsame Liste über alle
+  Wettk. Gemeinsame Liste wird bei Auswahl Alle Wk in AnsichtListe gedruckt
+- TTlnColl.SBhnBelegt entfernt
+- TTlnObj.TlnInOrtStatus:
+  - stEingeteilt wenn für wettk Startbahnen definiert sind, dann muss Sartbahn
+    auch für Tln definiert sein
+  - neuer Status stGewertetDisq für TlnErgListe
+
+TriaMain:
+- Funktion/var StopPaint gelöscht, durch LstFrame.TriaGrid.StopPaint ersetzen
+- WettkDummy für SortWettk wenn veranstaltung=nil
+- Create: Position := poDesktopCenter ; WettkDummy (nach InitAllgAk) ;
+          SortSex ; SetzeCommands
+- Veranstaltung=nil erlaubt in InitOrtListe, Init, InitAnsicht,StatusBarUpdate;
+  nicht erlaubt in RefreshAnsicht, UpdateAnsicht
+- StatusBarUpdate: Veranstaltung statt LstFrame.TriaGrid.Collection.VPtr, weil
+  EinlVeranst hier nie verwendet wird.
+- TriDatNeuActionExecute, TriDatOeffnenActionExecute: CommandTrailer entfernt,
+  weil bereits in vorherige Funktion (TriDatNeu) enthalten
+- Close von InternetUpdate nach UpdateActionExecute
+
+UpdateDlg:
+- Close von InternetUpdate nach UpdateActionExecute
+
+VeranObj:
+- LoadKorrektur: für Bearbeitet auch bei Exception Bool := true
+- NeuBerechnen (unverändert) von Loadkorrektur nach DateiDlg.TriDatNeu
+
+WettkDlg:
+- SetWettkAbschnGB, EnableWettkAbschn: nur wenn AbschnZahl > 1
+- Prüfung BahnEinteilung korrigiert: Funktion von EingabeOk nach WettkAendern,
+  alte Funktion in WettkAendern (mit SBhnBelegt) entfernt
+
+WettkObj:
+- Funtionen für FVPtr=nil geeignet gemacht (wegen WettkDummy)
+- GetOrtAbschnName =  '' wenn AbschnZahl  = 1
+- SetOrtAbschnName: nur wenn AbschnZahl > 1
+- GetOrtAbschnName: '' wenn AbschnZahl < 1 oder Abschn >= AbschnZahl
+- Funktion TWettkColl.AlleAbschnGleich neu
+
+ZtEinlDlg:
+- Create: neue Funktion AlleAbschnGleich benutzt
+- SetAbschnitt/GetAbschnitt vereinfacht
+
+Released: 02.08.2006
+
+
+################################################################################
+2006-1.5
+========
+TlnErg:
+- BerechneTagesRang: nach stGemeldet sortiert, damit Rang auch zurückgesetzt wird
+  wenn Status in stGemeldet geändert wird
+
+TlnObj:
+- TlnInOrtStatus korrigiert: FWettk.OrtStartBahnen(neu) statt StartBahnen
+- SetOrtStrtBahn: SetWettkErgModified ergänzt (wegen Status-Änderung)
+- Abs1OrtStartZeit: ungültig wenn kein Startbahn definiert (stGemeldet)
+
+WettkObj:
+- GetOrtStartBahnen neu für TlnObj.TlnInOrtStatus
+
+
+Released: 05.08.2006
+
+
+################################################################################
+2006-1.6
+========
+
+TriaMain:
+- ProgressBar in FormShow in StatusBar eingefügt (keine verbesserung bei Vista)
+
+WettkDlg;
+- in SetMschGesWertgRG Wertung disabled bei MeschWertung=mwKein,
+  in MschWertgRGClick SetMschGesWertgRG aufgerufen
+- SetMschGrGB ersetzt SetMschGrGBDaten und SetMschGrGBEnable
+
+TlnDlg:
+- InitData: TlnBuffer.SGrp gesetzt, wenn nur 1 SGrp vorhanden, damit TlnGeaendert
+  am Anfang false bleibt;
+  TlnBuffer.Free gererell hier statt in anderen Funktionen
+- InitDialog: Sonderklassen nur enabled, wenn mindestens 1 Sonderklasse definiert ist
+- UpdateKlasse: Sonderklasse bei gwProAk nicht angezeigt und disabled wenn
+  keine Sonderklasse definiert ist
+- UpdateSGrpListe: Anzahl Tln ohne SGrp statt nicht eingeteilte Tln
+- EingabeOK: bei PageChange nur Tab-Daten prüfen, keine allgemeine Daten
+- TlnAnmelden: WettkAktuell := erste Wettk nach alphabetischer Reihenfolge,
+               statt erste Wettk in WettkColl
+- TlnAendern: InitTlnBuffer (neue Funktion, auch in InitData) aufnehmen, weil
+  TlnBuffer gleich sein muss an TlnAktuell (Fehler: TlnAktuell.MannschName wird
+  bei Änderung gelöscht, wenn nicht mehr in Datei vorhanden; dadurch
+  Zugriffsverlettzung in TlnBuffer (Gerard)).
+  TlnAktuell fokussieren vor UpdateAnsicht.
+- TlnNext, TlnBack, ...etc: Anpassung an geänderte Funktion TlnAendern
+
+TlnObj:
+- SortString: bei Altersklassen: FAltKlasse.AlterVon / 1-Integer(FSex)
+  statt FSex / Alter;
+  neuer SortMode: smTlnSnrAk, Altersklasse für Startliste
+- TReportTlnList.Add: Fehler beim Drucken der Siegerliste: TBuff war undefiniert,
+  durch Item.Wettk ersetzt.
+ 
+AllgConst:
+- neuer Sortmode: smTlnSnrAk, Altersklasse für Startliste
+
+LstFmt:
+- GetListType: Funktion AkSpalte eingeführt, keine Funktionsänderung
+
+
+
+---------------------
+Released: 13.10.2006
+---------------------
+
+################################################################################
+2007-1.0
+========
+
+Allgemein:  Copiler-Warnungen reduziert
+DruckDlg:
+- Prüfung in OkButtonClick korrigiert
+UrkDrDlg:
+- Prüfung in OkButtonClick korrigiert
+AllgConst:
+- TWettkArt/waDummy wegen Doppelbenutzung waSigmaringen (Int3,4).
+  waSchopfheim früher fälscherweise bei TWettkArt gelöscht, deshalb
+  waSigmaringen in alten Dateien mit Idx 4, neu mit Indx 3 gespeichert
+  Zukünftige neue wettkArten sollen deshalb ab Indx 5 beginnen
+- TDateiFormat getrennt in TtriDateiFormat und TTrzDateiFormat weil .txt doppelt
+WettkObj:
+  TWettkObj:
+- GetOrtTlnTxt: bei Liga grundsätzlich Leerstring, damit wird TeilnehmerTS im
+  TlnDlg für Liga nicht mehr benötigt.
+- GetOrtWettkArt korrigiert: waSigmaringen mit Indx 3 und 4 benutzt
+- GetOrtMannschGrAnm,GetOrtMannschGrStrt: auch für non-Liga gespeicherter Wert
+  auslesen, früher fest auf cnTlnMax
+- Load:
+  read allg LongInt für Zukunft korrigiert: cnSizeOfLongInt statt -SmallInt
+  MannschGrAnmColl,MachGrStrtColl für ältere Versionen auf cnTlnMax setzen
+- FPunktGleichOrt von Integer auf TortObj umstellen, um Fehler bei Änderung in
+  OrtColl zu vermeiden
+TWettkColl:
+  SortString immer gleich Index, SortColl nur noch für WettkAlle
+- Create: Sortieren macht keinen Sinn, da Count = 0, deshalb nur SortMode setzen
+- FSortNachAk muss bei AddSortItem neu berechnet werden
+WettkDlg:
+- Create: bei Liga waSchopfheim generell entfernt, auch vor 2005 waSigmaringen
+- SchwimmTS gelöscht: info in AllgemeinTS
+- SerienTS gelöscht: Info in MannschTS für Liga, in CupDlg für Cup
+- SetPage: Korrektur: AllgemeinTS gewählt, wenn Page nicht Visible
+- MschGrAnm,Str,Wrtg für alle Veranstaltungsarten
+MannsObj:
+- MannschWkWertung: für alle Veranst.arten Starterzahl prüfen, nicht nur vaLiga
+- RngMax neu für UrkDrDlg
+- Startzeiten für Jagdstart Liga (ortindex > 0) korrigiert 
+TOrtObj:
+- eigenständige Unit statt in VeranObj, damit TOrtObj in TWettkObj benutzt
+  werden kann
+ImpFrm:
+- ImpStartButtonClick-WettkUebernehmen: ClearSortItem/AddSortItem, damit
+  WettkColl neu sortiert wird
+UrkDrDlg:
+- Snr- und RngBereich mit aktuellen Werte initialisiert, dafür neue Funktionen
+  in TlnObj: SnrMin, SnrMax, RngMax;  MannsObj: RngMax
+TlnObj:
+- SnrMin, SnrMax, RngMax neu für UrkDrDlg
+SnrDlg:
+- UpDown für SnrVon und SnrBis eingeführt
+TlnDlg:
+- Jg nur löschen wenn unbekannnt; nicht "0" eintragen da dies 2000 entspricht
+- UpDown eingeführt für Jg
+- Alter von 1 bis 99 erlaubt, abhängig von Wettk.Jahr
+- SnrButton entfernt, dafür Liste mit freie Snr zur Auswahl. 1. Freie Snr
+- voreingestellt, wenn SGrp gewählt und noch keine Snr definiert ist
+OptDlg:
+- SofortRechnen statt AutoBerechnen, alternativ nach Schließen des Dialogs
+- Setzen VorgabeButton korrigiert
+IdleProc,TriaMain,AllgConst,..:
+- NichtRechnen entfernt, grundsätzlich nach jedem relevanten Menübefehl neu
+  berechen, optional (default) auch sofort nach Änderung im Dialog.
+  Zusätzlich vor jedem Menübefehl, falls mal was schief gehen sollte
+  Keine Berechnung mehr im IdleHandler
+  Nicht klar ob damit Problem beim ZeitenEinlesen (Keine Neuberechnung - Rost)
+  gelöst ist.
+- Alle Befehle gespert während PrgressBar.Visible und HauptFenster Active ist,
+  auch ProgrammAbbruch gesperrt um Abstürz zu vermeiden.
+  Wenn nicht Active sind Befehle sowieso gesperrt.
+TriaMain:
+- ProgressBar-Funktionen mit ProcessMessages ergänzt, damit Fortschritt unter
+  Vista dargestellt wird (lauft immer noch nicht bis zum Ende) und Steps nur
+  alle 2% und 200 mSek dargestellt werden (Zeitgewinn)
+DateiDlg:
+- Beim Dateiladen und nachfolgendem Berechnen und Sortieren bleibt Progressbar
+  stehen, damit das Bild ruhiger wird
+ImpDlg:
+- beim Tln-Import können die Daten gleicher Tln optional überschreiben werden
+ExpDlg:
+- Jahrgang mit 4 statt 2 Stellen exportieren (Excel und Text)
+- Beim Excel-Export werden verbundene Felder in Einzelfelder getrennt wegen
+  einfachere Extraktion und Sortierung
+OrtDlg:
+- gestrichen, in VeranDlg integriert
+SerWrtgDlg:
+- neu, für flexible serienwertung
+
+
+---------------------
+Released: 28.03.2007
+---------------------
+
+
+################################################################################
+2007-1.1
+========
+
+SGrpDlg:
+- SGrpGridClick korrigiert: wenn bei Click nach Änderung bestätigt wird, wird
+  nicht mehr nach vorige SGrp zurückgeschaltet
+
+VstOrtDlg:
+- TVstOrtDialog.Create: Veranstaltung.OrtIndex voreingestellt
+
+TlnDlg:
+- TTlnDialog.TlnAendern: Fehlerkorr. bei Änderung SnrBelegtArr[Snr] updaten
+
+
+---------------------
+Released: 11.04.2007
+---------------------
+
+
+
+################################################################################
+2007-1.2:   Einfache Staffelwertung
+================================================================================
+
+AllgConst:
+- waMschSigmaringen entfernt, waTlnStaffel ergänzt (Int(5))
+
+WettkObj:
+- GetOrtWettkArt:  waTlnStaffel ergänzt
+- GetTlnGesWertg: fest für Liga:  gwMannFrau für WettkAlle, sonst gwAlleAk
+- GetMschWertg: fest für Liga:    mwKein für WettkAlle, sonst mwEinzel
+- GetMschGesWertg: fest für Liga: gwAlleAk
+- DefaultTlnWertg,DefaultMschWertg,DefaultMschGesWertg gestrichen
+
+WettkDlg:
+- SetWettkArtRG, GetWettkArtRG: waTlnStaffel ergänzt
+- EingabeOK: Fehler: MschGr/AnmStrt/Wrtg/Edit validate nur wenn Enabled
+- SetMschGrWrtg: Fehler: immer gültiger wert setzen (0 nach mwKein)
+- WettkArtRGClick: Bestätigung statt Meldung bei MschWettk.: mwKein,gwAlleAk
+  Git bei Cup für alle Orte
+- SetMschWertgRG,SetMschGesWertgRG:
+  bei vaCup WettkArt in andere VeranstaltungsOrte berücksichtigen,
+  disablen wenn irgendwo ein Mschwettk definiert ist 
+- SetMschGrAnm,SetMschGrStrt,SetMschGrWrtg: disabled bei waTlnStaffel
+- WettkAendern: Korrektur MschGrWrtg =3 wenn disabled (war 0), um
+  Fehler Division durch Null zu vermeiden
+
+ImpFrm, ZtEinlDlg,AllgConst:
+- InitialDir gesetzt und letzter wert gespeichert
+
+TlnObj:
+- GetOrtAbs2,3,4UhrZeit Fehler korrigiert: FWettk.OrtAbschnZahl statt AbschnZahl
+- BerechneSeriePunkte: MschWettbewerbe nicht berücksichtigen
+
+ZtEinlDlg:
+- ZeitErfDateiEinlesen:TriDatei.Modified entfernt, nur gesetzt in TZEObj.Einlesen
+
+UpdateDlg:
+- SetStatus: Fehler: teilweise alte ProgName durch neue ProgName ersetzt
+
+AnsFrm:
+- Korrektur: UpdateMschTlnColBreite in InitWettkListe statt WettkampfCBChange,
+  damit Breite auch bei WettkChange durch Ansichtswechsel angepaßt wird
+- InitWettkListe: Korrektur: Index+1 für SondWrtg nur wenn SondWrtg in Liste
+
+PrevFrm:
+- TPrevFrame.Oeffnen: Korrektur: Zoomfactor nach Definition von PrevScrollBox  
+
+MannsObj:
+- TMannschTlnListe.Sortieren: Korrektur: DIV durch null verhindern wenn
+  OrtMannschGrWrtg[OrtIndexNeu] = 0
+- MannsColl.Sortieren:  Fehlerkorrektur: TlnColl.SortWrtgMode := wgStandWrtg;
+
+
+---------------------
+Released: 09.05.2007
+---------------------
+
+
+################################################################################
+2007-1.3:
+================================================================================
+
+SMldFrm:
+- Fehlerkorrektur: sporadische Zugriffsverletzung beim Schliessen von SMld-Dialog
+  TSMldFrame.Schliessen: HauptFenster.LstFrame.TriaGrid.Collection := nil, nach
+  Löschen von SMld, weil TlnListe ungültig wird
+
+---------------------
+Released: 22.05.2007
+---------------------
+
+
+################################################################################
+2007-1.4:
+================================================================================
+
+SerWrtgDlg:
+- EingabeOk: ungültig wenn GetStreichErg < 0, statt <= 0
+- WrtgPktRecAendern,SetButtons: RecIndxAktuell statt Row benutzen
+- UebernehmButtonClick,OkButtonClick: wenn WrtgPktRecGeAendert zuerst Rec in
+  Liste übernehmen, vor Liste geprüft wird
+- FocusWrtgPktRec: setze Updating vor Row-Änderung, wegen Click-Event,
+  Funktion SetWrtgPktRec einfügen
+- SetWrtgPktGrid,WrtgPktRecNeu,WrtgPktRecLoeschen,ListeOk: FocusWrtgPktRec
+  benutzen, Row nicht direkt setzen
+
+Meldedaten nach Excel und Text exportieren
+- ExpDlg: mehrere Änderungen
+- AllgConst: ltMldLstTlnExp mit Spalten definiert
+- IdleProc: DruckenMenueCommands angepasst
+- ImpDlg: GetFeldNamenKurz auch für LstFmt zugänglich
+- LstFmt: GetTitel3, GetColType, GetColHeader, GetColData für ltMldLstTlnExp ergänzt
+- LstFrm: AlignMode für ltMldLstTlnExp ergänzt
+- TlnObj: TReportTlnLst.Add: ltMldLstTlnExp ergänzt
+
+ImpDlg:
+- ImportiereDaten: beim Überschreiben von TlnDaten nicht importierte Felder auf
+- Initwert setzen (wie beim Create)
+
+---------------------
+Released: 10.06.2007
+---------------------
+
+
+################################################################################
+2007-1.5:
+================================================================================
+
+UrkDrDlg:
+- in SerienDruckTlnTagesWertung VName+Name statt Name,Vname für Staffelteilnehmer
+
+TlnObj:
+- function StaffelVNameName für Urkunden ergänzt
+
+---------------------
+Released: 24.06.2007
+---------------------
+
+
+################################################################################
+2007-1.6:
+================================================================================
+
+ImpDlg:
+- Felder für StaffelTln, Zeiten, DisqGrund hinzugefügt, damit sind ALLE Daten
+  importierbar. (Ergebnisse notwendig bei Mika Timing Zeitnahme, da spezielles
+  Zeitdatei-Format gestrichen wird.
+- Prüfung auf vergebener Snr korrigiert bei vorhandener Tln
+- Bei Prüfung auf vorh. Tln. Option mbNo gestrichen, weil verwirrend, da keine
+  individuelle Entscheidung pro Tln möglich ist.
+  Korrektur: Bei Cancel Fehler setzen vor Exit.
+- Korrektur: Meldezeit in Zehntel statt in Sek.
+- nur Datenfelder mit Defaultnamen automatisch zuordnen, Übrige nicht mehr der
+  Reihe nach
+  
+AllgConst:
+- Spalten und Datenfelder für Im-/Export ergänzt in TImpFeld und TColType
+
+AllgFunc:
+- Funktionen MinZeitWertDec, MinZeitWertSek ergänzt für Import Strafzeit
+
+ImpFmt:
+- Spalten für Im-/Export ergänzt in ltMldLstTlnExp
+
+ExpDlg:
+- bei Text- und Excel-Export wird in sp(Msch)TlnEndzeit kein Blank angehängt
+- Felder für StaffelTln, Zeiten, DisqGrund hinzugefügt, damit werden ALLE
+  Daten exportiert.
+- nur für Wettkampf relevante Datenfelder exportieren.
+- function ExcelRangePar korrigiert
+
+TlnDlg:
+- Korrektur: MldZeitEdit Events definiert (fehlten)
+- TlnEntfernen: Alle Tln aus Liste können auf einmal gelöscht werden
+
+WettkObj:
+- neue Funktion:  AlleWettkArtAehnlich
+- neue Funktion:  AlleGesWertgGleich
+
+DruckDlg:
+- AkRBClick: AkNewPageCB nur enablen wenn bei Init enabled
+
+DruckDlg,UrkDrDlg,ExpDlg:
+- WkWahlRB und AkWahlRB an oberste Position und voreinstellen
+- WkAlleRB disablen wenn nicht AlleWettkArtAehnlich
+- AkAlleRB disablen wenn SortSex = cnSexBeide
+
+---------------------
+Released: 7.10.2007
+---------------------
+
+
+################################################################################
+2008-0.1:
+================================================================================
+
+TlnObj,TlnErg,MannschObj,...:
+- Wertung Tln und Msch immer für kwAlle,kwSex,kwProAk und für Tln zus. kwSondKl,
+  sowohl für Tages- wie Serienwertung
+- Sortieren: ProgressBarStehenLassen statt ZeigeMeldung benutzen 
+
+TlnObj:
+- TagesEndRngStr,TagesZwRngStr ersetzen TagesRngStr.
+  Nur in Spalte 1 wird disq/aK angezeigt
+
+AusgDlg:
+- Neu, ersetzt DruckDlg und ExpDlg, UrkDrDlg bleibt
+- ReportWkMode entfällt, Listen nur für SortWettk
+- ReportAkMode durch ReportAkListe ersetzt    
+
+WettkObj/WettkDlg:
+- waTlnStaffel bei Serien nicht verfügbar
+- MannschGrAnm,MannschGrStrt wieder nur für Liga, sonst müsste getrennt pro
+  Wertungsklasse definiert werden (nur für AkAlle definieren)
+  GetOrtMannschGrAnm,GetOrtMannschGrStrt: für non-Liga wieder fest auf cnTlnMax
+
+TlnErg:
+- TlnSerienwertung bei Cup nur für WettkArt=waEinzel
+- SetzeErstZeit1,2,3: Fehler: auf Abs1,2,3Zeit statt Abs1,2,3UhrZeit prüfen
+
+TriaConfig,DateiDlg,TriaMain:
+- OrtIndex in Ini- statt Tri-Datei speichern. Nur beim Neustart mit zuletzt benutzter
+  Datei verwenden. Beim Laden während Programmausführung letzter Index beibehalten.
+  In OrtCBChange TriDatei nicht Modified setzen
+
+PrevFrm:
+- Scrolltasten disabled, wenn nicht benutzbar
+
+TriaMain:
+- Statusbar-Anzeige erweitert mit Tln/Msch-Zahlen in Klasse, in Wettk
+- Msch in ErgListe auch bei mwMulti nur einmal gezählt (konsistent)
+- ProgressBar überarbeitet:
+  Init in DateiDlg,TlnErg,etc. geändert, damit Bar continue weiterlauft
+  Pause nach Clear damit Max-Stand sichtbar wird bei Vista
+  ProgressBarText: Panels[0]='', bei Panels[1] immer '...' am Ende
+  StatusBarText: wie vorher ProgressBartext mit Panels[0],Panels[1] als Input
+
+IdleProc:
+- TlnNeu-Button im Menü disablen wenn keine Tln-Ansicht
+
+ImpFrm:
+- DatenImportieren - Korrektur: bei ftKein Import abbrechen 
+
+AnsFrm:
+- InitStatusListe: anMschErgDetail: stAbschn1,2,3 statt stGestartet.
+  stGestartet nur für anTlnUhrZeit, weil AbsZeit nicht gültig sein muss (SBhn=0)
+- InitWettkListe: Startliste bei Liga auch pro einzelWettk
+- InitSexListe: Männer/Frauen unabhängig von Klassen- oder Sonderwertung.count
+
+LstFmt:
+- GetColData: spStatus korrigiert: stGestartet eliminiert, nur noch für
+  anTlnUhrZeit verwendet (stGestartet ist gültig auch wenn SBhn=0)
+  Bezeichnung Abschn1 statt ImZiel (bei AbschnZahl=1)
+
+AlgConst,AnsFrm,TlnObj,SMldObj:
+- zusätzlicher SortMode TlnAlter   
+
+KlassenDlg:
+- ListeOK: auch 0 Altersklassen zulassen
+  Gleiche Bezeichnungen für Name oder Kürzel pro Wettkampf nicht zulassen
+- Kürzel für Mannschaften disablen, weil nur für Tln-Altersklassen benutzt
+
+ZtEinlDlg:
+- MikaTiming entfernt, weil nicht benutzbar
+
+AllgConst,TlnObj,TlnDlg,TlnErg,...
+- Tln-Option a.K für Altersklassen- und Sonderklassenwertung (Rost).
+  Gilt für alle Orte und für Serienwertung, nicht für MschWertg
+  AusserKonk gilt auch nicht mehr für MschWrtg, da hierfür eigene Option MschWrtg
+
+
+---------------------
+Vorab an T. Rost: 27.1.2008
+---------------------
+
+
+################################################################################
+2008-1.0:
+================================================================================
+
+
+VistaFix:
+- Problem mit Alt-Taste gelöst (Texte verschwinden beim Drucken auf Alt-Taste)
+  TStaticText durch TLabel ersetzt um mögliches Problem in XP mit Alt-Taste zu
+  vermeiden.
+- Schriftarten alle auf Segoe UI, size 9 gesetzt (Vista Standard). War früher
+  Sans Serif (alte OS) und Tahoma (XP). Beide gemischt vorhanden.
+  Wenn OS <> Vista wird auf Tahoma, Size 8 oder MS Sans Serif umgestellt
+- Vista Open und SaveDialog verwendet
+
+UpdateDlg:
+- Download-exe: default Verzeichnis Desktop statt ProgrammDir
+
+TriaConfig:
+- Ini-datei vor Speichern immer löschen, damit alte Leichen verschwinden
+
+AusgDlg:
+- Drucken aus Preview korrigiert: alte Einstellungen übernehmen und in Dialog
+  disabled darstellen.
+- Druckereinstellung: A4 und Portrait voreingestellt und Meldung wenn
+  vom Anwender verändert
+- Urkunden mit altem Dialog
+
+TriaMain:
+- ProgressBarMaxUpdate: ProgressBarScale entfernt, weil Funktion bei
+  MaxNeu < 100 nicht OK.
+- THauptFenster.StatusBarUpdate: bei anAnmSammel alle Zahlen auf SMld bezogen
+- THauptFenster.MruActionExecute: Fehlerkorrektur: Zuerst SMldFrame schliessen
+- InitOrtListe: Dummy Ort in OrtCB um Count=0 zu verhindern (mögl. Ursache für Exc??) 
+
+TlnErg,MannsObj,WettkObj:
+- Fehlerkorrektur: bei TlnStaffel wird bei Jagdstart keine Abschn-Startzeit
+  berechnet. Neue Funktion eingeführt: TWettkObj.EinzelWettk:Boolean.
+
+TlnErg:
+- AusserKonkAltKl,AusserKonkSondKl auch bei TagesSerienwertung berücksichtigt 
+- Korrektur: ProgressBarStehenLassen := true nach try, sonst bleibt
+  ProgressBarStehenLassen=true bei WettkColl.Count und TlnColl.Count=0 
+
+DatExp:
+- TextColText korrigiert: spTlnEndZeit/spMschTlnEndZeit ersetzt durch
+  spTlnEndZeitExp/spMschTlnEndZeitExp damit kein Blank eingefügt wird
+
+DatExp,SerDrDlg:
+- bei TlnStaffel Rang-Spalten pro Teilehmer ergänzt
+
+WettkObj:
+- Korrektur: ProgressBarStep in WettkColl.Store ergänzt
+  
+AllgFunc,TlnDlg:
+- EffZeitStr: Zeit=0 als -/-,- dargestellt statt 0/0,0, weil 0 ungültig ist
+  Nur Strafzeit in TlnDlg wird als 0/0,0 dargestellt
+
+KlassenDlg (,AnsFrm,TlnErg):
+- bei waMschStaffel,waMschTeam keine SonderKlassen
+- wenn AkGrid.ItemCount = 1  oder NeuEingabe Name focussieren statt AkGrid
+ 
+ImpDlg:
+- PruefeDaten korrigiert: zuerst checken ob Pflichtfelder zugeordnet sind
+- Nur Name,Vorname als Pflichtfelder anzeigen und prüfen
+
+
+---------------------
+Released: 9.3.2008
+---------------------
+
+
+################################################################################
+2008-1.01:
+================================================================================
+
+WettkObj:
+- GetTlnKlasse: Ergebnis bei Liga von WettkAlle
+
+AusgDlg:
+- rmUrkunden ergänzt
+
+SerienDr:
+- Neu, ersetzt UrkDrDlg,
+
+RaveUnit:
+- Logo von 2007 in 2008 geändert
+
+---------------------
+Vorab an T.Rost: 15.3.2008
+---------------------
+
+
+################################################################################
+2008-1.1:
+================================================================================
+
+TlnErg,TlnDlg,AnsFrm,AusgDlg:
+- waTlnStaffel auch pro Geschlecht werten
+
+TlnDlg:
+- Korrektur: Abs2,3,4ZeitEdit.ReadOnly true gesetzt wenn EditMask = ''
+
+KlassenDlg:
+- ListeOK: keine Warnung wenn Alterslücke in Sonderklasse
+
+TlnErg:
+- Korrektur: weitere ProgressBarInit eingefügt. Bisher nur bei TlnAkModified
+
+--------------------------------------------------------------------------------
+Released: 26.3.2008
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2008-1.2:
+================================================================================
+
+
+TlnDlg:
+- Korrektur: UpdateKlasse: Updating war am Ende immer gesetzt (Rost)
+
+SerienDr:
+- Korrektur in verschiedenen Listen: Loop bis ReportWkListe.Count-1 statt Count
+
+ImpDlg,WettkObj,TlnDlg:
+- Import Jg sowohl 2- als 4-stellig, function WettkObj.JgLang eingeführt
+- neue funktion WettkObj.Jglang um Jg von 2- nach 4-stellig umzurechnen
+
+
+--------------------------------------------------------------------------------
+Released: 31.3.2008
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2008-1.3:
+================================================================================
+
+RaveUnit:
+- Fehlerkorrektur:
+- RvNDRWriterPrint:
+  Wenn kein ReportNewWkPage dann nur einen Report für alle Wettk., weil
+  ExecuteReport immer am Anfang der Seite beginnt (==> Überlappung)
+  Geht nur bei gleichem ReportType für alle Wettk.
+- TriaRvCustomConnectionGetRow: HauptFenster.SortWettk ersertzt durch ReportWk
+                                HauptFenster.SortWrtg ersetzt durch ReportWrtg
+
+TlnObj:
+- Fehlerkorrektur:
+  TReportTlnList.Add: SortWrtg durch ReportWrtg ersetzt
+  ReportSortieren in 2 versionen: gemeinsame und getrennte listen pro wettkampf
+- Checkliste Schwimmbahnen wenn Schwimmdistanz definiert ist, Bahnen müssen
+  nicht mehr definiert sein (TTlnColl.AddSortItem)
+
+DatExp:
+- ExportDateiSpeichern: keine Ausgabe wenn Liste leer ist
+
+AusgDlg:
+- UpdateLayoutGB: wenn kein Wettk-NewPage, dann kein Ak-NewPage
+- DatenUebernehmen: anTlnSchwDist: bei Wettk-, Bahn- und Startzeit-Änderung immer
+  neue Seite
+  
+AnsFrm:
+- InitAnsichtListe: anTlnSBhn umbenannt in anTlnSchwDist und angezeigt wenn Distanz
+  definiert ist (statt startbahnen)
+
+TlnDlg:
+- neue Funktion WettkObj.JgLang benutzt
+- SBhnGrid ColBreite eingestellt
+
+--------------------------------------------------------------------------------
+Released: 17.4.2008
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2008-1.4:
+================================================================================
+
+TlnDlg:
+- UpdateJg: Jg nicht umrechnen während JgEdit geändert wird.
+
+--------------------------------------------------------------------------------
+Released: 21.4.2008
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2008-1.43:
+================================================================================
+Basiert auf 1.4
+Zwischenversion für BWTV:
+
+bei Liga 4 Abschnitte erlauben für Wettkampf in TBB (Swim&Run + Triathlon)
+cnWettkAbschnMaxLiga entfernt
+
+LstFmt:
+- ltErgLstTlnQuad enabled für Liga
+
+RaveForm:
+- TriaRvCustomConnectionGetCols/Rows für Liga-Abschn.4 geändert
+
+AusgDlg:
+- WettkCLB: disabeln wenn nur 1 Wettk vorhanden
+
+--------------------------------------------------------------------------------
+an BWTV: 11.6.2008
+--------------------------------------------------------------------------------
+
+################################################################################
+2008-1.44:
+================================================================================
+
+Basiert auf 1.43
+Zwischenversion für Schüttler:
+- Korrketur Kürzel für Msch-Altersklasse
+
+KlassenDlg:
+- DrawCell: Kuerzel nur für TlnWrtg anzeigen, sonst ''
+- KlasseOk: Kuerzel nur prüfen, wenn enabled (TlnWrtg)
+
+AllgComp:
+- TTriaMaskEdit.Change: Text:=Trim(Text): Blanks am Anfang und ende aut. löschen
+
+--------------------------------------------------------------------------------
+an Schüttler: 20.6.2008
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2008-1.5:
+================================================================================
+
+Basiert auf 1.44
+
+AllgConst:
+- typt TImpFeld gelöscht, dafür TColtype benutzt
+  extra TColType für Schleifen als letzte Spalte: spExpKein
+- MruImpFeldArr dynamisches array of TMruImpFeldRec, nur gültige Feldnamen
+
+AllgFunc:
+- TriaMessage: Showmessage benutzen wenn Application.MainForm=nil. Ist der Fall,
+  wenn Tria.chm nicht existiert (wenn Tria.exe ohne .chm in Verzeichnis kopiert wird) 
+- UhrZeitWert100 Fehlerprüfung erweitert
+
+AllgComp:
+- TTriaMaskEdit.Change: Blanks auch in der  Mitte aut. löschen
+
+MannsObj:
+- TMannschObj.BerechneSeriePunkte korrigiert für Liga: Msch unabhängig von
+  Teilnahme immer für Liga gewertet.
+- MschEinlesen: nicht einlesen für Männer-Klasse wenn Tln.Sex=cnKeinSex
+
+TlnObj:
+- TlnObj.Load korrigiert: Name2,3,4Coll.Add(nil) vor 2007-1.2
+- Load/Store: Sex als Integer statt als Option speichern, damit auch cnKeinSex möglich
+- SerieWertung: keine Männer-Wertung wenn cnKeinSex
+- ReportSortieren,ReportTlnListe.Add: FSortAkWrtg pro Tln anpassen, damit korrekte
+  Serienpunkte benutzt werden. (Fehlerkorrektur Marti)
+
+DatExp:
+- Korrektur ExcelTabelZeile: auch bei Excel-Export wird in sp(Msch)TlnEndzeit
+  kein Blank angehängt
+  TextColData für Excel und Text benutzt
+- neu GetFeldData für ltMldLstTlnExp, sonst GetColData
+
+TriaConfig:
+- MruImportFeldnamenListe dynamisch, nur gültige Feldnamen  
+
+ImpFrm:
+- WeiterButtonClick: Gütigkeit JgEdit für Wettk.Datum prüfen
+
+AusgDlg:
+- Drucker aus uses entfernt
+
+ImpDlg:
+- TImpFeld durch TColType ersetzt
+- FeldZuordArr entfernen, ersetzt durch ImpFeldArr.Spalte
+- bei Uhrzeiten immer Dec und Sek-Format akzeptieren
+
+LstFmt:
+- spAk bei TlnStaffel Geschlecht als M oder W angeben
+- GetColdata: Data für ltMldLstTlnExp entfernr
+
+TlnErg:
+- SetRngTag:
+  keine Männer-wertung, wenn Geschlecht nicht definiert ist
+  Damit mixed-Staffel nur in der Gesamtwertung, wenn kein Geschlecht definier wird.
+  Über Sonderwertung ist dann eine eigene mixed-wertung möglich.
+
+KlassenDlg:
+ - bei TlnStaffel auch Männer/Frauen erlauben: SetTab1Daten geändert
+
+WettkObj:
+- JgLang nur 2-stellige Zahlen hochrechnen ??
+ - bei TlnStaffel: GetTlnKlasse : bei Alt/SondKlasse: AkUnbekannt
+
+TlnDlg:
+- SexCB: immer KeinSex erlauben, für alle WkArten.
+- JgUpDown.Min/Max nicht begrenzen. Wert(JgEdit) als Position übernehmen,
+  umrechnen erst bei Änderung
+
+--------------------------------------------------------------------------------
+Released: 26.6.2008
+--------------------------------------------------------------------------------
+
+
+
+################################################################################
+2008-1.6:
+================================================================================
+
+MannsObj,TlnObj:
+- BerechneSeriePunkte korrigiert
+  Zeile RngBuffColl.SortList.Add(RngBuffColl.PItems[i]); fehlte
+
+- SortString korrigiert für Serienwertung: SerPktSort,GetSerOrtRng => 5-stellig
+  TlnObj: smTlnSerErgMschName korrigiert
+
+ZtEinlDlg,AllgConst:
+- fzDAG für DAG-System ergänzt
+- fzTriaZeitHundert, fzZerfHundert ergänzt
+
+--------------------------------------------------------------------------------
+Released: 15.7.2008
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2008-1.7:
+================================================================================
+
+TriaMain:
+- Fehler: TlnSchwBhnActionExecute mit stEingeteilt statt stSerEndWertung. Hatte
+  keine wirkung, weil stGemeldet als default gesetzt wurde 
+
+TlnObj:
+  Fehler: FSerieWertung, FSerieEndwertung pro KlassenWertung definiert, statt
+  nur für AkAlle. Wenn nicht alle gewertete Tln Serienpunkte erhalten, kann Tln
+  bei akAlle ohne Punkte und z.B. bei Männer Punkte bekommen.
+  Fehler: StreichErgLoeschen korrigiert
+
+MannsObj:
+  Fehler: StreichErgLoeschen korrigiert
+
+--------------------------------------------------------------------------------
+Released: 31.7.2008
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2008-2.0:
+================================================================================
+
+AllgConst,WettkDlg,TlnDlg,........
+- neues Dateiformat für Rundenkontrolle
+- 1-9.999 Runden pro Abschnitt definierbar
+- Rundenkontrolliste, geeignet für 24h-Lauf - ltKtLstRunden
+
+VeranObj:
+- Load/Store am Datei-Ende: Funktionen in einzelene Objecten verlegt, weil sich
+  Dateiformat sowieso ändert.
+
+SerWrtgDlg:
+- PktIncrEdit/UpDown disabeln und in Grid als '-' darstellen, wenn RngVon=RngMin
+- bei Incr-Change Grid-PktBis-Spalte updaten
+- Pkt-Reihenfolge in ListeOk prüfen
+- smTlnSerErgMschName: auch abhängig vonFSeriewertung und PunktGleichOrtIndx
+
+TriaConfig:
+- SpeichereKonfiguration: Exit wenn Veranstaltung=nil (Fehler bei 2x Close)
+- ZtErfDateiFormat in Ini-Datei gespeichert
+- HauptFenster.Position := poDesigned, wenn Ini verfügbar, sonst Ini-Werte ignoriert
+  Wenn kein Ini-File bleibt poDeskTopCenter, damit Position immer definiert ist
+
+TlnObj:
+- a.K.-Wertungen pro Ort definieren. Wenn a.K. dann wird Ort für die Serie nicht
+  gewertet
+- disq-Bezeichnung pro Tln und pro Ort definieren.
+  DisqGrund und DisqBezeichnung in Destroy löschen
+
+TriaConfig,AllgConst:
+- ZtErfDateiFormat in Ini-Datei gespeichert
+
+AllgConst, AllgFunc, OptDlg, ....
+- neues Zeitformat Hundertstel: TZeitFormat = zfSek,zfZehntel,zfHundertstel
+- var DecZeiten ersetzt durch ZeitFormat
+- Option AutoSpeichern eingeführt
+
+AusgDlg:
+- Fehlerkorr.: bei Drucken aus preview wurden Daten (Seiten/Exemplare) nicht übernommen
+  in OkButtonClick wird DatenUebernahme jetzt immer aufgerufen, Übernahme nur für
+  Druckbereich und Exemplare
+- Default AkNewPageCB.Checked false statt true
+
+RaveUnit:
+- ltKtLstUhrZeit4 ergänzt
+
+KlassenDlg:
+- für MschWk MschWertung nur für Alle Tln: keine Tabs für Geschlecht und Altersklassen
+  TlnWertung auch für Altersklassen (nur für Darstellung in MschWertung-Detailliert) 
+
+LstFrm:
+- TriaGridClick,TriaGridDblClick,TriaGridDrawCell: Exit wenn StopPaint. Sonst
+  führt Click während DateiSchliessen zur Exception
+  
+ZtEinlDlg:
+- GiS DoppelEinträge mit Zeitdiff. < 60 sek gefiltert
+
+ZtLoeschDlg:
+- ZtErfLoeschen: StopPaint gesetzt während löschen
+
+ZtEinlDlg,ZtloeschDlg,ZtEinlRep:
+- gleichzeitiges Einlesen von verschiedenen Abschnittszeiten aus einer Datei
+  auch beliebige Mischung in verschiedene Dateien
+- DAG-System: min. Zeilenlänge von 40 nach 20. Bei manchen systeme fehlen die
+  führende Nullen (Rost)
+
+TlnDlg,TlnObj,MannsObj,.....
+- ZeitGutschrift eingeführt
+- TTlnDialog.SnrFrei: bei Snr=0 immer true
+- SnrEdit - ClearText entfernt, keine Prüfung auf Doppelte Snr bei Snr=0 
+
+ImpDlg,AllgFunc:
+- bei Uhrzeiten (UhrZeitWert) nur Decimalen entsprechend Option ZeitFormat zulassen um
+  Ungleichheiten in TlnDlg zu vermeiden
+- bei StrafZeit und Gutschrift (MinZeitWert) Stunden=0 und Decimalen=0 zulassen
+  ensprechend Option ZeitFormat
+
+Export:
+- für Excel und Text ExpZeitStr statt EffZeitStr in Uhrzeitformat
+  bei StrafZeit und Gutschrift Uhrzeit ohne Dec.
+  ListMode lmExport eingeführt
+  GetFeldData entfernt
+- MschWettk:  bei spMschEndZeit spMschStrafzeit/spMschGutschrift ergänzt
+
+TlnObj:
+- EndZeitNetto statt EndZeitOStrf
+- EndZeit statt EndZeitMStrf : EndZeitNetto + Strafe - Gutschrift
+
+IdleProc:
+- anTlnUhrZeit,anTlnRndKntrl: beide nach Excel und Text exportierbar
+
+--------------------------------------------------------------------------------
+Released: 10.10.2008
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2008-2.1:
+================================================================================
+
+Fehler beim AutoSpeichern korrigiert
+TriaMain,
+
+ZeitFilter prüfen auch für bereits eingelesene Zeiten
+
+--------------------------------------------------------------------------------
+Released: 18.10.2008
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2008-2.2:
+================================================================================
+
+AllgConst,TriaMain,DateiDlg:
+- ZeitAktGespeichert ===> ZeitDatGespeichert
+
+AllgFunc:
+- ValidDatum entfernt, function DatumWert geändert, Prüfung mit ValidateEdit
+- TryStrToInt durch neue function TryDecStrToInt ersetzt
+
+AllgComp:
+- TTriaGrid abgeleitet von TCustomDrawGrid statt TDrawGrid
+  Nicht benutzte properties entfernt
+- TTriaCustomMaskEdit neu als Basis für alle MaskEdits
+- ValidateEdit als fuction statt procedure, zu verwenden in allen Dlg in EigabeOk,
+  (weil Validate bei Enter nicht automatisch ausgeführt wird)
+- FOrgText, AendereText, GetText, SetText neu, damit in ValidateEdit
+  auch Änderungen erkannt werden, die in Change durchgeführt werden
+- MessageBeep in ValidateError entfernt
+- LeerValid entfernt (wird nur bei Liga MschGrAnm/Start benutzt)
+- ClearText enfernt
+- TZeitEdit.FLeerZulassen entfernt, immer zulassen (true in Tria, false in TriaZeit)
+
+WettkDlg:
+- DatumEdit - Font in Courier New geändert, Mask = !90/00/0000;1;_
+  Prüfung mit ValidateEdit, zusätzöiche Prüfung auf Tag > 0
+- LeerValid für MschGrAnm/Start entfernt (wird nur bei Liga benutzt)
+
+TlnObj:
+- Fehler bei Rundenzeiten korrigiert (Roessgen):
+  Bei Ändern von Wettk in TlnDlg wurde RundeColl der Tln nicht an neue Rundenzahl
+  angepasst
+  TlnObj.SetWettk: UpdateRundenZahl ergänzt
+  TlnObj.Load RundenzeitColl im Fehlerfall angepasst
+- SetOrtStrtBahn: Korrektur: StartZeiten neu berechnen wenn StBahnAlt=0 (Wert VOR Änderung) 
+
+OptDlg,TriaConfig,UpdateDlg,AllgConst:
+- Automatische Update-Prüfung als neue Option (max 1x täglich)
+
+
+--------------------------------------------------------------------------------
+Released: 19.01.2009
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2009 - 1.0:
+================================================================================
+
+TriaMain:
+- FormCloseQuery true nach SetupGestartet, sonst nach AutoUpdate nicht
+  geschlossen, weil BeendenAction disabled ist
+- TriDatSpeichernActionExecute, ...: Abfrage SMldFrame.Schliessen nu bei
+  FAnsicht=anAnmSammel (war in 2.2 vesehentlich gelöscht). Damit beim Speichern
+  keine Umschaltung mehr nach anEinzelAnm
+- Progressbar-Anzeige für Vista über Pos.-Änderung statt Warteschleife
+- Konflikt zwischen MenüCommands und Timer-Tick gelöst über ProgressBar und
+  Disable-Menücommands
+
+AllgConst,AnsFrm,TriaMain,TlnObj:
+- stGestartet in stUhrzeitVorhanden umbenannt (anTlnUhrZeit)
+- stAbs1Zeit,stAbs2Zeit,stAbs3Zeit,stAbs4Zeit neu für mindestens eine Uhrzeit (SBhn egal, anTlnRndKntrl)
+- stAbs1Start,stAbs2Start,stAbs3Start,stAbs4Start neu für mindestens eine gültige Uhrzeit (SBhn gültig)
+- Tln bei unvollständiger Rundenzahl in Ergliste aufgenommen.
+  Nach Rundenzahl und Zeit sortiert. EndRndZeit statt EndZeit, auch unvollständige
+  Zeiten angezeigt. Rundenzahl aber nicht angezeigt, braucht neue Spalte
+
+SGrpObj,TlnObj:
+- TlnGestartet: stAbs1Start statt stAbs1Ziel (nur bei Rundenzahl>1 unterschiedlich)
+
+TlnObj:
+- TlnInStatus: stAbs1..7Ziel,stImZiel wenn StoppZeit gültig, nicht Abs, weil
+  bei setzen MschZeiten/MschStaffel TlnStartzeiten noch nicht alle gültig sind 
+- SetStrtZeit: Korrektur bei waMschTeam:
+
+TlnDlg:
+- TTlnDialog.UpdateZeiten - Fehlerkorrektur:
+  ZeitEdit bei geänderter Sortierung als Folge von Startzeit-Änderung anpassen 
+- InitSondWertgTS korrigiert: Label disabeln bei Staffel
+
+AllgConst, .....
+- auf 8 Abschn. erweitert
+- MruListe max 8 statt 4
+- Großbuchstaben als Ext. zulassen
+
+AllgConst,WettkObj,WettkDlg:
+- MschGrWrtg max 8 bei MschStaffel, weil AbsArr für Zeiten benutzt wird
+- Fehler korrigiert: Berechnung bei MschStaffel war nicht Ok, weil TlnStartzeit
+  benutzt wurde, bevor diese definiert war
+
+OptDlg:
+- Sex Voreinstellen: wenn disabled, SexCB.Indx := -1 (CB leer)
+- neue Option: überlappende Snr-Bereiche zulassen
+
+ImpFrm:
+- ImportiereTln: Fehlerkorrektur: bei Import mit Erg wurde SGrp nicht übernommen
+
+VeranObj:
+- Store: Fehlerkorrektur: DisqGrundColl wurde 2. mal gespeichert.
+  Dadurch Zeitformat nach Load immer auf Sek.
+
+TlnErg,TlnDlg,AnsFrm,KlassenDlg:
+- Für TlnStaffel auch alter erlauben und damit Allers- und SonderKlassenwertungen
+
+LstFrm:
+- auch mit Eingabe-Taste Tln-Bearbeiten, wie DoppelKlick
+- StandardColBreite spMschTln0..spMschTln7 gleich für Tln/MschStaffel und
+  breiter für Tln > 4
+
+AllgFunc:
+- GetSpecialFolder als neue Funktion
+
+DateiDlg:
+- TridatNeu - GetSpecialFolder(CSIDL_DESKTOPDIRECTORY), statt Programmdir, nur wenn
+              vorher keine Datei geladen war
+  TridatNeu - SetCurrentDirectory ergänzt
+
+ZtEinl,ZtLoeschen, ZtFmtDlg(neu):
+- Abschn.1 nicht mehr voreingestellt, damit nicht versehentlich mit gewählt wird
+- FormatAuswahl über Datei
+- Dateiname im Dialog
+- Report mit Zahl der ausgefilterte Doppeleintr. ergänzt.
+- Fehler ZeitVorhanden, DoppelItems wurde ausgefiltert: korrigiert
+- Neu: Live Zeiterfassung
+
+UpdateDlg:
+- Progressbar-Anzeige für Vista über Pos.-Änderung statt Warteschleife
+
+MannsObj:
+- MschZeiten auch definieren wenn nicht komplett gewertet, für Anzeige bei
+  Live Zeiterfassung (Status imZiel)
+- Korrektur: SetzeMschAbsZeit: stAbs1UhrZeit statt stAbs1Ziel weil nur Stoppzeiten
+  benutzt werden können. Tln-Abszeiten werden später nach SetStrtZeit erst gültig
+
+SGRpDlg:
+- Prüfung: Startmodi müssen für alle Startgruppen eines Wettkampfes gleich sein  
+
+--------------------------------------------------------------------------------
+Released: 28.04.2009
+--------------------------------------------------------------------------------
+
+2009 - 1.1:
+TlnDlg: Exception bei SGrp=nil
+================================================================================
+
+2009 - 1.2:
+- ImportDialog.InitImpFeldArr: Exception
+  Zeile ergänzt: if Col in [spAbs1UhrZeit..spAbs8UhrZeit] then
+TriaMain.ImportActionExecute: Exception
+  ImportDialog in ImpFrame umbenannt
+
+================================================================================
+
+--------------------------------------------------------------------------------
+Released: 28.04.2009
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2009 - 1.3:
+================================================================================
+
+AllgConst, OptDlg, TriaMain, TriaConfig:
+- Fehler in OptDlg korrigiert, AutoSpeichernInterval konsequent in mSek;
+  Angezeigt in OptDlg und in Ini-Datei in Min
+
+TriaMain:
+- ProgressBarInit,StatusBarClear - Korrektur: Cursor setzen vor SetzeCommands
+- BeendenActionExecute: MenueCommandActive auch hier setzen
+- CommandHeader in TriaMain statt IdleProc und geändert:
+  MenueCommandActive, StatusBarClear und Berechnen hier aufnehmen
+
+IdleProc:
+- AnsichtMenueCommands: korrektur: TlnRndKntrlAction.Enabled/Disabled ergänzt
+
+AnsFrame:
+- InitAnsichtListe: Korrektur: TlnRndKntrlAction.Checked:= false; ergänzt
+
+LstFmt:
+- GetTitel3 bei Männer/Frauen Name Wettk-abhängig definieren
+- GetColData: Korrektur: spStaffelVName2..spStaffelVName8 ergänzt (wurden nicht exportiert)
+
+ImpDlg:
+- InitImpFeldArr: Korrektur in StaffelNameGueltig (StaffelVNamen nicht importierbar) 
+
+WettkDlg,TlnObj,....
+- neue wertungsart: Rundenrennen
+
+================================================================================
+--------------------------------------------------------------------------------
+Vorab-Version 1.2a an Marti: 7.05.2009
+--------------------------------------------------------------------------------
+
+SGrpObj:
+- StartModeVorgegeben: Korrektur: Basis SG.WkOrtIndex statt Vst.OrtIndex
+
+SerienDr:
+- SerienDruckTlnEtiketten: Jg ergänzt
+- Urkunden: Einheit Std./Min./Sek. ergaänzt
+
+SGrpDlg:
+- EingabeOk: ModiUebernehmen auch für SGAktuell und ClearTlnStZeit ergänzt,
+  ErgModified,TriDateModified gesetzt
+
+TlnObj:
+- TTlnColl.ClearIndex: SetOrtStaffelVorg nicht benutzen wegen Sortierung
+
+TlnDlg:
+- TlnFirst,TlnLast korrigiert: wenn Tln aus Liste verschwindet, wird ItemIndex
+  in TlnAender = 0. Deshalb kein Exit bei ItemIndex=0, weil sonst Dialog nicht
+  mit neuer Tln initialisiert wird    
+- TlnEntfernen: neuer Index korrigiert, gleiche Zeile auch bei neu-sortieren
+- in ZeitEdits wird letzte gestoppte Rundenzeit angezeigt statt Zeit der letzten Runde
+  zusätzliche Edits pro Abschnitt für Rundenzahl
+  ErgEdit und EndZeit zeigen Zeit bei RndRennen auch bei unvollständiger Rundenzahl
+
+================================================================================
+
+--------------------------------------------------------------------------------
+Released: 15.5.2009
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2009 - 1.4:
+================================================================================
+ImpDlg:
+- ImportDialog.GetSGrp korrigiert: SGrpColl statt SortColl, weil sonst nicht immer
+  alle wettk enthalten sind.
+================================================================================
+
+--------------------------------------------------------------------------------
+Released: 21.5.2009
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2009 - 1.5:
+================================================================================
+
+MannsObj:
+- Fehler in MannschWkWertung korrigiert: SetAbsZeit entfernt, da sonst keine
+  Wertung
+================================================================================
+
+--------------------------------------------------------------------------------
+Released: 6.6.2009
+--------------------------------------------------------------------------------
+
+################################################################################
+2009 - 1.6a:
+================================================================================
+
+TlnDlg:
+- VereinCB ersetzt durch LookupEdit/GRid/Btn
+- Verein bei Neuanmeldung := nil statt Verein voriger Tln,
+  MschNamePtrAktuell entfernt
+- KeinJg-, KeinSexAkzeptiertAll eingführt für alle Tln
+
+ZtEinlDlg,ZtFmtDlg:
+- Zeitnahme für Mandigo-Systeme: (Rost)
+  Dateiformat - getdata_out24.txt:
+  000001 00:00:06.9 S0000014L0000001
+  000002 00:00:07.0 S0000065L0000001
+  000003 00:00:09.4 S0000039L0000001
+  ..
+  000703
+  -------hh:mm:ss.d-----NNNN--------
+
+- Bei LiveZeitErfassung optional letzter Tln fokussieren
+================================================================================
+
+--------------------------------------------------------------------------------
+Geschickt an Rost: 8.10.2009
+--------------------------------------------------------------------------------
+
+################################################################################
+2010 - 1.0:
+================================================================================
+
+Allgemein:
+- Initialisiert in Dialoge entfernt, FormShow statt FormActivate benutzt für
+  Fokussierung
+  var HelpDateiVerfuegbar eingeführt, Helpbuttons disabled, wenn Datei nicht
+  vorhanden ist
+- bei Liga Einzel- Tages- und Serienwertung pro Wettkampf
+- WettkAlle durch WettkAlleDummy ersetzt. Wird nicht mehr gespeichert, weil nicht
+  mehr für Liga benötigt
+
+AllgObj:
+- TVersion JrNr ergänzt, damit Version als 10.1.0 angezeiigt wird statt 2010-1.0  
+
+CmdProc ersetzt IdleProc:
+- IdleHandler entfernt, Funktion in IdleEventHandler
+- Reset ActiveCtrl ergänzt
+
+ZtEinlDlg:
+- bei LiveErfDlg nicht abbrechen wenn Datei leer ist
+
+TriaMain
+- FormCreate und FormDestroy entfernt, Funktion in Create/Destroy übernommen
+- SpeichereKonfiguration und TriDatSchliessen(100) in Destroy,  nicht in FormClose,
+  weil danach Berechnung noch weitergeht ==> Exception bei Abbruch
+- In TriaMain.IdleEventHandler nur Refresh bei DialogNeu um SelectAll in SuchDlg
+  zu ermöglichen
+- wenn HelpDateiVerfuegbar=false Hilfe Buttons auf SMldFrm und ImpFrm disabeln.
+  Geht nicht in Frm, weil die vorher in inherited Create erstellt werden
+
+WettkObj:
+- neue Funktion: TlnOrtSerWertung
+- neu: StreichOrt (für MindestWettkämpfe)
+- StreichErg,StreichOrt,PflichtWhMode,PflichtWkOrt1/2,PubktGleichOrt für Msch
+  und Tln getrennt
+- GetCupPkt: nicht gewertet erhält bei Incr 1 mehr als letzter Platz
+- LigaKuerzel entfernt
+- WettkAlle entfernt, durch WettkAlleDummy ersetzt
+
+TlnObj:
+- in TTlnColl.SortString Label Ende entfernt
+- BerechneSeriePunkte korrigiert: TlnOrtSerWertung(i) pro Ort statt für OrtAktuell
+- für StreichOrt angepasst
+- SerRngToPkt: einheitlich für Cup und Liga, basiert auf Wettk.TlnCupPkt
+- GetPktSerStr: wenn TlnImZiel, dann Pkt auch anzeigen wenn nicht gewertet
+- SerPktSort für Liga und Cup einheitlich
+- EinteilungLoeschen: nur Einteilungsdaten löschen, alles andere unverändert lassen
+
+MannsObj:
+- BerechneSeriePunkte für StreichOrt angepasst
+- SerRngToPkt: einheitlich für Cup und Liga, basiert auf Wettk.MschCupPkt
+- GetPktSerStr: wenn TlnImZiel, dann Pkt auch anzeigen wenn nicht gewertet
+- MschEinlesen: Wettk.MschCupWrtgPktColl neu berechnen für Liga
+
+AnsFrm:
+- AppendStatus(stGemeldet) für anMschErgSerie und anTlnErgSerie
+- AppendAnsicht(anTlnErgSerie) auch für Liga
+- InitAnsichtListe Fehler: AppendAnsicht(anTlnSchwDist) abhängig von WettkAlleDummy
+  statt SortWettk, weil diese sich später ändern kann. Bei Änderung InitAnsichtListe
+  neu ist keine Alternative, weil hier wieder Impact auf wettkListe
+- AppendSortMode(smTlnSBhn) für anAnmEinzel,AnmSammel,TlnStart, wenn SBhn vorhanden
+
+DateiDlg:
+- Speichern: Warnung das Dateisicherung bei Extension .~tri nicht geht
+
+AllgConst, etc...
+- Mandigo-Format auskommentiert
+- ListTypes für ErgLstLiga entfernt
+- spLiga,LigaRng entfernt
+
+SerWrtgDlg:
+- alle Einstellugen getrennt für Tln u. Msch
+- StreichOrte/MindestWettk als neue Option
+- neue Button: Änderungen Übernehmen für alle Wettk
+- Tln Liga frei definierbar wie Cup, nur Liga-Msch voreingestellt
+- bei NeuEingabe nicht automatisch löschen, nur NeuEingabe zurücksetzen
+- Neu sperren, wenn RngBis in letzter Eintrag 9.999
+- Löschen sperren für 1. Eintrag in Liste
+- WrtgPktRecChange: PktIncr nicht löschen, bringt Fehler bei Änderung
+
+KlassenDlg:
+- auch bei Liga TlnKlassen pro Wettk, statt für WettkAlle definieren
+
+ListFmt:
+- ListTypes für ErgLstLiga entfernt
+- spLiga,LigaRng entfernt
+
+TlnDlg:
+- Korrektur: in EingabeOK bei Snr-Prüfung GetWettk benutzt statt Hauptfenster.SortWettk
+- Tages-Serienwertung mit Punkte ergänzt, Anzeige auch für Liga
+- Blanks in Name, VName automatisch entfernen
+- Warnung bei Einteilung mit Snr ohne SBhn
+
+SMldFrm:
+- Blanks in Name,VName automatisch entfernen
+
+SerienDr:
+- Bei Urkunden Msch Tln-Endzeiten ergänzt
+
+SuchDlg, ErsetzDlg:
+- SelectAll, wenn Liste nicht leer ist und letzter Suchbegriff angezeigt wird. Kann
+  damit gleich überschrieben werden.
+  Dazu in TriaMain.IdleEventHandler nur Refresh bei DialogNeu.
+
+SGrpObj:
+- TSGrpColl.SortString nach Startzeit statt Name sortiert
+
+UpdateDlg:
+- angepasst weil ProgName jetzt ohne Jahrzahl.
+
+ImpDlg:
+- HelpContext korrigiert
+  Excel:
+  Fehler beim Öffnen korrigiert, wenn parallel Excel bereits geöffnet.
+  Excel: Open und Close als neue Routinen. Korrektur bei Exceptions: Meldungen unterdruckt.
+  FLCID über Funktion statt Konstante: Werte unterschiedlich.
+
+VeranObj:
+- in Load Exception abfangen (try except)
+
+Scrollfehler in Grids:
+  wenn ein Item geändert wird und anschliessend per Maus den Scrollbar bedient wird,
+  erscheint Meldung: Daten geändert....
+  Wenn Fenster steht, wird aber weitergescrolled. Wenn anschließend den Scrollbutton
+  geklicked wird, wird teil vom grid grau. Ursache nicht gefunden, Scrollbarstatus
+  irgendwie inkonsistent.
+  Fehler beseitigt indem Scrollbars := ssNone gesetzt wird bevor Fenster geöffnet wird.
+  Dann wird weiteres scrollen verhindert und auch der folgefehler.
+- Korrigiert in: VstOrtDlg, SGrpDlg, SerWrtgDlg, KlassenDlg, WettkDlg, SMLdFrm
+
+EinteilenDlg
+- NEU: automatische Einteilung und Löschung
+
+ZtEinl:
+- Fehler beim Einlesen von fzZerf: zfSek-Prüfung falsch >14 statt bisher <14 
+- bei Zeit-Formatprüfung auch ungültige Werte (-1) zulassen, nur Format prüfen
+  Damit kein Abbruch bei Leerstring ('  :  :  .  '), wegen Fehler in triaZeit 
+
+--------------------------------------------------------------------------------
+19.03.2010: Released
+--------------------------------------------------------------------------------
+
+################################################################################
+2010 - 1.1:
+================================================================================
+
+UpdateDlg:
+
+- Korrektur in PadFileLesen: mit ProgVersion.JrNr statt Nr vergeleichen
+
+--------------------------------------------------------------------------------
+28.03.2010: Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2010 - 1.2:
+================================================================================
+
+WettkObj:
+- SexSortMode korrigiert, bei MannschWertung EinzelWettk <> liga Männer/Frauen
+  wieder einfügen, Fehler in 10.1.0
+
+TlnObj:
+- SetStrtZeit korrigiert: Fehler bei Jagdstart für Abs > 2. Bei Berechnung
+  von Startzeit wurde nur letzter Abs berücksichtigt, statt Summe aller Abs.
+
+--------------------------------------------------------------------------------
+14.04.2010: Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2010 - 1.3:
+================================================================================
+
+TriaConfig:
+- procedure LadeKonfiguration: Exit nach Hauptfenster.Close, damit Datei nicht
+  mehr geladen wird
+
+TriaMain:
+- FormClose: InitProgressbar nur wenn Veranstaltung <> nil, sonst Exception beim
+  autom. Update und Tria-Fenster bleibt offen
+
+WettkObj:
+- GetOrtDatum korrigiert für WettkAlleDummy: Datum des 1. Wettk
+- GetOrtMschGrWrtg, OrtSchwimmdistanz,GetOrtStartbahnen,OrtAbschnZahl,
+  GetOrtAbschnName, GetOrtTlnTxt,GetOrtAbschnRunden:
+  Wert für WettkAlleDummy nur berechnen wenn FVPtr=Veranstaltung und <> nil
+
+--------------------------------------------------------------------------------
+20.04.2010: Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2010 - 1.4:
+================================================================================
+
+SGrpDlg:
+- in EingabeOk, SGrpAendern WettkAlleBuff.OrtErgModified durch Schleife über
+  alle Wettk ersetzt, weil Funktion in WettkObj nicht für WettkAlleBuff funktioniert
+  Korrektur weil Ergebnisse nach Änderung nicht neu berechnet wurden
+
+TlnObj:
+- Load: Count von ZeitColl gleich Rundenzahl setzen wenn Version < 10.1.4,
+  weil noch Fehler in alten Dateien vorkommen können (Marti)
+
+AllgConst,ImpDlg,DatExp:
+- ltTlnImport/lmImport eingeführt
+- ltMldLstTlnExp mit Startzeit erweitert (nur Export, kein Import)  
+
+--------------------------------------------------------------------------------
+21.05.2010: Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2010 - 1.5:
+================================================================================
+
+ZtEinlDlg,ZtFmtDlg, AllgConst,TriaConfig:
+- Zeitnahme für Mandigo-Systeme: (Nagel,Rost)
+  Dateiformat - getdata_out24.txt:
+  000001 00:00:06.9 S0000014L0000001
+  000002 00:00:07.0 S0000065L0000001
+  000003 00:00:09.4 S0000039L0000001
+  ..
+  000703
+  -------hh:mm:ss.d-----NNNN--------
+
+TlnObj:
+- Load: Count von ZeitColl immer gleich Rundenzahl setzen, weil doch noch Fehler
+  in 10.1.4 Dateien vorkommen können (Nagel). Zur Sicherheit auch für neue Versionen.
+- SetTlnOrtDaten nur für akt. OrtIndex
+- TlnObj.UpdateRundenzahl OrtIndex als Parameter ergänzt
+- SetWettk Korrektur:
+  - UpdateRundenZahl für alle Orte, statt nur akt. Ort,
+  - für Abs>AbsZahl Zeiten löschen
+  - SondWrtg, TlnTex,StartBahnen an Wettk-Einstellung angepasst
+- TlnInOrtStatus korrigiert: WettkArt falsch ausgewertet bei waRndRennen
+    FWettk.OrtWettkArt[Indx] = waRndRennen statt FWettk.WettkArt = waRndRennen
+
+WettkObj:
+- SetWettkOrtDaten nur für akt. OrtIndx
+- SetAbschnRunden: nur für akt. OrtIndex Rundenzahl Updaten, SetOrtAbschnRunden entfällt,
+  kein Update beim Laden, nur benutzt in SetWettkOrtDaten,
+  keine StatusBar-Anzeige
+- SetOrtDatum und load Datum korrigiert: Trennzeichen immer '.' setzen
+
+--------------------------------------------------------------------------------
+03.06.2010: Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2010 - 1.5a:
+================================================================================
+
+WettkDlg:
+- EditMask TDatumEdit in WettkDlg geändert in Designer von:
+  '!90/00/0000;1;_' in '!90.00.0000;1;_'
+  Das Zeichen / dient dazu, in Datumsangaben Jahr, Monat und Tag voneinander zu trennen.
+  Wenn die Ländereinstellungen in der Systemsteuerung Ihres Rechners ein anderes
+  Trennzeichen vorsehen, wird dieses an Stelle von / verwendet.
+  In NL z.B. '-' statt '.'
+
+--------------------------------------------------------------------------------
+18.06.2010: Testversion an Versteeg
+--------------------------------------------------------------------------------
+
+################################################################################
+2010 - 1.5b:
+================================================================================
+
+TlnObj:
+- TlnObj.Load: Fehlerkorrektur: Rundenkorrektur für Ort-Rundenzahl statt für OrtIndex
+
+--------------------------------------------------------------------------------
+19.06.2010: Testversion an Nagel
+--------------------------------------------------------------------------------
+
+################################################################################
+2010 - 1.6:
+================================================================================
+
+Änderungen in 1.5a, 1.5b released
+
+--------------------------------------------------------------------------------
+28.06.2010: Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2010 - 1.7:
+================================================================================
+
+TlnObj:
+- SortString - function ErgStr korrigiert für RndRennen, damit Reihenfolge bei
+  ErgListen stimmt
+- TTlnObj.UpdateRundenZahl: für akltueller OrtIndex. War pro Ort, aber
+  falsch: Aktueller AbschnRunden verwendet statt Ort AbschnRunden
+  TriDatei.Modified um Korrekturen zu speichern
+- SetWettk: UpdateRundenZahl nur für akt. OrtIndex, früher für alle, aber falsch:
+  stets basierend auf AbschnZahl für akt. OrtIndex
+  Bei Änderung in WettkDlg müssen alle Orte geändert werden. Dies geschieht aber
+  generell in TlnErg
+- Load Korrektur Rundenzahl entfernt, geschieht jetzt in TlnErg.
+- TlnColl sicherheitshalber immer sortieren
+
+TlnErg:
+- UpdateRundenZahl für alle Orte ergänzt.
+
+SerienDr, Felder ergänzt:
+- SerienDrTlnEtiketten:  E-Mail, Startgeld
+- SerienFrSMldEtiketten: E-Mail
+- SerienDrTlnTageswertung: Strasse,HausNr,PlZ,Ort,EMail,Startgeld
+                           Abs1Zeit nur wenn mehr als 1 Abschn.
+                           Einheiten pro Absch.
+- SerienDrTlnSerienwertung: Strasse,HausNr,PlZ,Ort,EMail
+- SerienDruckMschWertungKompakt,
+  SerienDruckMschWertungDetail: Zeit-Einheiten pro Tln
+
+AllgFunc:
+- neue Funktion ZeitEinhStr
+
+SMldObj:
+- SMldTlnListe sicherheitshalber immer sortieren
+
+--------------------------------------------------------------------------------
+6.10.2010: Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2010 - 1.8:
+================================================================================
+
+TlnObj:
+- TNameCollArr of String statt TTextCollection:
+  TlnStaffel nicht bei Serie, deshalb Name,VName Ortsunabhängig
+  TlnColl sicherheitshalber immer sortieren, weil manchmal falsch sortiert,
+  siehe EMail vom 11.7.2010 von Oscar schneider. Ursache unklar
+
+VstOrtDlg:
+- VstAendern: bei vaEinzel WettkArt auf waTlnStaffel prüfen und ggf. auf waEinzel
+  setzten (bei Serien kein waTlnStaffel erlaubt)
+
+ImpFrm:
+- Fehler bei Import in Serie: Staffelname wurde vom Veranstaltung.Ortindex übernommen
+  statt vom EinlVeranst.OrtIndx.
+
+
+--------------------------------------------------------------------------------
+27.10.2010: Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2011 - 1.0:
+================================================================================
+
+Anpassung an Delphi XE (2011):
+
+Korrekturen für Delphi 2006 entfernt:
+- AllgConst, etc.: DialogNeu entfernt, Korrektur für Delphi XE nicht mehr benötigt
+- VistaFix: VistaAltFix, FileDialog-function entfernt
+- TriaMain: D6OnHelpFix, HideAppFormTaskBarButton,CreateParams,WMSyscommand,WMActivate entfernt
+
+DateiDlg:
+- FileOpenDialog1,FileSaveDialog1 für Vista ergänzt (Neu in Delphi XE (2011))
+- OpenFileDialog, SaveFileDialog angepasst
+
+AllgComp:
+- IstLeer: Character.IsDigit statt "in ['0'..'9']"
+- TTriaUpDown:
+  - Click korrigiert, weil Position bei Delphi XE vorher nicht mehr aktualisiert wird
+  - event ChangingEx statt CanChange benutzt, weil hier neuer Position verfügbar ist
+  - von TCustomUpDown statt TUpDown abgeleitet
+
+AllgFunc:
+- function Strg entfernt, ersetzt durch SysUtils.IntToStr
+- function RemTrailBlank, RemTrailNr, RemLeadZero entfernt, weil nicht benutzt
+- function AddLeadZero entfernt, dafür DatumStr neu
+- function AddLeadBlank entfernt, ersetzt durch Format('%'+IntToStr(L)+'s',[S])
+
+TlnDlg:
+- Kontexthilfe für Mannschaftsname wiederhergestellt
+
+Mannschaftswertung mit Option Platzaddition erweitert
+- AllgConst: TSortMode-neu:smMschPunkte, TWertungMode-neu:wgMschPktWrtg
+             TMschWrtgMode = (wmZeit,wmPlatz)
+- WettkDlg,WettkObj,TlnObj,TlnErg,MannsObj ergänzt
+
+KlassenDlg:
+- bei ListeAendern TlnAkModified auch wenn MschAltklassen geändert werden
+
+AllgObj, ...: Strings als AnsiString statt ShortString gespeichert
+- ReadStr, WriteStr von ShortString auf AnsiString umgestellt.
+  UniString nicht verwendet, weil mit 2 Bytes/Char Datei unnötig groß wird
+  Immer als Prozedur statt Bool-Funktion, mit Exception im Fehlerfall
+  Stream.Read und Stream.Write durch ReadBuffer und WriteBuffer ersetzt, Prozeduren
+  mit Exception im Fehlerfall.
+  Alle Load- und Store-Procs entsprechend umgestellt, Exception abgefangen keine
+  zusätzliche Fehlermeldung.
+
+--------------------------------------------------------------------------------
+15.03.2011: Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2011 - 1.1:
+================================================================================
+
+TlnObj:
+- in 2011-1.0 wurde Änderung in 10.1.8 nicht berücksichtigt:
+  Umstellung von StaffelNamen und -Vornamen von Ortsspezifisch auf Allgemein.
+  Änderung in Source 10.1.8 verloren gegangen.
+  Fehler beim Öffnen von Dateiversionen 10.1.8. Speichern nicht möglich.
+
+--------------------------------------------------------------------------------
+20.03.2011: Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2011 - 1.2:
+================================================================================
+
+
+Einführung Mannschaftswertung für DTU Schultour:
+  1. Platz = 4 Punkte
+  2. Platz = 3 Punkte
+  3. Platz = 2 Punkte
+  ab 4. Platz = 1 Punkt
+--------------------------------------------------------------------------------
+
+AllgConst:
+- TMschWrtgMode = (wmTlnZeit,wmTlnPlatz,wmSchultour) statt (wmZeit,wmPlatz)
+- smMschTlnZeit,smMschTlnPlatz,smMschSchultour statt smMschEndZeit,smMschPunkte
+
+LstFmt:
+- Überschriften:
+  - Startliste Schulklassen statt Startliste Mannschaften
+  - Klassenwertung statt Mannschaftswertung
+  - Ak statt Klasse
+
+MannsObj:
+- SortString erweitert mit smMschSchultour
+- EinzelWkWertung erweitert mit DTUSchultourPunkte für wmSchultour
+- SortmodeValid: TlnListe: bei Schultour alle Tln gewertet
+
+AnsFrm:
+- anMschErgKompakt nicht bei wmSchultour
+- smString: Text bei Msch-Ansichten anpassen an Spaltenüberschrift
+
+CmdProc:
+- ErgLstCompact bei Schultour disabeln
+
+AusgDlg:
+- bei AlleListenGleich auch Schultour berücksichtigen (für Wettk auf neue Seite)
+
+WettkDlg:
+- MschWrtgMode wmSchultour ergänzen
+- WettkArtAlt eingeführt um auf letzter WkArt zurückzuschalten statt auf WkAktuell
+
+WettkObj:
+- wmSchultour als MschWrtMode ergänzt
+
+History, InfoDlg:
+- cnReleaseJahr neu für InfoDlg, unabhängig von cnVersionsJahr
+
+TlnDlg:
+- Fehler in TlnGeaendert:
+  Default in StrToIntDef(StartgeldEdit.Text,0) und StrToIntDef(SnrEdit.Text,0)
+  von -1 in 0 geändert. Sonst Result immer true wenn keine Snr vergeben.
+- VereinLabel an Wettk.MschWrtgMode angepasst
+
+RaveUnit:
+- Param.MschSpalte statt 'Mannschaft' für alle Msch-Listen (wie bisher Tln-Listen)
+  Param für jeden Wettkampf einzeln setzen
+- Spaltenüberschrift Klasse durch Ak ersetzt
+
+VeranObj:
+- TlnMschSpalteUeberschrift ergänzt mit 'Schulklasse' für Tln-Ansicht
+- MschSpalteUeberschrift neu mit 'Mannschaft' oder 'Schulklasse' für Msch-Ansicht
+
+SerienDr:
+- SpaltenÜberschrift MschSpalte abhängig vom Wettkampf setzen
+
+TlnErg:
+- BerechneTagesRang: MschPktWrtg mit wmSchultour ergänzt
+
+--------------------------------------------------------------------------------
+21.12.2011: Source als 1.2 gespeichert
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2011 - 1.3:
+================================================================================
+
+RaveUnit:
+- Druckdatum als zusätzlicher parameter (Datum - Uhrzeit)
+- Druckdatum am Ende jeder Seite/Liste ergänzt für alle Listenarten
+
+--------------------------------------------------------------------------------
+8.1.2012: Source als 1.3 gespeichert
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2011 - 1.4:
+================================================================================
+
+TlnObj:
+- GetMschWrtg wieder eingeführt, siehe mail Sube
+
+SerWrtgDlg:
+- neuer Parameter AkJahr für Altersklassenberechnung (bisher fest Wettk.OrtJahr(0))
+  gleich für Tln und Msch, nur auf Tln-Tab änderbar
+
+WettkObj:
+- TlnAkModified durch KlasenModified ersetzt
+- in SetKlassenModified auch MannschModified und ErgModified für alle Orte gesetzt
+- in SetMannschModified auch ErgModified für alle Orte
+- neu: FSerWrtgJahr mit Get- und Set-Funktionen
+
+SerienDr:
+- SerienDruckTlnTagesWertung,SerienDruckTlnSerienWertung:
+  alle Wertungen immer mitgeben: WertgRng (1.Spalte),GesRng,SexRng,AkRng,SondKlRng
+  und zusätzlich Vorname und Nachname;
+
+ErsetzDlg:
+- in TextErsetzen TriDatei.Modified := true gesetzt;  (Fehlerkorrektur)
+
+--------------------------------------------------------------------------------
+3.2.2012: Source als 1.4 gespeichert
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2011 - 2.0:
+================================================================================
+
+TlnObj,ImpFrm:
+-  function AlleMschNamenErsetzenErlaubt und AlleMschNamenErsetzen eingeführt
+
+SuchenDlg:
+- neu, ersetzt SuchDlg und ErsetzDlg: Suchfunktion überarbeitet
+
+LstFrm, ...
+- StopPaint in GridInit unverändert, generell überarbeitet
+- HauptFenster.FocusedTln überarbeitet, war nicht immer gleich mit ItemIndex
+
+TTlnDialog:
+- UpdateMschWrtg MschWrtgCB immer gesetzt wenn vorher disabled war
+
+AllgObj:
+- in TriaSortColl-functions überall auf FSortItems<>nil überprüfen, weil
+  Abbruch in TTriaSortColl.GetSortCount (FSortItems=nil) aufgetreten beim
+  Wechsel der Tria-Datei
+
+--------------------------------------------------------------------------------
+16.03.2012: Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2011 - 2.1:
+================================================================================
+
+AllgConst, LstFmt, VstOrtDlg, RaveUnit:
+- Anzahl Veranstaltungsorte von 8 auf 20 erweitert. Listen in Querformat
+- seSerPktMax erweitert
+- Ansicht anTlnErgSerie spAk durch spAkRngSer ersetzt (Ak + AkRng)
+
+LstFrm:
+- StandardColBreite angepasst: Serpunkte: 6-stellig
+
+SGrpDlg:
+- ErgModified nur für aktueller Ort setzen
+
+TlnObj:
+- SetWettkErgModified immer nur für akt. Ortindex
+
+TlnDlg:
+- ControlAktuell := ActiveControl; gesetzt in SetPage, EingabeOk, InitDat, damit bei
+  TlnNext, tec. den Focus auch beim 1. Mal erhalten bleibt. EingabeEnter reicht nicht
+
+WettkObj:
+- FSerErgModified neu
+- GetSerWrtgJahr entfernt, Wert immer FSerWrtgJahr
+- SetOrtMschWrtgMode: Korrektur für Schultour: SetMannschModified(true) weil impact auf MschEinlesen
+- SetWettkAllgDaten mit SerWrtgJahr erweitert
+
+SerWrtgDlg:
+- SetAkJahr: Akt. Jahr in Liste aufnehmen, falls ausserhalb der Wettk.Ortjahre,
+  weil dies durch spätere Wettk-Datumänderung möglich ist
+
+WettkDlg:
+- WettkAendern: zuerst alle Optionen abfragen und bei Abbruch nichts ändern
+- WettkAendern: bei Datum-Änderung prüfen ob SerWrtgJahr im Bereich bleibt. Wenn
+  nicht ggf. ändern.
+
+CmndProc:
+- TeilnehmerMenueCommands: TlnEinteilenAction nur enabeln wenn SGrp'en vorhanden
+
+DatExp:
+- in ExportDateiHeader (HTML, EXCEL, Text) GetTitel3 entfernt, weil ExportReportType
+  noch nicht bekannt (Wettk-abhängig)
+
+SGrpDlg:
+- EingabeOK: keine Meldung wenn Name der SGrp fehlt
+
+AllgFunc:
+- TryDecStrToInt: Bedingung erweitert mit (Value >= 0), nur pos. Werte zulässig
+
+ZtEinlDlg:
+- bei Live-Zeiterfassung Zugriffs-Fehler erst nach 3. Mal melden
+
+--------------------------------------------------------------------------------
+29.04.2012: Released
+--------------------------------------------------------------------------------
+
+Beliebiges Textformat für Zeiten einlesen
+Arbeit abgebrochen, weil zu zeitaufwendig
+Vielleicht später nachholen
+
+--------------------------------------------------------------------------------
+27.4.2012: vorab gespeichert 11.2.1a
+--------------------------------------------------------------------------------
+
+################################################################################
+2011 - 2.2:
+================================================================================
+
+AllgFunc:
+- function AddLeadZero,RemLeadZero wieder eingeführt, weil benutzt für TriaZeit
+
+DateiDlg, VistaFix:
+- function SetzeVistaFilter von DateiDlg nach VistaFix, weil auch für TriaZeit benötigt
+
+RaveReports:
+- Seitenangabe mit Gesamtzahl auch für Portrait ergänzt:
+  'Seite ' & Report.RelativePage & '/' & Report.TotalPages
+  War nur für Landscape vorhanden
+
+AusgDlg:
+- Duplex-Einstellung wurde vorher nicht übernommen, immer Simplex
+  Deshalb in ReportDrucken:  IgnoreFileSettings := false;
+  ErstelleNDRDatei benutzt RpDev-Einstellungen, die in RpDev.PrinterSetupDialog
+  gesetzt werden.
+  Bei IgnoreFileSettings := true wurden RaveForm.RvRenderPrinter-Einstellungen
+  benutzt, die nicht in Dialog angepasst werden.
+- In RpDev.PrinterSetupDialog wird immer der Windows Defaultprinter selektiert.
+  Deshalb neue Funktionen GetDefaultDrucker und SetDefaultDrucker um beim
+  Dialog-Aufruf den DefaultPrinter an DruckerCB anzupassen. Danach DefaultPrinter
+  wieder zurücksetzen. RpDev.Device entspricht eingestellter Drucker.
+  Copies und Collate werden nicht automatisch von Drucker-Einstellungen
+  übernommen, deshalb getrennt aus AusgDlg übernehmen.
+- Druckerbezogene Teile im Layout gemeinsam im oberen Bereich, der Optik wegen
+- Vorschau-Button ergänzt (rmDrcken,rmPrevDrucken,rmPDFDatei)
+  ClearNDRDatei
+
+TriaMain:
+- Menüpunkt Druckereinstellungen entfernt. Nur im AusgabeDlg/Drucken vorhanden
+  Sonst über Windows (Geräte und Drucker)
+
+AnsFrm:
+- Startliste Tln nur pro Wettkampf. Bei Ausdruck über alle Wettk wird kein Wettk
+  gelistet und damit nicht sinnvoll.
+- InitAnsichtListe: Ansicht nur wenn gültig in Liste aufnehmen, in Menü sonst
+  disabeln. Bei WettkAlle nur wenn es für mindestens einen Wettk. eine gültige Liste gibt.
+  Gilt für anMschStart, anMschErgDetail, anMschErgKompakt, anMschErgSerie, anTlnSchwDist.
+  Wenn gewählte Ansicht für Wettk keine gültige Liste ist, wird gültiger Wettk
+  gewählt.
+- WettkampfCBChange:
+  Ansichtliste an WkNeu anpassen. Wenn aktuelle Ansicht für gewählter Wettk. keine
+  gültige Liste ist, wird gültige Ansicht gewählt. Dabei gibt es keine Rückwirkung
+  auf WettkListe, da Ansicht mit identischer WettkSortMode gewählt wird.
+  Deshalb auch bei anTlnStart WettkAlle gestrichen.
+
+CmdProc:
+- AnsichtMenueCommands: Enabeln der Ansichten korrigiert.
+
+
+--------------------------------------------------------------------------------
+09.07.2012: Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2011 - 2.3:
+================================================================================
+
+TriaMain:
+- CommandDataUpdate neu, benutzt in allen Commandfunktionen für AutoSpeichern und
+  Sofortberechnen. Zusätzlich jetzt auch LiveZeitErfRequest abgefragt
+- UhrzeitTimerTick - Wenn CommandActive, für AutoSpeichern und LiveZtErf nur
+  Request setzen, nicht durchführen.
+  Disabeln von Commands streichen, da Konflikt während Commandausführung (Cursor
+  als Sanduhr, evtl. Blockade?)
+  Annahme, dass Commands zwischen Abfrage CommandActive und Ausführung nicht
+  aktiviert werden können.
+
+ZtEinlDlg:
+- LiveZtErfDatEinlesen als Funktion, wird in CommandDataUpdate  abgefragt
+- TZtEinlDialog.OkButtonClick: DisableButtons eingeführt
+- TZEColl.Einlesen: auch bei WettkAlle getrennt nach Wettk runden um unnötige
+  Aufrundungen bei Zeitgleichheit zu vermeiden,
+  Progressbarmax korrigieren
+
+TlnObj:
+- TlnColl.ZeitenRunden: nur einzeln pro Wettk (WettkAlle ungültig)
+
+AllgFunc:
+- EuroWert korrigiert, damit auch ganze Zahlen beim Import akzeptiert werden
+
+AllgConst:
+- bei Import TTriDateiFormat durch TImpDateiFormat ersetzt
+- functions ImpExtFormat, ImpExtFilter ergänzt für DateiImport (.csv für Textdateien ergänzt)
+- cnKopfeilenMax=10 ergänzt
+
+ImpDlg:
+- ExcelSheetCB: Style von csDropDown in csDropDownList korrigiert: Eingabe führte zu Fehler!
+- ExcelSheetLaden: erste 10 Zeilen ignorieren, wenn nicht genügend Spalten
+  Damit kann exportierte Datei unverändert importiert werden
+- ImportiereDatei: TImpDateiFormat statt TTriDateiFormat (.csv für Textdateien ergänzt)
+- TextDateiLaden: bis zu cnKofzeilenMax (10) Kopfzeilen ignorieren, 10. oder
+  letzte Zeile als Basis für Spaltenzahl und Trennzeichen nehmen
+- ExcelSheetLaden: bis zu cnKofzeilenMax (10) Kopfzeilen ignorieren.
+  Import von exportierte Datei ohne Änderung möglich
+- InitFeldValueListEditor: Pflichtfelder immer Datenfelder zuordnen, damit auf jedenfall
+  Daten in Vorschau angezeigt werden.
+- in Form: TrennZeichenGB in RadioGroup geändert, weil sonst am
+  Anfang immer SemiKolonRB selektiert wird, auch wenn vorher ein anderes
+  Trennzeichen gesetzt wird. Setzen in FormShow-Event hilft nicht, Ursache nicht klar
+  SonstEdit auf RadioGroup platziert
+- Texterkennungszeichen ergänzt. Erkannt wenn am Anfang und Ende eines Feldes.
+  Doppelte Erkennungszeichen dazwischen werden als 1 Zeichen eingelesen.
+
+SerienDr:
+- SerienDruckTlnTagesWertung, SerienDruckTlnSerienWertung: Geschlecht ergänzt
+
+
+--------------------------------------------------------------------------------
+04.11.2012: 2011-2.3 Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2011 - 3.0:
+================================================================================
+
+AllgConst:
+- TListType ltErgLstTlnAbs1LAk, ltErgLstTlnAbs1LAkLnd,ltErgLstMschTlnRndL,
+            ltErgLstTlnRndLAkLnd,ltErgLstTlnRndLAk ergänzt für lange Ak-Kürzel
+- TColType spMschMixWrtg ergänzt, spCupWrtg in spSerWrtg umbenannt
+- TSex mit cnMixed (Index=2) erweitert
+- Sortmode smIncr,smDecr ergänzt für Seriewertung - StreichErgebnisse
+- Status: stSerGemeldet für Serienpunkte-Berechnung
+          stAbs1UhrZeit..stAbs8UhrZeit, stEndUhrZeit für SetzeMschAbsZeit,
+          unabhängig von Tln-StrtZeit, die erst später gesetzt werden
+- TDefaultAkListe = (alDTU,alDLV) für KlassenDlg
+- TSerPktMode = (spRngUpPkt,spRngUpEqPkt,spRngDwnPkt,spRngDwnEqPkt,spFlexPkt)
+- TVeranstArt = (vaEinzel,vaCup,vaLiga) entfernt, durch Serie-Boolean ersetzt
+- TImpOption = (ioTrue,ioFalse,ioFehler); bislang TSex für Options verwendet
+- opMschMixWrtg, iiSuchListe, iiErsatzListe,
+  SuchListe,ErsatzListe: Suchliste in Ini gespeichert
+
+AllgFunc:
+- TxtGleich, StrGleich:  SameTxt,SameStr statt Compare
+
+AllgObj:
+- TDatei.SetPath(const PathNeu:String); // Leerzeichen am Anfang+Ende vermeiden
+- TIntSortCollection.Compare: smIncr,smDecr unterscheiden
+
+AkObj:
+- neu: AkMixed mit Sex=cnMixed für Mixed-MschWrtg und Tln-Staffel
+- Default Klassen: DTU_M_AkListe, DTU_W_AkListe, DTU_M_SkListe, DTU_W_SkListe,
+  DLV_M_AkListe, DLV_W_AkListe, DLV_M_SkListe, DLV_W_SkListe: TAkColl;
+
+AnsFrm:
+- procedure SetzeMschKlasseKompakt, abhängig vom Wettk gültige Werte für Sex und Klasse
+- InitAnsichtListe abhängig von Sex und Klasse, wegen MschGr in anMschErgKompakt
+- stSerGemeldet statt stGemeldet bei Serienwertung
+- TAnsFrame.Create: DropDownCount generell auf 26, bis zur min. Unterkante vom
+  Hauptfenster. AnsichtCB war zu kurz.
+- Ansicht anAnmEinzel: smTlnName als erste und default-Sortierung, damit bei
+  Neu-Anmeldung nach vorhandenen Tln-Namen gesucht werden kann
+- KlasseListe mit AkMixed für Mannschaftsansicht ergänzt
+UpdateAkColBreite
+
+AusgDlg:
+- AkMixed für MschListen ergänzt und TlnStaffel
+- GleichesWkAkListenFormat: Format an MschErgKompakt abhängig von Klasse (MschGr)
+
+ImpDlg:
+- TImpOption statt TSex für Options verwenden
+- neue Funktion GetSexOption, GetSexStr...  wegen cnMixed bei TlnStaffel
+- neue Option für MschMixWrtg
+- Startzeit bei Einzelstart importieren (procedure SetzeStrtZeit)
+- TxtGleich benutzt um Leer- und Steuerzeichen am Anfang und Ende von
+  Name, VName, Vereín zu ignorieren
+- Tln.Sex korrigiert: cnKeinSex akzeptieren
+- Jg-Prüfung korrigiert, nur einmal warnen wenn Jg = ''
+- während Prüfung VorschauGrid.Row/Row nicht updaten, weil sehr langsam und unruhig
+
+KlassenDlg:
+- SetWkDaten: KuerzelEdit.MaxLength bei 1 Abschn auf 6 erweitert für DLV-Klassen
+- DTU und DLV Defaultlisten einstellbar
+- AkMixed zusätzlich zu AkAlle bei cnSexBeide
+
+ListFmt:
+- GetListType abhängig von MschGr in anMschErgKompakt und LangeAkKuerzel
+
+LstFrm:
+- StandardColBreite für Ak optional auf 6 Stellen erhöht.
+  Neue Funktionen AkColBreite und UpdateAkColBreite
+- Init: InitAnsicht mit smTlnName statt smTlnErstellt wegen Tln-Suche bei Neu-Anmeldung
+- neue Funktionen: UpdateMschTlnColBreite,
+  AkColBreite, ZeitColBreite(C:TColType), MschTlnColBreite(MschGr:Integer)
+
+MannsObj:
+- GetPktSerStr: '-' (Decr) oder (xx)(Incr) wenn nicht gewertet
+- in SetzeRng SerRngMax für Msch setzen
+- für MschName TxtGleich statt SameText benutzen, Leerzeichen ignorieren
+- BerechneSeriePunkte: StreichErg nach Punkte statt Rng sortiert streichen
+- ReportSortieren: AkListe hier berücksichtigen
+- MschWkWertung/EinzelWkWertung: Meldezahl Prüfung für Liga entfällt
+- MschWertung: zusätzlich für AkMixed
+- MschEinlesen: untersch. MschGr für Alle, Mixed, Männer, Frauen berücksichtigen
+  Prüfung Starterzahl für Liga entfällt
+
+RaveUnit:
+- ltErgLstMschTlnRnd in RaveDesigner korrigiert: Runden waren nicht in DataView
+- ltErgLstMschTlnRndL, ltErgLstTlnAbs1LAk,ltErgLstTlnAbs1LAkLnd,
+  ltErgLstTlnRndLAkLnd,ltErgLstTlnRndLAk   ergänzt für Lange Ak (DLV)
+- RvNDRWriterPrint: Liste auch getrennt nach Ak sortieren, weil bei MschErgKompakt
+  Format (MschGröße) Klassenabhängig
+
+SerienDr:
+- TlnEtiketten: Geschlecht, Ak und AkKürzel ergänzt
+- Tageswertung (Urk) AkKürzel ergänzt
+- AkMixed ergänzt
+
+SerWrtgDlg:
+- Pkt entsprechend und umgekehrt zur Platzierung
+- StreichOrtUpDown.Min = 1 statt 0
+- WrtgPktGB incl. Label grau wenn disabled
+
+SuchenDlg:
+- Option 'Übereinstimmung am Wortanfang' hinzugefügt und als default markiert
+
+TlnObj:
+- Load,Store: Option Mixed Msch vorsehen
+- in Create smTlnName statt smTlnErstellt weil Anfangssortierung in AnsFrm
+- GetPktSerStr: '-'(Decr) oder (xx)(Incr) wenn nicht gewertet
+
+TlnDlg:
+- TxtGleich benutzt um Leer- und Steuerzeichen am Anfang und Ende von
+  Name, VName, Vereín zu ignorieren
+- WrtgGB für MschWrtg, MixMsch,SonWrtg,SerWrtg, statt Options-MschWrtgCB
+- AllgemeinGB für UrkDruck
+- neue Funktionen: SetMschWrtg, GetMschWrtg, UpdateMixWrtg
+- neue Funktion: UpdateSex, nach WettkCB Change, TlnBuff.Wettk hier setzen
+- EingabeChange: bei jeder Änderung von NameEdit wird erste Tln mit
+  Namens-Übereinstimmung in Liste focussiert um erkennen zu können ob Tln bereits
+  vorhanden ist
+- Liste bei Neu-Anmeldung immer nach Name sortieren und 1. Tln fokussieren (auch
+  bei nächster Anmeldung)
+- RestStreckeUpDown entfernt: Position muss kleiner 32767 (SmallInt) bleiben, sonst Überlauf-Fehler
+
+TlnErg:
+- BerechneTagesRang: cnDim2 auf 3 erhöht für Sex=cnMixed bei wgMschPktWrtg
+- if SerWrtg then MaxRng für Tln-Serienwertung setzen
+- OrtZahlGestartet getrennt füt Tln und Msch
+
+TriaConfig:
+- Lade-/SpeichereKonfiguration: SuchListe und Ersatzliste in Ini gespeichert
+
+TriaMain:
+- ClientWidth von 836 auf 861 erhäht wegen breitere Klassennamem
+- TlnHinzufuegenActionExecute: Ansicht und Sortmode für Anmeldung einstellen
+
+VeranObj:
+- FArt (TVeranstArt) durch FSerie (Boolean) ersetzt
+- Load: AkKuerzelLaden(WettkAlleDummy) ersetzt durch 1. Wettk
+  CupWrtgPktColl laden, default löschen - für alte Dateien gelöscht, weil
+  Fehler bei lauf.tri 2008-0.2 (am Ende von Tria-Datei)
+
+VstOrtDlg:
+- Cup und Liga durch Serie ersetzt
+- Tabcontrol entfernt, Orte und Art zusammen
+
+WettkDlg:
+- AbschnZahlEditChange: Meldung wenn Kürzel langer als 3 sind
+- WettkPageControl:  Wertungen an 2. Stelle statt Abschnitte
+- MannschaftsGröße einzeln für Alle,Männer,Frauen,Mixed
+- RundLaengeUpDown entfernt: Position muss kleiner 32767 (SmallInt) bleiben, sonst Überlauf-Fehler
+
+WettkObj:
+- neue Funktion LangeAkKuerzel zur Prüfung bei AbschnZahlChange und AkColBreite
+- WettkObj.TlnOrtSerPkt:
+- statt FMannschGrWrtgColl: FMschGrAlle-,FMschGrMaenner-,FMschGrFrauen-,FMschGrMixedColl
+- SerPktMode für Msch und Tln vorsehen
+- RngMax Coll für alle Klassen Msch+Tln für Serienwertung
+
+AllgComp:
+- TTriaMaskEdit:
+
+- TTriaUpDown:
+
+
+
+--------------------------------------------------------------------------------
+10.04.2013: 2011-3.0 Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2011 - 3.1:
+================================================================================
+
+SerienDr:
+- Korrektur SerienDruckTlnTagesWertung, SerienDruckTlnSerienWertung:
+  im Header nach AkKuerzel ';' ergänzt
+
+TriaMain:
+- CreateMutex(nil, False, 'TriaMutexName'); eingeführt um beim nächsten Update
+  Setup abzubrechen wenn tria ausgeführt wird
+
+--------------------------------------------------------------------------------
+24.04.2013: 2011-3.1 Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2011 - 3.2:
+================================================================================
+
+SerienDr:
+- Korrektur SerienDruckTlnTagesWertung, SerienDruckMschWertungDetail:
+  für waRndRennen Rundenzahl eingefügt
+
+TlnObj:
+- overload functionen von AbsEndZeit und EndZeit gestrichen
+- functionen AbsRndEndZeit, RndEndZeit entfernt. Option für RndRennen in
+  AbsEndZeit, EndZeit übernommen
+- overload functionen StoppZeit und AbsZeit vereinfacht
+
+--------------------------------------------------------------------------------
+11.06.2013: 2011-3.2 Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2011 - 3.3:  Stand 2013.12.16
+================================================================================
+
+................................................................................
+FehlerKorrektur:
+  In BahnenKontrolliste werden Startzeiten und Bahnen nicht auf getrennte Seiten
+  gedruckt
+
+AusgDlg:
+- DatenUebernehmen: RepNewAkPage=false für anTlnSchwDist, d.h. NewPage bei
+  jeder Titel3-Änderung. Bei BahnenKontrolliste für StartZeit- und BahnÄnderung
+  statt für Ak benutzt
+
+RaveUnit:
+- RvNDRWriterPrint: AkBand.StartNewPage := true für anTlnSchwDist
+
+................................................................................
+FehlerKorrektur:
+  Wenn man einen Teilnehmer anlegt ohne Geschlecht wird im Export korrekter weise
+  keine Anrede gesetzt, es wird jedoch vergessen ein eintsprechendes Semikolon hinzuzufügen.
+
+SerienDr:
+- In SerienDruckTlnEtiketten ';' ergänzt
+
+--------------------------------------------------------------------------------
+19.12.2013: 2011-3.3 vorab gespeichert
+--------------------------------------------------------------------------------
+Fehlerkorrektur:
+  Wenn von einer leere Liste im Klassendialog zu einer anderen Klasse gewechselt
+  wurde, wurde immer geffragt ob Änderunge gespeicher werden sollte, auch wenn
+  nichts geändert wurde.
+
+KlassenDlg:
+- TKlassenDialog.ListeGeAendert korrigiert. Bei NeuEingabe wurde immer Status
+  geändert zurückgegeben, auch wenn die Liste leer war
+................................................................................
+
+--------------------------------------------------------------------------------
+21.01.2014: 2011-4.0 Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2011 - 4.1:  Stand 2015.02.10
+================================================================================
+
+Von XE auf XE2 umgestellt
+
+RaveReport in FastReport konvertiert. Nicht weiter umgestellt.
+
+AnsFrm:
+- Left-Position Überschrift 'Status' in Ansichtleiste korrigiert
+
+TlnObj:
+- Bezeichnungen der Funktion entsprechend deutlicher formuliert
+
+--------------------------------------------------------------------------------
+17.01.2015: 114.0.a Source gespeichert
+--------------------------------------------------------------------------------
+
+SuchDlg:
+- BorderStyle bsSingle statt bsDialog, Fenster kann stehen bleiben
+- Create in TriaMain.Create, sonst problem in Config
+- Alle Dlg-Parameter in Ini speichern
+
+TriaMain:
+- Shortcut für Teilnehmer entfernen von Entf in Ctrl+Entf geändert
+  Damit kein konflikt mehr mit Entf-Taste in SuchenDialog
+- ProgressBarMaxUpdate korrigiert DIV durch 0 bei leere Liste verhindert
+- neues MenüueCommand: Tln disqualifizieren
+
+TlnDlg:
+- TAB in TlnPageBuf festhalten und beim nächsten Aufruf voreinstellen
+- Startgeld aus Wettk voreinstellen
+- Reststrecke für Stundenrennen
+- FehlerKorrektur: bei EingabeChange-WettkCB SnrBelegtArr nicht ändern, sondern
+  erst bei endgültiger Änderung in TlnAendern
+- LöschLabel.caption ergänzt
+- JgEdit: in NavKeyDown mit VK_UP,VK_DOWN FUpDown.Click simulieren
+- SnrEdit: in NavKeyDown mit VK_UP,VK_DOWN SnrGrid simulieren
+- neue Funktion: Tln Disqualifizieren
+- UpdateZeiten: Immer nur eine LeerZeile für Eingabe weitere Rundenzeit
+- UpdateDisqGrund: default von Wettk übernehmen
+- Loesch1Label1.Caption angepasst
+- SetPage: immer Name fokussieren, wenn noch nicht eingetragen
+- NavKeyDown: für JgEdit VK_UP/DOWN verwenden
+
+AllgConst,AnsFrm,WettkObj,WettkDlg,..
+- neue WettkArt: waStndRennen, neue Spalte: spRestStrecke
+
+WettkObj:
+- neu: FRundLaengeColl mit zus. Funktionen für Stundenrennen
+- neu: FMaxRundenModified, neu berechnen in TlnErg
+- OrtCollAdd:
+  - Korrektur TlnImZielColl[tmMsch].Add - Absturz wenn Ort in bestehende Datei ergänzt wurde
+  - Korrektur Datum gleich an 1. Ort (Self<>FCollection[0]) statt GetIndx, weil immer -1
+  - FAbschnZahlColl.Add(1) statt 3
+- GetSerWrtgJahr: GetOrtJahr(0) (Datum im 1. Ort) wenn FSerWrtgJahr noch nicht gesetzt in SerWrtgDlg
+
+WettkDlg:
+- neue WettkArt: waStndRennen
+- TAB Abschnitte in Abschn./Runden geändert
+- neues Feld für RundLaenge auf TAB Abschn./Runden
+- WettkArtAlt gelöscht, im Fehlerfall immer waEinzel weil da alle Einstellungen möglich
+- neues Feld für Startgeld
+- WettkArtAlt eingeführt: bei Fehler wird nicht immer zu waEinzel sondern zur letzten Art gewechselt
+- Teilnehmer: neues feld für DisqTxt, Vorgabe für teilnehmer-DisqualifiKation
+- SEtWettkDaten: InitWettkAbschnGB nach WettkArt
+- SetMschWrtg: MschWrtgModeGB.Enabled: MschWertgRG.ItemIndex <= 0 statt mwKein sonst waTlnStaffel nicht berücksichtigt
+- WettkAendern: immer SerWrtgJahrUebernehmen wenn WkAktuell.SerWrtgJahr = 0, damit beim 1.Wettk gesetzt
+- AbschnZahlEditChange: Text ändern geht hier nicht, weil UpDown-Position nicht mit geändert wird.
+
+AllgComp:
+- TTriaMaskEdit.Change:  Fehler in Felder mit Dezimalen
+  - if CType = mcLiteral then //Inc(TextIndx) entfernt
+  - SelStart := Min(i,Length(EditText)) EditText statt Text + 1
+  - bei Änderung durch FUpDown-Click, wird Position erst später gesetzt, deshalb
+    bei TextAlt nicht auf Position prüfen
+  - UpDown-Limits prüfen und Text ggf. korrigieren
+- TTriaMaskEdit.KeyDown: mit VK_UP,VK_DOWN FUpDown.Click simulieren
+- TTriaLookupEdit.Click: Self.Hide statt (Edit)Hide - Fehler erst mit XE2 bemerkbar
+- TTriaLookupEdit.KeyDown:
+  - VK_UP,DOWN nur auswerten wenn Liste.Count>0, nicht Items.Count>0
+  - wenn TextEdit='', bei VK_UP,DOWN ganze Liste zeigen
+  - Liste nur zeigen wenn Items.Count > 0
+- TZeitEdit.EditMask anpassen mit '\'
+  IstLeer ergänzt für Maskzeichen '\' vor ':', damit unabhängig von Ländereinstellungen
+
+TlnObj:
+- neu FRestStreckeColl für Stundenrennen
+
+ImpFrm:
+- Korrektur: auch importierte SGrp-Zeiten werden gerundet, nicht nur Tln-Zeiten
+
+TlnErg:
+- BerechneTagesRang korrigiert für RndRennen: Ergebnis:Int64, RundenZahl berücksichtigen,
+  bislang bei zeitgleicheit gleicher Rng bei unterschiedlicher rundenzahl
+- MaxRundenModified für UpdateRundenZahl benutzen statt WettkErgModified
+- SetzeErstZeitMsch korrigiert für MschStaffel (MschGroesse statt AbschnZahl)
+
+DatExp:
+- ExcelRangePar: Korrektur: Absturz bei 52,78,.. Spalten wegen falsche Spaltenbezeichnung '@' statt 'Z'
+- ExcelDateiSchliessen: neue Funktion
+- ExportDateiSpeichern: bei Exception alle Dateien schliessen
+- spRestStrecke ergänzt
+
+ImpDlg:
+- InitImpFeldArr: Par. MaxRnd ergänzt um Spalten unabhängig von Wettk.AbschnZahl zu definieren
+- InitFeldValueListEditor:
+  - Init ImpFeldArr und Feld-Zuordnung nach Laden der Datei
+  - Max RundenZahl nach einlesen der Datei berechnen anhand Spaltenzahl
+- PruefeDaten: spRestStrecke ergänzt
+
+LstFmt:
+- GetTitel3:
+  - Abschn für JagdStartliste Staffel ergänzt
+  - RundenKontrolliste: Abschn nur bei mehr als 1 Abschn
+  - Meldeliste in Vereinsansicht nur für Sammelmelder gemeldete Tln listen
+
+MannsObj:
+- StndRennen ergänzt
+- SetzeMschAbsZeit: Korrektur für waMschStaffel>8: FTlnListe.SortCount berücksichtigen, sonst Exception
+
+RaveRep:
+- TriaRvCustomConnectionGetRow: bei anTlnRndKntrl Abschn. nur wenn > 1
+
+SGrpObj:
+- neue Funktiopn: TSGrpObj.ZeitenRunden
+
+VstOrtDlg:
+- SetButtons: NeuBtn immer disabeln während NeuEingabe
+- EingabeOk: Blank in Name nicht OK: Trim(OrtNameEdit.Text) = ''
+- FormCloseQuery: SetOrtName nach ClearItem, sonst Exception in VstGeAendert
+- UebernehmButtonClick: bei NeuEingabe OrtNeu statt OrtLoeschen, damit weitere Orte
+  mit Enter ohne Klick auf Neu-Button erzeugt werden können
+
+EinteilenDlg:
+- wenn HauptFenster.SortWettk=WettkAlle alle Wettk in WettkCB zur Auswahl, sonst
+  nur SortWettk.
+- Übersichtszahlen an tatsächlich ausgewählten Tln anpassen und nicht ganzen Wettk
+
+
+--------------------------------------------------------------------------------
+21.04.2015: 2015-4.1 Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2011 - 4.2:  Stand 2015.06.16
+================================================================================
+
+AllgObj:
+- TIntSortCollection.Compare: smIncr,smDecr unterscheiden für Serienwertung-Streicherg.
+  War bereits in 11.3.0 eingeführt, aber in 11.4.1 verschwunden
+
+AllgConst:
+- cnZeitStrUeberlauf ersetzt cnZeit192_00 bei Zeit-Str-Ausgabe,
+  max 3 Zeichen für Stunden
+  Überlauf nur möglich bei Msch mit Zeitaddition (3.087:nn:nn.dd  1/100 sek).
+  SerWrtg-Zeit-Str in Sek, deshalb kein Überlauf bei Zeitaddition
+- TSerPktMode ersetzt durch TSerWrtgMode (swRngUpPkt,swRngUpEqPkt,swRngDwnPkt,swRngDwnEqPkt,swFlexPkt,swZeit),
+  Zusätzliche Wrtg durch Zeitaddition
+- spPktSer in spSumSer und spMschPktSer in spMschSumSer geändert: Anzeige Punkte oder Zeit
+
+SerWrtgDlg:
+- neu: Wertung durch Zeitaddition
+
+MannschObj:
+- FSeriePunkte(Integer) durch FSerSummeSort und FSerSumLst ersetzt. FSerSummeSort für
+  Sortieren und Rng-Berechnung mit Max-Zeit wenn keine Zeit vorhanden ist. SerSumLst
+  mit Zeit=0 wenn keine Zeit vorhanden ist ==> in Listen als Summe gezeigt
+  Int64 um Überlauf der Summe bei swZeit zu vermeiden. Wert in 1/100, angezeigt an´bver in Sek
+- FSerSumColl:  Summe pro Ort für Serienwertung in Klasse
+- function GetOrtEndZeit neu für Summenberechnung
+- function GetOrtSerSumStr mit Umwandlung Int64 => Integer und Sek
+- function SerWrtgSortZahl statt SerPktSort mit Option swZeit
+- BerechneSerieSumme statt BerechneSeriePunkte, erweitert mit swZeit
+- Create:  Korrektur: DummTln: oaNoAdd, damit OrtAdd nicht 2x ausgeführt wird
+
+TlnObj:
+- wie MannschObj für swZeit erweitert
+
+WettkObj:
+- TlnOrtSerWertung: waStndRennen nur für Serie werten wenn SerWrtgMode <> swZeit
+
+--------------------------------------------------------------------------------
+05.07.2015: 2015-4.2 Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+2011 - 5.0:  Stand 2016.02.21
+================================================================================
+
+................................................................................
+Fehlerkorrektur: Fehlermeldung bei Excel-Import: Listenindex überschreitet das max. 0
+                 trat auf bei Wechsel von Tabellenseite
+
+ImpDlg:
+- ExcelDateiLaden:
+  - wenn mehrere Sheets, dann bei Fehler in ExcelSheetLaden
+    Dialog trotzdem ausführen, weil andere Sheets Ok sein können
+- ExcelSheetLaden:
+  - am Anfang und im Fehlerfall DatenArray löschen
+- ExcelSheetCBChange:
+  - Exception in ExcelWorkSheet.ConnectTo abfangen
+  - InitFeldValueListEditorund UpdateVorschau auch im Fehlerfall, damit Grid
+    leer wird
+- InitFeldValueListEditor:
+  - FehlerKorrektur: FeldValueListEditor.Strings.Clear ergänzt, gab Index-Fehler
+    bei Tabellenblatt-Wechsel, weil Strings immer wieder hinzugefügt wurden
+  - für Length(DatenArray)=0 angepasst
+- UpdateVorschau:
+  - für Length(DatenArray)=0 angepasst
+- PruefeDaten:
+  - bei Abbruch durch Fehler keine weitere Fehlermeldung (Result = -1)
+
+
+................................................................................
+Fehlerkorrektur:
+  Vereinsliste in TlnDlg / MannschNameColl wird bei Alle Tln löschen nicht gelöscht.
+  MannschColl wird nur bei MschEinlesen in TlnErg gelöscht, aber nicht wenn TlnColl.Count = 0.
+  Leichen bleiben erhalten.
+
+SMldOb:
+- neu: TSMldColl.ClearIndex: damit Mannschname in MannschNameColl gelöscht wird
+  (wenn nicht mehr vorhanden)
+SMldFrm:
+- zusätzlicher Button AlleSMldLoeschen
+- function SMldLoeschen mit Parameter: TSMldLoeschen = (smEinzel,smAlle)
+MannsObj:
+- TMannschNameColl.NameLoeschen: MannschColl ist abgeleitet von TlnColl,
+  deshalb hier nicht berücksichtigen, nur TlnColl und SMldColl
+  MannschName wurden nicht entfernt, weil im MannschColl noch vorhanden
+- function MannschColl.MannschNameVorhanden entfernen
+- Korrektur TagesRngMax, SerieRngMax: MannschInKlasse(Kl) statt ((FKlasse=Kl)or(Kl=AkAlle))
+  falsches Ergebnis bei Kl=AkAlle
+TlnErg:
+- BerechneRangAlleWettk: auch wenn TlnColl.Count=0 berechnen, damit MannschColl gelöscht wird
+- BerechneTagesRang: kwAltKl bei wgMschPktWrtg auch bei MschMixWrtg berechnen, damit
+  Tln von Mixed Msch auch Ihre AltKl-Wertung berücksichtigt werden.
+  AltKl-MschWertung nach Punkten wurde bei Tln mit MixWrtg falsch berechnet
+TlnObj:
+- KlassenSetzen: FMschWertgKlasseArr[kwAltKl] unabhängig von FMschMixWrtg setzen
+
+VeranObj:
+- LoadKorrektur erweitert um Leichen in MannschNameColl zu löschen
+
+................................................................................
+UrkundeDlg: neu für Drucken von Urkunde mit Word
+            in alle Ansichten, auch ohne Zeitnahme
+            Einzeln oder Liste
+SerDrDlg ersetzt SerienDr
+- Urk-Druck nur für HauptFenster.SortWettk und HauptFenster.SortKlasse
+- restliche Funktionen anders aufgeteilt
+- Seriendruck-Datei für MschWrtg-Detail und -Kompakt identisch
+- seriendruck Urk auch für Startlisten
+
+AusgDlg:
+- Seriendruck Etiketten und Urkunden entfernt, in SerDrDlg behandeln
+- DruckerCB durch DruckerEdit ersetzt. Drucker-Auswahl nur in DruckEinstellungen-Dialog,
+  weil sonst doppelte Wahlmöglichkeit.
+  Keine Lösung um Druckereigenschaften direkt aufzurufen, nur in DruckEinstellungen-Dialog.
+- PgBisInitTxt Parameter speichert Wert für Druckbereich bei PreviewDruck.
+  Bleibt bei Wechsel nach Alle Seiten erhalten, wurde vorher auf 1 gesetzt
+- function  GetDefaultDrucker entfernt, weil Ergebnis bei HP nicht immer RpDev.Device
+  entsprach (zusätzlicher Text in Name). Statt dessen RpDev.ItemIndex vorübergehend
+  auf -1 gesetzt (Setzt DefaultDrucker)
+
+ImpDlg:
+- GetFeldNameLang/Kurz: spWettk ergänzt für Export Meldeliste
+
+DatExp:
+- ExportDateiSpeichern: für ltMldLstTlnExp spWettk am Anfang eingefügt
+
+LstFmt:
+- GetTitel2 bei SerienErgebnisse Wettk.Name verwenden, weil Ortsunabhängig
+
+................................................................................
+UpdateDlg:
+- Fehlerkorrektur: LHandler: TIdSSLIOHandlerSocketOpenSSL ergänzt, sonst
+  Exception in IdHTTP.Get - seit Umstellung von www.selten.de auf SSL / HTTPS
+
+................................................................................
+TriaMain,LstFrm:
+- KontextMenue mit rechte Maustaste für Tln-Funktionen
+
+
+--------------------------------------------------------------------------------
+22.02.2016: 11.5.0 Released
+--------------------------------------------------------------------------------
+
+
+################################################################################
+
+UrkundeDlg:
+- Fehlerkorrektur UrkDateiBtnClick:
+  UpdateDokCB(Trim(DokName)) einfügen, damit DokNeu in Liste aufgenommen wird
+
+--------------------------------------------------------------------------------
+23.02.2016: 11.5.1 Released
+================================================================================
+
+
+################################################################################
+11.5.2:  Stand 08.04.2016
+################################################################################
+
+InnoSetup Version 5.5.8 (vorher 5.5.5)
+
+SerDrDlg: aus project entfernt - AusgDlg für SerienDr benutzt, TxtDatei und WordUrk
+SerienDr: hinzugefügt
+
+RaveReports:
+- Alle Reports Odd Rectangle Color von ECECEC nach F4F4F4 geändert: etwas heller
+
+CmdProc,AusgDlg:
+- Seriendruck Msch auch für MschStartliste
+
+UrkundeDlg:
+- procedure WordUrkunde(Mode:TReportMode) für Einzel und Liste
+- UrkTab durch Panel ersetzt: rmWordUrk: nur Einzel-Urk mit KlasseCB rmSerDrUrk: Liste von AusgDlg
+- KlasseCB auch für Msch: alle Klassen mit gleicher MschName und Wettk
+- WordUrkAnzeigen entfernt, grundsätzlich Drucken als default, wenn HauptDok gewählt
+- nach PrintOut profilaktisch 1 Sek Pause, damit Quit nicht zu früh kommt.
+  Sollte nicht nötig sein, schadet aber auch nicht.
+- Datenliste entfernt: direkt schreiben (SchreibeZeile)
+
+AusgDlg:
+- rmSerDrEtiketten,rmSerDrUrk ergänzen  : ExportDatFormat := ftText;
+- rmSerDrUrk ergänzen für Seriendruck Urkunden
+- SerienDrGB für Seriendruck Textdatei oder Word Urkunden
+- Seriendruck Etiketten mit Abfrage für Anzeigen
+
+SerDrDlg:
+- ZeileTlnWertung erweitert: 205 Zeichen - nicht für Staffel
+    GesRng, Akkurz, SexKl,SexRng,SondKl,SkRng
+
+TTlnObj:
+- TReportTlnList.Add in alle Ansichten sortieren wegen Seriendruck
+
+MannschObj:
+- funktionen OrtMschAnzahl, TlnZahlMax enfernt
+- MschAnzahl: immer für stGemeldet berechnen
+- MschTlnListeSortieren:
+  - Korrektur für für mwMulti: (FMannschPtr.FMschIndex < IndxMax) // sonst Tln doppel
+  - IndxMax := Mindestens 1, damit unvollständige Msch berücksichtigt werden
+
+DatExp:
+- ExportDateiSpeichern: ExportDateiName hier erstellen, statt in AusgDlg
+
+TriaMain:
+- StatusBarUpdate für Msch korrigiert:
+    Panel[0]: aktuelle Liste, bei mwMulti alle Indx mitzählen, evtl. gößer als Panel2
+    Panel[1]: grundsätzlich nur 1x zählen (Indx=0, stGemeldet)
+- Seriendruck über ListAusgabe (AusgDlg)
+
+AllgConst:
+- cnWebSite statt cnHomePage, ohne Protokoll (http://)
+
+AllgComp:
+- an Triazeit angepasst (Ziffernblock Tasten)
+
+TriaConfig:
+- WordUrkAnzeigen entfernt
+
+UpdateDlg:
+- PadFileLesen: exception in Get abfangen falls kein SSL
+
+VeranObj:
+- LoadKorrektur: doppelte Tln gefunden mit Groß/Klein-Unterschied
+  Prüfung auf doppelte Tln erweitern von 2003 auf 2005:
+  if (Jahr<'2005') or
+     (Jahr='2005')and(Nr<'1.1') then // auch bis 2005-1.0 Groß/Klein unterschieden
+- TlnMschSpalteUeberschrift: 'Mannschaft' für TlnTeam und TlnStaffel
+
+WettkDlg:
+- WettkArtRG: waTlnTeam ergänzen
+- UpdateWettkAbschnGB: Abschn.Zahl als Parameter
+- WettkArtRGClick: AbschnZahl korrigieren nach Bestätigung
+
+TlnDlg:
+- TlnPageControlChanging: TabGeaendert statt TlnGeaendert, FehlerCheck nur
+  wenn Tab geändert wurde.
+- UpdateStaffelTln: TlnTeam ergänzt
+- UpdatePageControl: TSStaffel: Caption Team oder Staffel
+
+
+
+################################################################################
+11.5.3:  Stand 28.04.2016
+################################################################################
+
+ImpDlg:
+- Fehler in InitImpFeldArr / StaffelNameGueltig korrigiert
+  Spalten fehlen bei Import und Export Text / Excel
+
+ZtLoeschenDlg:
+- ZtErfLoeschen benutzt  TTlnObj.ErfZeitenLoeschen(Abs:TWkAbschnitt)
+
+TlnObj:
+- procedure   ErfZeitenLoeschen(Abs:TWkAbschnitt); neu
+
+ZtEinlDlg,AllgConst,TriaConfig:
+- Parameter ZeitenBehalten ergänzt
+- ZtErfDatEinlesen: zunächst ZEColl speichern, später prüfen und in ZECollOk/NOk
+
+AllgObj:
+- neu: TTriaObjColl.DeleteItems um nur Ptr zu löschen
+
+--------------------------------------------------------------------------------
+03.05.2016: 11.5.3 Released
+================================================================================
+
+
+################################################################################
+11.5.4:  Stand 17.06.2016
+################################################################################
+
+TlnDlg:
+- Fehlermeldung bei Einteilung korrigiert:
+  . UpdateSnr: SnrEdit.SetFocus entfernt, Focus bleibt unverändert
+  . SetPage: ControlAktuell := ActiveControl entfernt, weil ActiveControl nil sein kann.
+             Dies führt zu Exception in ControlAktuell.CanFocus 
+
+TriaConfig:
+- LadeKonfiguration: ZeitenBehalten wurde nicht initialisiert:
+  Korrektur: ZeitenBehalten := ReadBool(iiZtErf,iiZeitenBehalten,true);
+
+ZtEinlDlg:
+- ZeitenBehalten wurde als var doppel definiert, ist in AllgConst bereits definiert
+
+--------------------------------------------------------------------------------
+17.06.2016: 11.5.4 Released
+================================================================================
+
+################################################################################
+11.5.5:  Stand 5.7.2016
+################################################################################
+
+UrkundeDialog:
+- UrkDokErstellen: function FeldVorhanden geändert, nur gültige Seriendruckfelder
+  prüfen, damit IF-Verknüpfung im Hauptdokument nicht als Fehler bewertet wird
+  z.B.: [ IF [ MERGEFIELD Geschl ] = "Männlich" "Herr" "Frau" ] => [,] ersetzen durch geschw.Klammer
+- UpdateDruckenGB: UrkWordRB nur Disabled wenn ItemIndex=0, nicht bei -1
+  (z.B. nach Text-Änderung in UrkDokCB)
+- procedure WordUrkunde: Bei Word-Tln-Einzelurkunde Meldung und Exit, wenn Option
+  'Urkunde drucken' nicht gesetzt ist.
+
+SerienDr:
+- ZeileTlnWertung, ZeileMschWertung: Feld Einh nach Result eingefügt
+- ZeileTlnWertung:
+  - Tln-Felder nur eintragen wenn Wettk waTlnStaffel oder waTlnTeam Vorhanden
+   (EinfachTlnMax > 0) und keine Serienansicht
+  - Feld VstOrt nur für Serienveranstaltung
+  - Rnd-Felder nur bei RndRennen und nicht in Serienansicht
+- ZeileMschWertung:
+  - SerDrMode sdText, sdWord als zus. Parameter
+  - in serienansicht keine MschTln
+  - In Ansicht Startliste nur TlnName eintragen (max 32), sonst zusätzlich Result
+    pro Tln. (max 16)
+  - Einh und Runden für sdWord nur wenn MschTlnMax <= 8, sonst wird ResStr zu lang,
+    für TextDatei (sdText) unbegrenzt
+  - Feld VstOrt nur für Serienveranstaltung
+  - Rnd-Felder nur bei RndRennen und nicht in Serienansicht
+- MschTlnMaxBerechnen: splitten in:
+    - MschTlnStart: max 32 Tln
+    - MschTlnWrtg: max 16 Tln
+- RndRennenSetzen: neue Proc. Rnd-Felder nur wenn ein waRndRennen in Vst vorhanden
+
+TlnObj, MannsObj:
+- funktionen GetTagSumEinh, GetSerieSumEinh ergänzt für Seriendruck
+
+MannsObj:
+- MschEinlesen: AddMschToColl: bei mwMulti, MschIndex>0, TlnListe nur für Klasse
+  übernehmen (wie Msch0) und nicht alle Tln von MschTlnLst
+
+--------------------------------------------------------------------------------
+05.07.2016: 11.5.5 Released
+================================================================================
+
+
+################################################################################
+11.5.5b:  Stand 03.04.2017
+################################################################################
+
+UpdateDlg:
+- auf Homepage werden xml- und exe-dateien nicht mehr auf https umgeschaltet,
+  weil Tria-Zugriff nicht funktioniert. Veraltetes protokoll wird nach
+  1&1-Vertragsänderung nicht mehr unterstützt.
+  IdSSLOpenSSL nicht mehr benutzt, zurück nach altem Zustand.
+
+UrkundeDlg:
+- UrkDokCB: 1x Problem mit falschen Index gesehen beim Anklicken - Ursache unbekannt
+  Items.Clear in Create ergänzt. Nicht klar ob es hilft.
+
+AllgConst:
+- TSerDrMode=(sdText,sdWord) neu: in TextMode werden zusätzliche Felder ausgegeben
+- TListType: ltMldLstTlnSchirm ersetzt alle bisherigen Listen in MeldeAnsicht (Tln+SMld)
+  Ansichtsfelder variabel, je nach Verwendung sichtbar
+- TColType: spRfid neu für RfidCode
+- iiRfidModus,iiRfidZeichen,iiRfidHex neu für Init-Datei
+- Neue Rfid-Konstanten: cnRfidZeichenMin=2;cnRfidZeichenMax=24;cnRfidZeichenDefault=10;
+  opDefaultRfidHex=true;
+- Neue Variablen: RfidModus;RfidZeichen;RfidHex;
+
+AllgFunc:
+- TriaMessage wird mit CreateMessageDialog im Form zentriert und mit Form als
+  zusätzlicher Parameter.
+  Kein Unterschied mehr für tria und TriaZeit
+  File- und Printdialoge unverändert.
+- neue Prüf-Funktionen für RFID
+
+ImpDlg:
+- TextDateiLaden: Fehlermeldung bei Format-Fehler konkreter formuliert mit Zeilennummer
+  und Zeilen-Inhalt. TAB als Pfeil nach rechts und nicht druckbare Zeichen
+  (inkl. Blank) als MIDDLE DOT
+
+ZtEinlDlg:
+- Korrektur: Runde (für Report) war falsch gesetzt in TZEObj.Einlesen (SortIndex statt Index)
+  dadurch wurden im Report übernommene Zeit und Runde nicht eingetragen.
+- für Format-Funktion Zeit in %7d, %8d statt %7u weil neg. Zeit (-1) möglich
+- DateiTypCB ergänzt und DateiName nur DropDownList.
+- zfSonstige ergänzt mit flexible Formatdefinition
+- Create Korrektur: HauptFenster.SortWettk selektieren statt WettkAlle
+- ZtErfZeitTrenn neue Par. für Einlesen ZeitErfdatei
+
+ZtLoeschDlg:
+- Create Korrektur: HauptFenster.SortWettk selektieren statt WettkAlle
+
+ZtEinlRep:
+- Anpassung für RFID-Code
+
+AusgDlg:
+- ReportDrucken: Daten von RvNDRWriter übernehmen, dort vorher alle Parameter setzen
+- DatenUebernehmen: Daten ExemplareGB in ReportAnzahlKopien, ReportKopienSortieren
+  übernehmen. Diese werden bei RvNDRWrite benutzt
+  Korrektur: bisher wurde immer nur 1 Kopie gedruckt
+
+RaveUnit
+- ErstelleNDRDatei: Copies und Collate vorher in RpDev setzen (ReportAnzahlKopien,
+  ReportKopienSortieren). Wird nur beim Drucken verwendet
+- ErstelleNDRDatei: nicht alle Seiten, sondern ReportSeiteVon-ReportSeiteBis
+
+SerienDr:
+- ZeileTlnWertung: Abs-zeiten und -Platzierung ergänzt.
+- neue Funktion AbsMaxBerechnen über alle wettk, damit gleiches Hauptdok für alle verwendet werden kann
+- Einh. nur in Textdatei oder wenn AbsMax <= 4
+- Adressinfo nur in Textdatei
+
+ImpDlg:
+- ExcelSheetLaden: Fehlerprüfung verbessert, genauere Fehlermeldungen
+- RfidCode ergänzt
+
+TriaConfig:
+- LadeKonfiguration: Layout auf Hauptbildschirm angepasst
+  Screen.WorkAreaHeight/Width (=Hauptbildschirm) durch Self.Monitor.WorkAreaRect.Height/Width
+  (= BenutzerBildschirm) ersetzt
+- SetBounds benutzt damit Align nur 1x aufgerufen wird
+- Select prinnter nur bei exakter Namensgleichheit
+- RfidCode ergänzt
+- #9 wird in Ini als 'TAB' gespeichert, weil sonst '' gelesen wird
+
+TriaMain:
+- für Multiscreen mit mehreren Monitoren angepasst
+- poScreenCenter statt poDesktopCenter , wird bei mehreren Monitoren über alle zentriert
+
+LstFmt:
+- GetColType: ltMldLstTlnLnd,ltMldLstTlnSmlLnd: spSondWrtg war 2x vorhanden
+- ltMldLstTlnSchirm ersetzt alle bisherigen Listen in MeldeAnsicht, Spalten variabel
+
+TlnDlg:
+- RFID-Code ergänzt, Reiter Anmeldung angepasst
+- SMldStrg in Create vereinfacht um Platz zu sparen
+- function SnrFrei ersetzt durch TlnColl.TlnMitSnr, weil einfacher
+- TlnAendern: HauptFenster.LstFrame.UpdateColWidths; // Cols spStartBahn anpassen
+
+TlnObj:
+- ab 11.5.5b RFID-Code ergänzt und gespeichert (statt Dummy für MldZeit)
+- neue function MeldeZeitBenutzt,StartgeldBenutzt,KommentBenutzt um Spalten in MeldeAnsicht zu steuern
+
+MannsObj,TlnObj,SGrpObj,SMldObj:
+- für Format-Funktion Zeit in %7d, %8d statt %7u weil neg. Zeit (-1) möglich
+
+SMldObj,TlnObj:
+- SortString: ungültige RFID-Codes normal alphabetisch anzeigen
+
+WettkObj:
+- GetOrtTlnTxt korrigiert für AnmeldeAnsicht: FCollection=nil
+
+OptDlg:
+- Rfid ergänzt
+
+RfidEinlDlg:
+- neues Modul um Datei mit Snr und Rfid-Codes zu importieren
+- DateiBtn eingefügt, statt vor Dialog-Öffnung Datei einlesen.
+- DateiEdit grau statt weiss
+- flexible Zeilenlänge beim Einlesen
+- abweichende Code-Länge und ungültige Hex-Code nach Bestätigung akzeptieren.
+- ZtErfMessage benutzen, TriaMessage nur wenn nicht LiveZtErfAktiviert
+
+AusgDlg,InfoDlg,OptDlg,RfidEinlDlg,UrkundeDlg,VstOrtDlg,WkWahlDlg,ZtEinlDlg:
+- CancelButton: Cancel false damit Dialog nicht mit Esc geschlossen wird
+
+
+--------------------------------------------------------------------------------
+02.05.2017: 11.5.6 Released
+================================================================================
+
+
+################################################################################
+11.5.6a:  Stand 21.06.2017
+################################################################################
+
+AusgDlg:
+- DruckerAktualisieren: neue Funktion um Änderungen in der Windows-Druckerliste
+  zu berücksichtigen. Wird vor jedem Druckvorgang ausgeführt.
+
+--------------------------------------------------------------------------------
+22.06.2017: 11.5.6a für Prof. Winter
+================================================================================
+
+
+################################################################################
+11.5.7:  Stand 04.04.2018
+################################################################################
+
+AllgComp:
+- TTriaLookupGrid.UpdateItems: Groß-/Kleinschreibung nicht unterscheiden beim Öffnen
+  der Liste. Benutzt in TlnDlg für Verein/Ort
+  property OnChangingEx ergänzt
+- TTriaMaskEdit.Change: unabhängig von TUpDown erlauben
+  bei ungültiger FUpDown.Position Min oder Max setzen, nur wenn Edit enabled
+- TTriaUpDown: procedure ChangingEx, var Aendernd entfernt, weil nicht benutzt.
+- TTriaUpDown.Click: Korrekturen, weil der andere Button nach Klick manchmal verschwindet
+  inherited Click(Button) vorab ausführen, Aendernd nicht benutzen, RecreateWnd ergänzt
+  Edit.SetFocus kann benutzt werden, weil kein ValidateError benutzt wird und deshalb
+  kein Problem mit ESC-Taste auftritt
+- TTriaMaskEdit: bei FUpDown-Benutzung EditMask mit 1 Ziffer (0) fest ('099;0; ';)
+
+AllgConst (und weitere):
+- spSammelMelder, spSMldName, spSMldVerein entfernt, weil nicht benutzt
+- smRelAbs1-8UhrZeit statt smEndUhrZeit für MschWettk, Zeit relativ zur Startzeit
+  für Tagesübergang
+- stEndUhrzeit enfernt, stAbs1-8UhrZeit benutzt
+- var DefaultDrucker, ReportDrucker neu
+
+AusgDlg:
+- DruckerAktualisieren: neue Funktion um Änderungen in der Windows-Druckerliste
+  zu berücksichtigen. Wird bei jedem Druckaufruf (in Create) und bei Fehler (in EingabeOk) ausgeführt
+  ReportDrucker, DefaultDrucker und Liste aktualisiert
+- Drucker auswählen in ComboBox statt Edit
+- SortierCB Initwert = false statt true
+- EingabeOk: RpDev.SelectPrinter prüfen
+- DatenUebernehmen: ReportDrucker übernehmen := RpDev.Device , in EingabeOk gesetzt
+- Taborder korrigiert
+- PgVonUpDownClick und RngVonUpDownClick entfernt, wird durch geänderte TTriaUpDownClick ersetzt
+- PgVonBisRBEnter, RngVonBisRBEnter ergänzt
+- DruckerBtn ersetzt SetupBtn: TPrintDialog und Printers benutzt statt RpDev.PrinterSetupDialog,
+  weil Anzahl, Range sinnvoller als Papierformate (bei Rave nicht möglich,
+  RpDev.PrintDialog funktioniert nicht)
+
+DatExp:
+- ExcelStart: Meldung nicht gefunden und nicht gestartet unterschieden
+
+ImpDlg:
+- AufRndZeit durch AufrundZeit ersetzt: bezieht sich aufs Aufrunden und nicht auf Runden
+- ImportiereDaten: TlnBuff.DisqName := '' statt TlnBuff.Wettk.DisqTxt;
+
+ImpFrm:
+- AufRndZeit durch AufrundZeit ersetzt: bezieht sich aufs Aufrunden und nicht auf Runden
+
+KlassenDlg:
+- VonUpDown.Min und BisUpDown.Min =1 statt =0, wegen geänderter TTriaUpDownClick
+- VonEdit.Text, BisEdit.Text IntToStr statt Format 2-Stellig, weil einfachere Eingabe
+
+LstFmt:
+- GetListType/SpalteAusKonk korrigiert für Veranstaltung=nil
+- GetColType: Wettk-Spalte nur bei WettkAlle
+
+MannsObj:
+- function Startzeit, GetAbsOrtStZeit entfernt, weil nicht benötigt
+- procedure TMannschColl.SetzeMschAbsStZeit: in wkAbs1 kein stOhnePause (=EinzelStart)
+  EinzelStart bei waMschTeam und waMschStaffel streichen: Startzeiten nicht immer eindeutig.
+  Nur noch für EinzelWettk erlauben
+- Korrektur in TMannschColl.SortModeValid: smMschAbs2Startzeit..smMschAbs2Startzeit
+                            ersetzt durch: smMschAbs2Startzeit..smMschAbs8Startzeit
+  Fehler für Jagdstart Msch für Abschn. 3 bis 8
+- TMannschColl.Sortieren: für MschWettk
+    smMschAbs2StartZeit..smMschAbs8StartZeit: und smMschErg,smMschErgMschName:
+    FTlnSortMode := TSortMode(Integer(smRelAbs1UhrZeit)+WettkNeu.AbschnZahl-1) // letzter Abschnitt
+    statt smEndUhrZeit. Zeit rel. zur StartZeit Abs1 für Tagesüberlauf um Mitternacht
+- TMannschColl.SetzeStaffelVorg: TSortMode(Integer(smRelAbs1UhrZeit)+WertungsWk.AbschnZahl-1)
+    statt smEndUhrzeit. Zeit rel. zur StartZeit Abs1 für Tagesüberlauf um Mitternacht
+- TmannschColl.SetzeMschAbsStZeit: in wkAbs1 kein stOhnePause (=EinzelStart)
+- TMannschColl.SetzeMschAbsZeit: rel. zur StartZeit Abs1 für Tagesüberlauf um Mitternacht
+    waMschTeam: TSortMode(Integer(smRelAbs1UhrZeit)+Integer(Abs)-1) statt smTlnAbs1UhrZeit
+    waMschStaffel: TSortMode(Integer(smRelAbs1UhrZeit)+FWettk.AbschnZahl-1) statt smEndUhrZeit,
+                   TStatus(Integer(stAbs1UhrZeit)+FWettk.AbschnZahl-1) statt stEndUhrZeit
+
+SerienDr:
+- SerDrDateiErstellen/WriteSerDrZeile: nur wenn UrkDruck gesetzt,
+  keine Fehlermeldung wenn nicht gesetzt
+
+SGrpDlg:
+- Create, SGrpNeu: Neue SGrp.Init mit SnrVon=SnrBis=0
+- SetSGrpDaten: bei neuer SGrp FreierSnrBereich einstellen
+- SGrpGridDrawCell: 1. Zeile bei NeuEingabe: Text = ''
+- Label für MschStaffel korrigiert
+- SetWettkDaten: StartOhnePauseRB[wkAbs1].Visible := false bei waMschTeam oder waMschStaffel
+
+SGrpObj:
+- TSGrpObj.GetStartModus, Load: kein Einzelstart bei MschWettk
+- WettkStartModus für WkAlle korrigiert
+- InitValue: Result := true hat gefehlt
+
+SMldFrm:
+- HilfeButtonClick: HelpContext := 1500 statt 0701
+
+SMldObj:
+- TSMldTlnListe.SortString: smTlnStartgeld, smTlnSBhn ergänzt
+
+TlnDlg:
+- AufRndZeit durch AufrundZeit ersetzt: bezieht sich aufs Aufrunden und nicht auf Runden
+- TlnDisqualifizieren: DisqName unverändert
+- UpdateDisqGrund: DisqNameEdit.Text := TlnBuffer.DisqName, ist nie ''
+- InitTlnBuffer: LoadPtr := TlnBuffer statt Self; ==> Absturz bei TlnNeu
+- ZeitnahmeTS1,2: Differenz durch Abschnitts- und zeit ersetzt.
+- Gültige AbsZeit nur wenn Runden vollständig, ausgen. RundenWettk
+- Proc. JgUpDownClick ergänzt, TTriaUpDownClick nicht benutzen, JgUpDown.Edit := nil
+- ReststreckeUpDown entfernt, wegen Überlauf 16 Bit
+- NavKeyDown: VK_UP, VK_Down bei JgEdit hochrechnen auf 1900/2000
+
+TlnErg:
+- UpdateRundenZahl bei ErgModified statt MaxRundenModified
+
+TlnObj:
+- VereinsName entfernt, weil nicht benutzt
+- AufRndZeit durch AufrundZeit ersetzt: bezieht sich aufs Aufrunden und nicht auf Runden
+- TlnInOrtStatus: stAbs1UhrZeit..stAbs8UhrZeit: ohne Disq und auf >= 0 prüfen statt >0
+                  stEnduhrzeit ersetzt durch stAbs.x.Uhrzeit (letzter Abschnitt)
+- InitStrtZeit: FLoadPtr benutzen für Berechnung im TlnDlg
+- GetDisqName: Result='' nur wenn DisqGrund=''
+- SetDisqName: nur von default abweichende Namen aufnehmen
+- SetMschWrtg, SetMschMixWrtg: setze KlassenModified statt MschModified und KlassenSetzen
+- GetMschWrtg: Result := FMschWrtg, unabhängig von übrigen Parameter, damit
+  Default=true in TlnDialog angezeigt wird
+- TTlnColl.ZeitenRunden: if ZeitNeuGerundet <> ZeitAltGerundet statt ZeitNeuGerundet > ZeitAltGerundet,
+  Fehler, weil Tagesübergang nicht berücksichtigt wurde
+- TTlnColl.SortString: smRelAbs1UhrZeit..smRelAbs8UhrZeit: neu, nur Msch.TlnListe
+                       smEndUhrZeit: entfernt, ersetzt durch smRelAbs.x.UhrZeit (letzter Abschn.)
+
+TriaConfig:
+- ReportDrucker in Ini speichern, hier noch kein RpDev.SelectPrinter, erst bei Benutzung
+
+ZtEinlRep:
+- NOkGridDrawCell,SpeichernButtonClick: zeZeitEingelesen,zeRundenUeberlauf: Text verbessert
+
+ZtLoeschDlg:
+- HilfeButtonClick: // Kommentar korrigiert: Zeiten löschen
+
+TlnErg, WettkObj:
+- MaxRundenModified wieder ersetzt durch WettkErgModified
+
+TriaMain:
+- Create: TriaMessage ohne Self, weil noch nicht verfügbar
+
+UrkundeDlg:
+- DruckerCB, AnzahlEdit und DruckerBtn ergänzt
+- QuellDateiErstellen: SchreibeZeile nur wenn UrkDruck gesetzt
+
+WettkDlg:
+- RundLaengeUpDown entfernt wegen Überlauf 16 Bit
+
+WettkObj:
+- FMaxRundenModified entfernt, ErgModified benutzen
+- Einzelstart nur für EinzelWettk
+
+ZtEinlDlg:
+- HelpContext für OkButten und HilfeBtn für LiveZtErf neu definiert.
+  Text in Tria.txt korrigiert/ergänzt.
+  Neue Tria.chm erstellt.
+- TZEColl.SortString: nach Zeit ab Tln.StrtZeit statt 00:00:00 sortieren,
+  Damit wird Tagesübergang bei Zuordnung der Abschn. berücksichtigt
+
+ZtEinlRep:
+- Create: Text Abschnitt(e) korrigiert
+- NOkGridDrawCell: Max. Anzahl Zeiten statt Rundenzahl überschritten
+
+
+--------------------------------------------------------------------------------
+07.04.2018: 11.5.7 released
+================================================================================
+
+
+################################################################################
+11.5.8:  Stand 10.04.2018
+################################################################################
+
+KlassenDlg:
+- Create: Fehlerkorr. VonUpDown.Min, BisUpDownMin := 0 statt 1, wie in 11.5.6.
+  Führte zum Fehler beider Definition von Klassen weil ! statt 0 im Leerzustand angezeigt wurde
+
+MannsObj:
+- Store für MannsNameObj/Coll wieder enabled. Waren versehentlich noch auskommenitiert.
+  Führte zum Fehler beim Speichern der Datei
+
+--------------------------------------------------------------------------------
+10.04.2018: 11.5.8 released
+================================================================================
+
+
+}
+
+end.

@@ -1,0 +1,843 @@
+unit SerDrDlg;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages,
+  System.SysUtils, System.Variants, System.Classes, System.Math,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
+  Vcl.ComCtrls, Vcl.Mask,
+  AllgConst,AllgComp,WettkObj,AkObj,TlnObj,MannsObj;
+
+procedure SerienDruck(Mode:TSerDrMode); // menue-commands: rmEtiketten, rmUrkunden
+function  ErstelleUrkTxtListe(var Lst: TStringList; Ptr:Pointer) : Boolean;
+
+type
+  TSerDrUrkDialog = class(TForm)
+
+  published
+    WettkLabel: TLabel;
+    WettkEdit: TTriaEdit;
+    KlasseLabel: TLabel;
+    KlasseEdit: TTriaEdit;
+    RngBereichGB: TGroupBox;
+      RngBisLabel: TLabel;
+      RngAlleRB: TRadioButton;
+      RngVonBisRB: TRadioButton;
+      RngVonEdit: TTriaMaskEdit;
+      RngBisEdit: TTriaMaskEdit;
+      RngVonUpDown: TTriaUpDown;
+      RngBisUpDown: TTriaUpDown;
+    OkButton: TButton;
+    CancelButton: TButton;
+    HilfeButton: TButton;
+
+    procedure RngAlleRBClick(Sender: TObject);
+    procedure RngVonBisRBClick(Sender: TObject);
+    procedure RngVonBisEditClick(Sender: TObject);
+    procedure RngBisUpDownClick(Sender: TObject; Button: TUDBtnType);
+    procedure RngVonUpDownClick(Sender: TObject; Button: TUDBtnType);
+    procedure RngBisLabelClick(Sender: TObject);
+    procedure OkButtonClick(Sender: TObject);
+    procedure HilfeButtonClick(Sender: TObject);
+
+  private
+    HelpFensterAlt : TWinControl;
+    Updating       : Boolean;
+    DisableButtons : Boolean;
+
+    procedure InitRngBereichGB;
+    procedure UpdateRngBereichGB;
+    function  EingabeOk: Boolean;
+    procedure DatenUebernehmen;
+
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+var
+  SerDrUrkDialog : TSerDrUrkDialog;
+  SerDrDateiPfad : String;
+  SerDrMode      : TSerDrMode;
+  SerDrDatei     : Text;
+  SerDrWk        : TWettkObj;
+  SerDrWrtg      : TWertungMode;
+  SerDrAk        : TAkObj;
+  SerDrRngVon    : Integer;
+  SerDrRngBis    : Integer;
+
+implementation
+
+{$R *.dfm}
+
+uses TriaMain,VistaFix,AllgFunc,AllgObj,VeranObj,DateiDlg,ListFmt,SMldObj;
+
+function SerDrDateiErstellen                : Boolean; forward;
+function ZeileTlnEtiketten(Tln:TTlnObj)     : String;  forward;
+function ZeileSMldEtiketten(SMld:TSMldObj)  : String;  forward;
+function ZeileTlnWertung(Tln:TTlnObj)       : String;  forward;
+function ZeileMschWertung(Msch:TMannschObj) : String;  forward;
+procedure IncRslt(const Txt:String);                   forward;
+
+var ResStr     : String;
+    MschTlnMax : Integer; // in MschAnsicht nur für Header berechnen
+
+
+//******************************************************************************
+procedure SerienDruck(Mode:TSerDrMode);
+//******************************************************************************
+begin
+  SerDrMode := Mode;
+  case SerDrMode of
+    sdEtiketten: SerDrDateiErstellen; // alle Tln in Liste, ohne Dialog
+    sdUrkunden:
+    begin
+      SerDrUrkDialog := TSerDrUrkDialog.Create(HauptFenster);// Dialog öffnen
+      try
+        SerDrUrkDialog.ShowModal;
+      finally
+        FreeAndNil(SerDrUrkDialog);
+      end;
+    end;
+  end;
+  HauptFenster.StatusBarClear;
+  HauptFenster.RefreshAnsicht;
+end;
+
+//******************************************************************************
+function ErstelleUrkTxtListe(var Lst:TStringList; Ptr:Pointer): Boolean;
+//******************************************************************************
+// Header- + Datenzeilen, gemeinsam für Word-Urkunde und SerDrDatei
+// 1x DatenZeile wenn Ptr<>nil, sonst Liste
+var i       : Integer;
+    TlnPtr  : TTlnObj;
+    MschPtr : TMannschObj;
+
+//..............................................................................
+function TlnRang: Integer;
+begin
+  if HauptFenster.Ansicht = anTlnErgSerie then
+    Result := TlnPtr.SerieRang(SerDrAk.Wertung)
+  else
+    Result := TlnPtr.TagesRng(wkAbs0,SerDrAk.Wertung,SerDrWrtg);
+end;
+//..............................................................................
+function MschRang: Integer;
+begin
+  if HauptFenster.Ansicht = anMschErgSerie then
+    Result := MschPtr.SerieRang
+  else
+    if (MschPtr.Wettk.MschWertg = mwMulti) and (MschPtr.MschIndex=0) and // Startliste
+       (MschPtr.Msch1<>nil) then
+      Result := MschPtr.Msch1.TagesRng
+    else
+      Result := MschPtr.TagesRng;
+end;
+//..............................................................................
+begin
+  Result  := false;
+  Lst.Clear;
+
+  try
+
+    case HauptFenster.Ansicht of
+      anAnmSammel:
+      begin
+        Lst.Add(ZeileTlnWertung(nil)); // Header
+        if Ptr<>nil then // 1x Datenzeile
+          Lst.Add(ZeileTlnWertung(TTlnObj(Ptr)))
+        else // Liste
+          for i:=0 to HauptFenster.SortSMld.TlnListe.SortCount-1 do
+          begin
+            TlnPtr := TTlnObj(HauptFenster.SortSMld.TlnListe.SortItems[i]);
+            if (TlnPtr <> nil) and
+               (TlnPtr.Wettk=SerDrWk) and TlnPtr.TlnInKlasse(SerDrAk,tmTln) and // falls WettkAlle oder akAlle
+               ((SerDrRngVon = 0) or
+                (TlnRang >= SerDrRngVon) and (TlnRang <= SerDrRngBis)) then
+              Lst.Add(ZeileTlnWertung(TlnPtr));
+          end;
+      end;
+      anTlnErgSerie,anAnmEinzel,anTlnStart,anTlnErg: //anTlnUhrZeit,anTlnRndKntrl, anTlnSchwDist
+      begin
+        Lst.Add(ZeileTlnWertung(nil)); // Header
+        if Ptr<>nil then // 1x Datenzeile
+          Lst.Add(ZeileTlnWertung(TTlnObj(Ptr)))
+        else // Liste
+          for i:=0 to Veranstaltung.TlnColl.SortCount-1 do
+          begin
+            TlnPtr := Veranstaltung.TlnColl.SortItems[i];
+            if (TlnPtr <> nil) and
+               (TlnPtr.Wettk=SerDrWk) and TlnPtr.TlnInKlasse(SerDrAk,tmTln) and // falls WettkAlle oder akAlle
+               ((SerDrRngVon = 0) or
+                (TlnRang >= SerDrRngVon) and (TlnRang <= SerDrRngBis)) then
+              Lst.Add(ZeileTlnWertung(TlnPtr));
+          end;
+      end;
+      anMschErgSerie,anMschStart,anMschErgDetail,anMschErgKompakt:
+      begin
+        Lst.Add(ZeileMschWertung(nil)); // Header
+        if Ptr<>nil then // 1x Datenzeile
+          Lst.Add(ZeileMschWertung(TMannschObj(Ptr)))
+        else // Liste
+          for i:=0 to Veranstaltung.MannschColl.SortCount-1 do
+          begin
+            MschPtr := Veranstaltung.MannschColl.SortItems[i];
+            if (MschPtr <> nil) and
+               ((SerDrRngVon = 0) or
+                (MschRang>=SerDrRngVon)and(MschRang<=SerDrRngBis)) then
+              Lst.Add(ZeileMschWertung(MschPtr));
+          end;
+      end;
+      else // anKein,anTlnUhrZeit,anTlnRndKntrl,anTlnSchwDist
+    end;
+
+    Result := true;
+
+  except
+    // keine Fehlermeldung
+  end;
+end;
+
+//******************************************************************************
+function SerDrDateiErstellen: Boolean;
+//******************************************************************************
+// benutzt für Seriendruck-Datei (Ptr=nil) und Word-Urkunde-Datei (Ptr=Tln/Msch)
+// bei Ptr=nil ganze Liste sonst nur Tln oder Msch
+// alle SerDr-Parameter vorher gesetzt
+// nur 1 Wk: SerDrWk/SerDrWrtg (NICHT WettkAlle), nur 1 Ak: SerDrAk
+
+var i : Integer;
+    Titel : String;
+    UrkTxtListe : TStringList;
+    IOFehler : Boolean;
+
+//..............................................................................
+function WriteSerDrZeile(Txt:String): Boolean;
+begin
+  Result := false;
+  if Txt = '' then begin IOFehler := true; Exit; end;
+  WriteLn(SerDrDatei,Txt);
+  if IoResult<>0 then begin IOFehler := true; Exit; end;
+  Result := true;
+end;
+
+//..............................................................................
+begin
+  Result := false;
+  IOFehler := false;
+  UrkTxtListe := TStringList.Create;
+  Titel  := '';
+
+  // SerienDruckDatei erstellen für alle Tln/Msch in Liste
+  if SerDrMode = sdUrkunden then
+    Titel := 'Seriendruckdatei für Urkunden erstellen'
+  else // sdEtiketten
+    Titel := 'Seriendruckdatei für Etiketten erstellen';
+
+  SerDrDateiPfad := System.SysUtils.ChangeFileExt(TriDatei.Path,'.txt');
+  if not SaveFileDialog('txt',
+                        'Textdatei (*.txt)|*.txt|Alle Dateien (*.*)|*.*',
+                         System.SysUtils.ExtractFileDir(TriDatei.Path),
+                         Titel,
+                         SerDrDateiPfad) then Exit;
+
+  HauptFenster.ProgressBarInit('Die Quelldatei für Seriendruck wird erstellt',100);
+  HauptFenster.ProgressBarStep(30); // 30% Position
+
+  if FileExists(SerDrDateiPfad) and not DeleteFile(SerDrDateiPfad) then
+  begin
+    TriaMessage('Die Seriendruckdatei  "'+ExtractFileName(SerDrDateiPfad)+'"  '+
+                'kann nicht erstellt werden,'+
+                'weil eine Datei mit diesem Namen bereits vorhanden ist und nicht gelöscht werden kann.',
+                mtInformation,[mbOk]);
+    Exit;
+  end;
+
+  try
+
+    {$I-}
+    AssignFile(SerDrDatei,SerDrDateiPfad);
+    if IoResult<>0 then begin IOFehler := true; Exit; end;
+
+    Rewrite(SerDrDatei);
+    if IoResult<>0 then begin IOFehler := true; Exit; end;
+
+    HauptFenster.ProgressBarStep(20); // 50% Position
+
+    // restlichen Zeilen mit Tln/Msch-Daten
+    if SerDrMode = sdEtiketten then // Tln-/SMldSortColl benutzt
+      case HauptFenster.Ansicht of
+        anAnmEinzel :
+        begin
+          if not WriteSerDrZeile(ZeileTlnEtiketten(nil))then Exit; // Header
+          HauptFenster.ProgressBarStep(20); // 70% Position
+          for i:=0 to Veranstaltung.TlnColl.SortCount-1 do
+            if not WriteSerDrZeile(ZeileTlnEtiketten(Veranstaltung.TlnColl.SortItems[i])) then Exit;
+        end;
+        anAnmSammel :
+        begin
+          if not WriteSerDrZeile(ZeileSMldEtiketten(nil)) then Exit; // Header
+          HauptFenster.ProgressBarStep(20); // 70% Position
+          for i:=0 to Veranstaltung.SMldColl.SortCount-1 do
+            if not WriteSerDrZeile(ZeileSMldEtiketten(Veranstaltung.SMldColl.SortItems[i])) then Exit;
+        end;
+        else;
+      end
+    else // rmUrkunden
+    begin
+      if not ErstelleUrkTxtListe(UrkTxtListe, nil) then Exit;
+      HauptFenster.ProgressBarStep(20); // 70% Position
+      for i:=0 to UrkTxtListe.Count-1 do
+        if not WriteSerDrZeile(UrkTxtListe[i])then Exit;
+    end;
+
+    HauptFenster.ProgressBarStep(20); // 90% Position
+    Result := true;
+
+  finally
+    UrkTxtListe.Free;
+    CloseFile(SerDrDatei);
+    IoResult; //Löschen Fehlerspeicher
+    {$I+}
+    if not Result and IoFehler then
+      TriaMessage('Die Seriendruckdatei  "'+ExtractFileName(SerDrDateiPfad)+'"  '+
+                  'kann nicht erstellt werden.',
+                  mtInformation,[mbOk]);
+  end;
+
+end;
+
+//==============================================================================
+procedure IncRslt(const Txt:String);
+//==============================================================================
+begin
+  ResStr := ResStr + TZ + Txt;
+  if Txt='' then ResStr := ResStr + '-'; // keine leere Felder erlauben
+end;
+
+//==============================================================================
+function ZeileTlnEtiketten(Tln:TTlnObj): String;
+//==============================================================================
+begin
+  if Tln=nil then ResStr := 'Name'      else ResStr := Tln.VNameName;
+  if Tln=nil then IncRslt('Vorname')    else IncRslt(Tln.VName);
+  if Tln=nil then IncRslt('Nachname')   else IncRslt(Tln.Name);
+  if Tln=nil then IncRslt('Jahrgang')   else if Tln.Jg>0 then IncRslt(IntToStr(Tln.Jg))
+                                                         else IncRslt('-');
+  if Tln=nil then IncRslt('Geschl')     else case Tln.Sex of
+                                               cnMaennlich : IncRslt('Männlich');
+                                               cnWeiblich  : IncRslt('Weiblich');
+                                               cnMixed     : IncRslt('Mixed');
+                                               else          IncRslt('-');
+                                             end;
+  if Tln=nil then IncRslt('GeschlKurz') else case Tln.Sex of
+                                               cnMaennlich : IncRslt('M');
+                                               cnWeiblich  : IncRslt('W');
+                                               cnMixed     : IncRslt('X');
+                                               else          IncRslt('-');
+                                             end;
+  if Tln=nil then IncRslt('Ak')         else IncRslt(Tln.WertungsKlasse(kwAltKl,tmTln).Name);
+  if Tln=nil then IncRslt('AkKurz')     else IncRslt(Tln.WertungsKlasse(kwAltKl,tmTln).Kuerzel);
+  if Tln=nil then IncRslt('Strasse')    else IncRslt(Tln.Strasse);
+  if Tln=nil then IncRslt('Hausnr')     else IncRslt(Tln.HausNr);
+  if Tln=nil then IncRslt('PLZ')        else IncRslt(Tln.PLZ);
+  if Tln=nil then IncRslt('Ort')        else IncRslt(Tln.Ort);
+  if Tln=nil then IncRslt('Land')       else IncRslt(Tln.Land);
+  if Tln=nil then IncRslt(Veranstaltung.MschSpalteName(WettkAlleDummy))
+                                         else IncRslt(Tln.MannschName);
+  if Tln=nil then IncRslt('Snr')         else IncRslt(IntToStr(Tln.Snr));
+  if Tln=nil then IncRslt('Wettkampf')   else IncRslt(Tln.Wettk.Name);
+  if Tln=nil then IncRslt('Kommentar')   else IncRslt(Tln.Komment);
+  if Tln=nil then IncRslt('EMail')       else IncRslt(Tln.EMail);
+  if Tln=nil then IncRslt('Startgeld')   else IncRslt(EuroStr(Tln.Startgeld));
+
+  Result := ResStr;
+end;
+
+//==============================================================================
+function ZeileSMldEtiketten(SMld:TSMldObj): String;
+//==============================================================================
+begin
+  if SMld=nil then ResStr := 'Vorname'   else ResStr := SMld.VName;
+  if SMld=nil then IncRslt('Name')       else IncRslt(SMld.Name);
+  if SMld=nil then IncRslt('Strasse')    else IncRslt(SMld.Strasse);
+  if SMld=nil then IncRslt('Hausnr')     else IncRslt(SMld.HausNr);
+  if SMld=nil then IncRslt('PLZ')        else IncRslt(SMld.PLZ);
+  if SMld=nil then IncRslt('Ort')        else IncRslt(SMld.Ort);
+  if SMld=nil then IncRslt('Mannschaft') else IncRslt(SMld.MannschName^);
+  if SMld=nil then IncRslt('EMail')      else IncRslt(SMld.EMail);
+
+  Result := ResStr;
+end;
+
+//==============================================================================
+function ZeileTlnWertung(Tln:TTlnObj): String;
+//==============================================================================
+// keine Sonderzeichen (.,-) in Feldnamen, sonst wird Trennzeichen ';' von Word nicht automatisch erkannt
+// Max 255 Zeichen für Header in CreateDataSource
+// SerDrWrtg = HauptFenster.SortWrtg
+var AbsCnt : TWkAbschnitt;
+begin
+  if (Tln<>nil) and not Tln.UrkDruck then Exit;
+
+  if Tln=nil then ResStr := 'Veranst'   else ResStr := Veranstaltung.Name;
+  if Tln=nil then IncRslt('Wettk')      else IncRslt(GetTitel2(SerDrWk,SerDrWrtg));
+  if Tln=nil then IncRslt('Wertg')      else
+                                        if HauptFenster.Ansicht=anTlnErgSerie then
+                                          IncRslt('Serienwertung')
+                                        else
+                                          IncRslt('Tageswertung');
+  if Tln=nil then IncRslt('Datum')      else IncRslt(SerDrWk.Datum);
+  if Tln=nil then IncRslt('VstOrt')     else
+                                        if Veranstaltung.Serie then
+                                          IncRslt(Veranstaltung.OrtName)
+                                        else
+                                          IncRslt('-');
+  if Tln=nil then IncRslt('Snr')        else
+                                        if HauptFenster.Ansicht=anTlnErgSerie then
+                                          IncRslt('-')
+                                        else
+                                          IncRslt(IntToStr(Tln.Snr));
+  if Tln=nil then IncRslt('Name')       else IncRslt(Tln.VNameName); // auch bei Staffel
+  if Tln=nil then IncRslt('VName')      else IncRslt(Tln.VName);
+  if Tln=nil then IncRslt('NName')      else IncRslt(Tln.Name);
+  if SerDrWk.WettkArt = waTlnStaffel then  //HauptFenster.Ansicht<>anTlnErgSerie
+    for AbsCnt:=wkAbs2 to wkAbs8 do
+      if SerDrWk.AbschnZahl >= Integer(AbsCnt) then
+        if Tln=nil then IncRslt('Tln'+IntToStr(Integer(AbsCnt)))
+                   else IncRslt(Tln.StaffelVNameName(AbsCnt));
+  if Tln=nil then IncRslt(Veranstaltung.MschSpalteName(SerDrWk))
+                                        else IncRslt(Tln.MannschName);
+  if Tln=nil then IncRslt('Land')       else IncRslt(Tln.Land);
+  if Tln=nil then IncRslt('Jg')         else if Tln.Jg>0 then IncRslt(IntToStr(Tln.Jg))
+                                                         else IncRslt('-');
+  if Tln=nil then IncRslt('Geschl')     else case Tln.Sex of
+                                               cnMaennlich : IncRslt('Männlich');
+                                               cnWeiblich  : IncRslt('Weiblich');
+                                               cnMixed     : IncRslt('Mixed');
+                                               else          IncRslt('-');
+                                             end;
+  if Tln=nil then IncRslt('Klasse')     else IncRslt(Tln.WertungsKlasse(SerDrAk.Wertung,tmTln).Name);
+  if Tln=nil then IncRslt('Rng')        else
+                                        if HauptFenster.Ansicht=anTlnErgSerie then
+                                          IncRslt(Tln.GetSerieRangStr(SerDrAk.Wertung))
+                                        else
+                                          IncRslt(Tln.TagesEndRngStr(wkAbs0,SerDrAk.Wertung,SerDrWrtg));
+  if SerDrWk.WettkArt <> waTlnStaffel then // keine KlassenWrtg beim Staffel um Platz zu sparen
+  begin
+    if Tln=nil then IncRslt('Ak')       else IncRslt(Tln.WertungsKlasse(kwAltKl,tmTln).Name);
+    if Tln=nil then IncRslt('AkKurz')   else IncRslt(Tln.WertungsKlasse(kwAltKl,tmTln).Kuerzel);
+    if Tln=nil then IncRslt('AkRng')    else
+                                        if HauptFenster.Ansicht=anTlnErgSerie then
+                                          IncRslt(Tln.GetSerieRangStr(kwAltKl))
+                                        else
+                                          IncRslt(Tln.TagesZwRngStr(wkAbs0,kwAltKl,SerDrWrtg));
+    if Tln=nil then IncRslt('GesRng')   else
+                                        if HauptFenster.Ansicht=anTlnErgSerie then
+                                          IncRslt(Tln.GetSerieRangStr(kwAlle))
+                                        else
+                                          IncRslt(Tln.TagesZwRngStr(wkAbs0,kwAlle,SerDrWrtg));
+    if Tln=nil then IncRslt('SexKl')    else IncRslt(Tln.WertungsKlasse(kwSex,tmTln).Name);
+    if Tln=nil then IncRslt('SexRng')   else
+                                        if HauptFenster.Ansicht=anTlnErgSerie then
+                                          IncRslt(Tln.GetSerieRangStr(kwSex))
+                                        else
+                                          IncRslt(Tln.TagesZwRngStr(wkAbs0,kwSex,SerDrWrtg));
+    if Tln=nil then IncRslt('SondKl')   else IncRslt(Tln.WertungsKlasse(kwSondKl,tmTln).Name);
+    if Tln=nil then IncRslt('SkRng')    else
+                                        if HauptFenster.Ansicht=anTlnErgSerie then
+                                          IncRslt(Tln.GetSerieRangStr(kwSondKl))
+                                        else
+                                          IncRslt(Tln.TagesZwRngStr(wkAbs0,kwSondKl,SerDrWrtg));
+  end;
+  if Tln=nil then IncRslt('Result')     else
+                                        if HauptFenster.Ansicht=anTlnErgSerie then
+                                          IncRslt(Tln.GetSerieSumStr(lmReport,SerDrAk.Wertung))
+                                        else
+                                          IncRslt(Tln.GetTagSumStr);
+  if HauptFenster.Ansicht<>anTlnErgSerie then
+    if Tln=nil then IncRslt('Runden')   else // header bei jeder WettkSrt
+                                        if SerDrWk.WettkArt = waRndRennen then
+                                          IncRslt(IntToStr(Tln.RundenZahl(wkAbs1)))
+                                        else IncRslt('-');
+  if Tln=nil then IncRslt('Kommentar')  else IncRslt(Tln.Komment);
+  if Tln=nil then IncRslt('Startgeld')  else IncRslt(EuroStr(Tln.Startgeld)); // kein ';' als Abschluss
+  if Tln=nil then IncRslt('VereinsMld') else if Tln.SMld=nil then IncRslt('-')
+                                             else IncRslt(Tln.SMld.VName+' '+Tln.SMld.Name);
+  if Tln=nil then IncRslt('Strasse')    else if Tln.SMld=nil then IncRslt(Tln.Strasse)
+                                             else IncRslt(Tln.SMld.Strasse);
+  if Tln=nil then IncRslt('Hausnr')     else if Tln.SMld=nil then  IncRslt(Tln.Hausnr)
+                                             else IncRslt(Tln.SMld.HausNr);
+  if Tln=nil then IncRslt('PLZ')        else if Tln.SMld=nil then  IncRslt(Tln.PLZ)
+                                             else IncRslt(Tln.SMld.PLZ);
+  if Tln=nil then IncRslt('Ort')        else if Tln.SMld=nil then  IncRslt(Tln.Ort)
+                                             else IncRslt(Tln.SMld.Ort);
+  if Tln=nil then IncRslt('EMail')      else if Tln.SMld=nil then  IncRslt(Tln.EMail)
+                                             else IncRslt(Tln.SMld.EMail);
+
+  Result := ResStr;
+  if Tln=nil then ShowMessage(IntToStr(Length(ResStr))); // 212
+end;
+
+//==============================================================================
+function ZeileMschWertung(Msch:TMannschObj): String;
+//==============================================================================
+// Max 255 Zeichen, 63 Felder
+// Felder gleich für alle WkArten
+var i  : Integer;
+
+begin
+  Result := '';
+  if Msch=nil then // nur 1x berechnen
+    if HauptFenster.Ansicht=anMschErgSerie then
+      MschTlnMax := 0
+    else
+      MschTlnMax := Min(Veranstaltung.MannschColl.TlnZahlMax(SerDrWk,SerDrAk,HauptFenster.SortStatus),cnMschGrMax);
+
+  if Msch=nil then ResStr := 'Veranst'   else ResStr := Veranstaltung.Name;
+  if Msch=nil then IncRslt('Wettk')      else IncRslt(GetTitel2(SerDrWk,SerDrWrtg));
+  if Msch=nil then IncRslt('Wertg')      else
+                                         if HauptFenster.Ansicht=anMschErgSerie then
+                                           IncRslt('Serienwertung Mannschaften')
+                                         else
+                                           IncRslt('Mannschaftswertung');
+  if Msch=nil then IncRslt('Datum')      else IncRslt(SerDrWk.Datum);
+  if Msch=nil then IncRslt('VstOrt')     else
+                                         if Veranstaltung.Serie then
+                                           IncRslt(Veranstaltung.OrtName)
+                                         else IncRslt('-');
+  if Msch=nil then IncRslt('Mannschaft') else
+                                         if Msch.MschIndex > 1 then
+                                           IncRslt(Msch.Name+ '~' + IntToStr(Msch.MschIndex))
+                                         else IncRslt(Msch.Name);
+  if Msch=nil then IncRslt('Klasse')     else IncRslt(SerDrAk.Name);
+  if Msch=nil then IncRslt('Rng')        else
+                                         if HauptFenster.Ansicht=anMschErgSerie then
+                                           IncRslt(Msch.GetSerieRangStr)
+                                         else
+                                         if (Msch.Wettk.MschWertg = mwMulti) and
+                                            (Msch.MschIndex=0) then // Startliste
+                                           if Msch.Msch1<>nil then
+                                             IncRslt(Msch.Msch1.TagesRngStr)
+                                           else
+                                             IncRslt('-')
+                                         else
+                                           IncRslt(Msch.TagesRngStr);
+  if Msch=nil then IncRslt('Result')     else
+                                         if HauptFenster.Ansicht=anMschErgSerie then
+                                           IncRslt(Msch.GetSerieSumStr(lmReport))
+                                         else
+                                         if (Msch.Wettk.MschWertg = mwMulti) and
+                                            (Msch.MschIndex=0) then // Startliste
+                                           if Msch.Msch1<>nil then
+                                             IncRslt(Msch.Msch1.GetTagSumStr(nil))
+                                           else
+                                             IncRslt('-')
+                                         else
+                                           IncRslt(Msch.GetTagSumStr(nil));
+  if HauptFenster.Ansicht<>anMschErgSerie then
+    if Msch=nil then IncRslt('Runden')   else
+                                         if SerDrWk.WettkArt = waRndRennen then
+                                           IncRslt(IntToStr(Msch.Runden))
+                                         else IncRslt('-');
+  for i:=0 to MschTlnMax-1 do // nicht für anMschErgSerie
+    if Msch=nil then
+    begin
+      IncRslt('Tln'+IntToStr(i+1));
+      IncRslt('Res'+IntToStr(i+1)); //keine
+    end
+    else
+    if (i<Msch.TlnListe.SortCount) and (Msch.SortedTln[i]<>nil) then
+    begin
+      IncRslt(Msch.SortedTln[i].VNameName); // TlnName auch wenn nicht gewertet
+      if Msch.SortedTln[i].TlnInStatus(stGewertet) then
+        IncRslt(Msch.GetTagSumStr(Msch.SortedTln[i]))
+      else
+        IncRslt('-');
+    end else
+    begin
+      IncRslt('-');
+      IncRslt('-');
+    end;
+
+  Result := ResStr;
+end;
+
+(******************************************************************************)
+(*  Methoden TDruckDialog                                                     *)
+(******************************************************************************)
+
+// public Methoden
+
+(*============================================================================*)
+constructor TSerDrUrkDialog.Create(AOwner: TComponent);
+(*============================================================================*)
+begin
+  inherited Create(AOwner);
+  if not HelpDateiVerfuegbar then
+  begin
+    BorderIcons := [biSystemMenu];
+    HilfeButton.Enabled := false;
+  end;
+
+  Updating       := false;
+  DisableButtons := false;
+
+  if HauptFenster.SortWettk = WettkAlleDummy then // nur für Einzelne Wettk
+    SerDrWk := Veranstaltung.WettkColl[0] // 1. Wettk in WkListe
+  else
+    SerDrWk := HauptFenster.SortWettk;
+  SerDrWrtg := HauptFenster.SortWrtg;
+  WettkEdit.Text := GetTitel2(SerDrWk,SerDrWrtg);
+
+  KlasseEdit.Text := HauptFenster.SortKlasse.Name;
+  SerDrAk        := HauptFenster.SortKlasse;
+
+  InitRngBereichGB;
+
+  OkButton.Default := true;
+  HelpFensterAlt := HelpFenster;
+  HelpFenster := Self;
+  SetzeFonts(Font);
+end;
+
+//------------------------------------------------------------------------------
+procedure TSerDrUrkDialog.InitRngBereichGB;
+//------------------------------------------------------------------------------
+// in Create
+begin
+  Updating := true;
+  try
+    if HauptFenster.TlnAnsicht then
+      if HauptFenster.Ansicht= anTlnErgSerie then
+        RngBisUpDown.Max := Veranstaltung.TlnColl.SerieRngMax(SerDrWk,SerDrAk)
+      else
+        RngBisUpDown.Max := Veranstaltung.TlnColl.TagesRngMax(SerDrWk,SerDrWrtg,SerDrAk)
+    else // MschAnsicht
+      if HauptFenster.Ansicht = anMschErgSerie then
+        RngBisUpDown.Max := Veranstaltung.MannschColl.SerieRngMax(SerDrWk,SerDrAk)
+      else
+        RngBisUpDown.Max := Veranstaltung.MannschColl.TagesRngMax(SerDrWk,SerDrAk);
+
+    RngVonUpDown.Max := RngBisUpDown.Max;
+    {RngBisUpDown.Min  := Min(RngBisUpDown.Max,1);
+    RngVonUpDown.Min  := RngBisUpDown.Min;
+    RngVonUpDown.Max  := RngBisUpDown.Max;
+    RngBisEdit.Text   := IntToStr(RngBisUpDown.Max);
+    RngVonEdit.Text   := IntToStr(RngVonUpDown.Min);}
+    RngAlleRB.Checked := true;
+    UpdateRngBereichGB;
+  finally
+    Updating := false;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+procedure TSerDrUrkDialog.UpdateRngBereichGB;
+//------------------------------------------------------------------------------
+// in Create und bei Änderung RadioButtons-Checked in Click-Events
+// RadioButtons vorher gesetzt, hier nicht ändern
+var UpdatingAlt : Boolean;
+begin
+  UpdatingAlt := Updating;
+  Updating    := true;
+  try
+    if RngAlleRB.Checked then
+    begin
+      RngVonUpDown.Min := 0;
+      RngBisUpDown.Min := 0;
+      RngVonEdit.Text  := '0';
+      RngBisEdit.Text  := IntToStr(RngBisUpDown.Max);
+    end else
+    begin
+      RngVonUpDown.Min := Min(RngBisUpDown.Max,1);
+      RngBisUpDown.Min := RngVonUpDown.Min;
+      // Text an Limits anpassen
+      if StrToIntDef(RngVonEdit.Text,0) < RngVonUpDown.Min then
+        RngVonEdit.Text := IntToStr(RngVonUpDown.Min);
+      if StrToIntDef(RngVonEdit.Text,0) > RngVonUpDown.Max then
+        RngVonEdit.Text := IntToStr(RngVonUpDown.Max);
+      if StrToIntDef(RngBisEdit.Text,0) < RngBisUpDown.Min then
+        RngBisEdit.Text := IntToStr(RngBisUpDown.Min);
+      if StrToIntDef(RngBisEdit.Text,0) > RngBisUpDown.Max then
+        RngBisEdit.Text := IntToStr(RngBisUpDown.Max);
+    end;
+  finally
+    Updating := UpdatingAlt;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+function TSerDrUrkDialog.EingabeOk: Boolean;
+//------------------------------------------------------------------------------
+begin
+  Result := false;
+
+  // prüfen ob Tln vorhanden bei RngAlle ???
+
+  if RngVonBisRB.Checked then
+  begin
+    if (StrToIntDef(RngVonEdit.Text,0) < RngVonEdit.UpDown.Min) or
+       (StrToIntDef(RngVonEdit.Text,0) > RngVonEdit.UpDown.Max)then
+    begin
+      TriaMessage('Der eingegebene Wert ist ungültig. Erlaubt sind Werte von ' +
+                  IntToStr(RngVonEdit.UpDown.Min)+' bis '+IntToStr(RngVonEdit.UpDown.Max)+'.',
+                  mtInformation,[mbOk]);
+      if RngVonEdit.CanFocus then RngVonEdit.SetFocus;
+      Exit;
+    end;
+    if (StrToIntDef(RngBisEdit.Text,0) < RngBisEdit.UpDown.Min) or
+       (StrToIntDef(RngBisEdit.Text,0) > RngBisEdit.UpDown.Max) then
+    begin
+      TriaMessage('Der eingegebene Wert ist ungültig. Erlaubt sind Werte von ' +
+                  IntToStr(RngBisEdit.UpDown.Min)+' bis '+IntToStr(RngBisEdit.UpDown.Max)+'.',
+                  mtInformation,[mbOk]);
+      if RngBisEdit.CanFocus then RngBisEdit.SetFocus;
+      Exit;
+    end;
+    if (StrToIntDef(RngVonEdit.Text,0) > StrToIntDef(RngBisEdit.Text,0)) then
+    begin
+      TriaMessage('Bereich der Platzierungen ist ungültig.',mtInformation,[mbOk]);
+      if RngVonEdit.CanFocus then RngVonEdit.SetFocus;
+     Exit;
+    end;
+  end;
+
+  Result := true;
+end;
+
+//------------------------------------------------------------------------------
+procedure TSerDrUrkDialog.DatenUebernehmen;
+//------------------------------------------------------------------------------
+// Wettk, Klasse in Create fest vorgegeben
+begin
+  // RngBereichGB
+  if not RngAlleRB.Checked then
+  begin
+    SerDrRngVon := StrToIntDef(RngVonEdit.Text,0);
+    SerDrRngBis := StrToIntDef(RngBisEdit.Text,0);
+  end else
+  begin
+    SerDrRngVon := 0;
+    SerDrRngBis := cnTlnMax;
+  end;
+  //ExportDateiName := SysUtils.ChangeFileExt(TriDatei.Path,TriDateiExt(ExportDatFormat));
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSerDrUrkDialog.RngAlleRBClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if not Updating then
+  begin
+    Updating := true;
+    UpdateRngBereichGB;
+    Updating := false;
+  end;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSerDrUrkDialog.RngVonBisRBClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if not Updating then
+  begin
+    Updating := true;
+    UpdateRngBereichGB;
+    if RngVonEdit.CanFocus then RngVonEdit.SetFocus;
+    Updating := false;
+  end;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSerDrUrkDialog.RngBisLabelClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if not Updating then
+  begin
+    if not RngVonBisRB.Checked then
+    begin
+      Updating := true;
+      RngVonBisRB.Checked := true;
+      UpdateRngBereichGB;
+      Updating := false;
+    end;
+    if RngBisEdit.CanFocus then RngBisEdit.SetFocus;
+  end;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSerDrUrkDialog.RngVonBisEditClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if not Updating then
+    if not RngVonBisRB.Checked then
+    begin
+      Updating := true;
+      RngVonBisRB.Checked := true;
+      UpdateRngBereichGB;
+      Updating := false;
+    end;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSerDrUrkDialog.RngVonUpDownClick(Sender: TObject; Button: TUDBtnType);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if not Updating then
+  begin
+    if not RngVonBisRB.Checked then
+    begin
+      Updating := true;
+      RngVonBisRB.Checked := true;
+      UpdateRngBereichGB;
+      Updating := false;
+    end;
+    if RngVonEdit.CanFocus then RngVonEdit.SetFocus;
+  end;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSerDrUrkDialog.RngBisUpDownClick(Sender: TObject; Button: TUDBtnType);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if not Updating then
+  begin
+    if not RngVonBisRB.Checked then
+    begin
+      Updating := true;
+      RngVonBisRB.Checked := true;
+      UpdateRngBereichGB;
+      Updating := false;
+    end;
+    if RngBisEdit.CanFocus then RngBisEdit.SetFocus;
+  end;
+end;
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSerDrUrkDialog.OkButtonClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  // verhindern, dass während Ausgabe ein 2. Mal Ok gedruckt wird
+  if not DisableButtons then
+  try
+    DisableButtons := true;
+    if not EingabeOk then Exit;
+    DatenUebernehmen;
+    if SerDrDateiErstellen then ModalResult := mrOk;
+  finally
+    DisableButtons := false;
+  end;
+end;
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSerDrUrkDialog.HilfeButtonClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  Application.HelpContext(2700);// Seriendruck Urkunden
+end;
+
+
+end.

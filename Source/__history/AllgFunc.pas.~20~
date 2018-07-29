@@ -1,0 +1,944 @@
+unit AllgFunc;
+
+interface
+
+uses SysUtils,Windows,Dialogs,Forms,Math,ShlObj,ActiveX, ShellApi,
+     System.UITypes,StrUtils,Classes,
+     AllgConst;
+
+{type
+  // File-Dialoge über Form zentrieren
+  Dialog zentriert, aber Medlungen/Abfragen nicht, Deshalb nicht einführen
+  TPThread = class(TThread)
+  private
+       Title : string;
+       XPos,YPos : integer;
+  protected
+    procedure Execute; override;
+  end;
+
+  TOpenDialogPos = class(Dialogs.TOpenDialog) // anstelle von TOpenDialog verwenden
+  private
+     Pt : TPThread;
+  public
+     function Execute(X,Y : integer):boolean; reintroduce;
+  end;
+
+  TSaveDialogPos = class(Dialogs.TSaveDialog) // anstelle von TSaveDialog verwenden
+  private
+     Pt : TPThread;
+  public
+     function Execute(X,Y : integer):boolean; reintroduce;
+  end;}
+
+function GetSpecialFolder(const AFolder:Integer): String;
+function SystemDatum: String;
+function SystemJahr: Integer;
+function SystemMonat: String;
+function SystemTag: String;
+function SystemZeit: String;
+function ErsetzeEinfachUnd(const S:String): String;
+function TriaMessage(const Msg:String;DlgType:TMsgDlgType;Buttons:TMsgDlgButtons):Integer; overload
+function TriaMessage(Form:TForm;const Msg:String;DlgType:TMsgDlgType;Buttons:TMsgDlgButtons):Integer; overload
+function Strng(X,W:Integer): String;
+function TrimBlank(const S: String): String;
+function AddLeadZero(S:String; L:integer): string;
+function RemLeadZero(S:String): string;
+function StrGleich(const Str1,Str2:String): Boolean;
+function TxtGleich(const Str1,Str2:String): Boolean;
+function ZeitInitWert: String;
+function GleichZeitInitWert(Format:TZeitFormat; S: String): Boolean;
+function ZeitFormatOk(const S:String; ZtFormat:TZeitFormat): Boolean;
+function UhrZeitWert100(const Zeit:String): Integer;  // Uhrzeit in 1/100 Sek
+function UhrZeitWertDec(const Zeit:String): Integer;  // Uhrzeit in 1/100 Sek
+function UhrZeitWertSek(const Zeit:String): Integer;  // Uhrzeit in 1/100 Sek
+function MinZeitWert(const Zeit:String): Integer;     // Uhrzeit in 1/100 Sek
+function UhrZeitWert(const Zeit:String): Integer;     // Uhrzeit in 1/100 Sek
+function UhrZeitWertMin(const Zeit:String): Integer;  // Uhrzeit in 1/100 Sek
+function DatumWert(const Datum:String): Integer;
+function DatumStr(const Datum:String): String;
+function EffZeitStr(Zeit:Integer): String;
+function EffZeitSekStr(Zeit:Integer): String;
+function ExpZeitStr(Zeit:Integer): String;
+function ExpZeitSekStr(Zeit:Integer): String;
+function UhrZeitStr(Zeit:Integer): String; overload;
+function UhrZeitStr(ZtFormat:TZeitFormat;Zeit:Integer): String; overload;
+function UhrZeitStrODec(Zeit:Integer): String;
+function MinZeitStr(Zeit:Integer): String;
+function ZeitEinhStr(Zeit:Integer): String;
+function EuroStr(Zahl:Integer): String;
+function EuroWert(const S:String): Integer;
+function KmStr(Zahl:Integer): String;
+function RemoveExtension(var Name:String): String;
+function UhrZeitRunden(Zt:Integer): Integer;
+function ZeitRundenMitUeberlauf(Zt:Integer): Integer;
+function FormatStr(Format:TZeitFormat): String;
+function TryDecStrToInt(const S:String; out Value:Integer): Boolean;
+function FileInUse(const FileName: string): Boolean;
+function RfidTrimValid(const Code:String): Boolean;
+function RfidLengthValid(const Code:String): Boolean;
+function RfidHexValid(const Code:String): Boolean;
+function RfidCodeValid(const Code:String): Boolean;
+
+
+implementation
+
+
+{//******************************************************************************
+procedure TPThread.Execute;
+//******************************************************************************
+var ODhandle : THandle; dlgRect  : TRect;
+begin
+    ODhandle:= FindWindow(nil, PChar(Title));
+    while (ODhandle = 0) do ODhandle:= FindWindow(nil, PChar(Title));
+    if ODhandle <> 0 then begin
+       GetWindowRect(ODhandle, dlgRect);
+       with dlgRect do begin
+         XPos:=XPos-(Right-Left) div 2;
+         YPos:=YPos-(Bottom-Top) div 2;
+         MoveWindow(ODhandle, XPos, YPos,Right-Left,Bottom-Top,True);
+         SetWindowPos(ODhandle, HWND_TOP, XPos, YPos, 0, 0, SWP_NOSIZE);
+       end
+    end;
+    DoTerminate;
+end;}
+
+{//******************************************************************************
+function TOpenDialogPos.Execute(X,Y : integer):boolean;
+//******************************************************************************
+begin
+  Pt:= TPThread.Create(False);
+  Pt.XPos := X;
+  Pt.YPos := Y;
+  if Self.Title <> '' then
+     Pt.Title := Self.Title
+  else begin
+    Self.Title := 'Öffnen';
+    Pt.Title := Self.Title;
+  end;
+  Result:= inherited Execute;
+  Pt.Free;
+end;
+
+//******************************************************************************
+function TSaveDialogPos.Execute(X,Y : integer):boolean;
+//******************************************************************************
+begin
+  Pt:= TPThread.Create(False);
+  Pt.XPos := X;
+  Pt.YPos := Y;
+  if Self.Title <> '' then
+     Pt.Title := Self.Title
+  else begin
+    Self.Title := 'Speichern';
+    Pt.Title := Self.Title;
+  end;
+  Result:= inherited Execute;
+  Pt.Free;
+end;}
+
+//******************************************************************************
+function GetSpecialFolder(const AFolder:Integer): String;
+//******************************************************************************
+// Standard Verzeichnisse, z.B.:
+// CSIDL_COOKIES              Cookies
+// CSIDL_DESKTOPDIRECTORY     Desktop
+// CSIDL_FAVORITES            Favoriten
+// CSIDL_HISTORY              Internet-Verlauf
+// CSIDL_INTERNET_CACHE       "Temporary Internet Files"
+// CSIDL_PERSONAL             Eigene Dateien ===> liefert 'C:\', weil auf F verschoben
+// CSIDL_PROGRAMS             "Programme" im Startmenü
+// CSIDL_RECENT               "Dokumente" im Startmenü
+// CSIDL_SENDTO               "Senden an" im Kontextmenü
+// CSIDL_STARTMENU            Startmenü
+// CSIDL_STARTUP              Autostart
+var
+  ItemIDList: PItemIDList;
+  hPath: PChar;
+  ShellH: IMalloc;
+begin
+  Result := 'C:';
+  if SUCCEEDED(SHGetSpecialFolderLocation(Application.Handle, AFolder, ItemIDList)) then
+  begin
+    try
+      hPath:= StrAlloc(MAX_PATH);
+      try
+        if SHGetPathFromIDList (ItemIDList, hPath) then
+          Result := hPath;
+      finally
+        StrDispose(hPath);
+      end;
+    finally
+     if SHGetMalloc(ShellH) = NOERROR then
+       ShellH.Free(ItemIDList);
+    end;
+    if Result[Length(Result)] = '\' then Result := 'C:';
+  end;
+end;
+
+//******************************************************************************
+function SystemDatum: String;
+//******************************************************************************
+// Format('%.2u',[3])  = '03'  - leading zero
+// Format('%2u',[3])   = ' 3'  - leading blank
+// Format('%5.2u',[3]) = '   03'
+
+var SystemTime : TSystemTime;
+begin
+  // DateTimeToString nicht benutzen, führt manchmal zum Absturz. Grund unklar.
+  GetLocalTime(SystemTime);
+  with SystemTime do
+    Result := Format('%.2u.%.2u.%.4u',[wDay,wMonth,wYear]);
+end;
+
+//******************************************************************************
+function SystemJahr: Integer;
+//******************************************************************************
+var SystemTime : TSystemTime;
+begin
+  GetLocalTime(SystemTime);
+  Result := SystemTime.wYear;
+end;
+
+//******************************************************************************
+function SystemMonat: String;
+//******************************************************************************
+var SystemTime : TSystemTime;
+begin
+  GetLocalTime(SystemTime);
+  Result := Format('%.2u',[SystemTime.wMonth]);
+end;
+
+//******************************************************************************
+function SystemZeit: String;
+//******************************************************************************
+var SystemTime : TSystemTime;
+begin
+  GetLocalTime(SystemTime);
+  with SystemTime do
+    Result := Format('%.2u:%.2u:%.2u',[wHour,wMinute,wSecond]);
+end;
+
+//******************************************************************************
+function SystemTag: String;
+//******************************************************************************
+var SystemTime : TSystemTime;
+begin
+  GetLocalTime(SystemTime);
+  Result := Format('%.2u',[SystemTime.wDay]);
+end;
+
+//******************************************************************************
+function ErsetzeEinfachUnd(const S:String):String;
+//******************************************************************************
+// '&' richtig anzeigen. Einfach '&' wird sonst als Unterstrich angezeigt.
+var i : Integer;
+begin
+  Result := S;
+  for i := Length(Result) downto 1 do
+    if Copy(Result,i,1) = '&' then Insert('&', Result, i);
+end;
+
+//******************************************************************************
+function TriaMessage(const Msg:String;DlgType:TMsgDlgType;Buttons:TMsgDlgButtons): Integer;
+//******************************************************************************
+begin
+  Result := TriaMessage(Application.MainForm,Msg,DlgType,Buttons);
+end;
+
+//******************************************************************************
+function TriaMessage(Form:TForm;const Msg:String;DlgType:TMsgDlgType;Buttons:TMsgDlgButtons): Integer;
+//******************************************************************************
+// Message über Form zentrieren
+var MsgForm: TForm;
+begin
+  MsgForm := CreateMessageDialog(ErsetzeEinfachUnd(Msg), DlgType, Buttons);
+  try
+    with MsgForm do
+    begin
+      if not Assigned(Form) then
+        Position := poScreenCenter
+      else
+      begin
+        Left := Form.Left + (Form.Width div 2) - (Width div 2);
+        Top  := Form.Top + (Form.Height div 2) - (Height div 2);
+      end;
+      Result := ShowModal;
+    end;
+  finally
+    MsgForm.Free;
+  end;
+end;
+
+//******************************************************************************
+function Strng(X,W:Integer): String;
+//******************************************************************************
+// leading Blanks
+begin
+  Result := Format('%'+IntToStr(W)+'d', [X]);
+end;
+
+//******************************************************************************
+function TrimBlank(const S:String): String;
+//******************************************************************************
+// Leerzeichen am Anfang und Ende entfernen (Steuerzeichen wie TAB bleiben)
+var
+  I, L: Integer;
+begin
+  L := Length(S);
+  I := 1;
+  if (L > 0) and (S[I] > ' ') and (S[L] > ' ') then Exit(S);
+  while (I <= L) and (S[I] = ' ') do Inc(I);
+  if I > L then Exit('');
+  while S[L] = ' ' do Dec(L);
+  Result := Copy(S, I, L - I + 1);
+end;
+
+//******************************************************************************
+function AddLeadZero(S:String; L:integer): String;
+//******************************************************************************
+var i,j: integer;
+begin
+  S := TrimLeft(S);
+  i := Length(S);
+  if i>0 then for j := i+1 to L do S := '0' + S;
+  Result := S;
+end;
+
+//******************************************************************************
+function RemLeadZero(S:String): String;
+//******************************************************************************
+// leading Zeros durch Blank ersetzen
+var i : Integer;
+begin
+  for i:= 1 to Length(S)-1 do
+    if Copy(S,i,1) = '0' then
+    begin
+      Delete(S,i,1);
+      Insert(' ',S,i);
+    end else Break;
+  Result := S;
+end;
+
+//******************************************************************************
+function StrGleich(const Str1,Str2:String): Boolean;
+//******************************************************************************
+// Leer- und Steuerzeichen nicht berücksichtigen
+// Upper/Lower und ss/ß unterscheiden
+// die aktuelle Ländereinstellung wird nicht berücksichtigt (ss und ß unterscheiden,
+// im Gegensatz zu AnsiSameStr)
+begin
+  Result := SameStr(Trim(Str1),Trim(Str2));
+end;
+
+//******************************************************************************
+function TxtGleich(const Str1,Str2:String): Boolean;
+//******************************************************************************
+// Leer- und Steuerzeichen nicht berücksichtigen
+// Upper/Lower nicht unterscheiden,
+// die aktuelle Ländereinstellung wird nicht berücksichtigt (ss und ß unterscheiden,
+// im Gegensatz zu AnsiSameText)
+begin
+  Result := SameText(Trim(Str1),Trim(Str2));
+end;
+
+//******************************************************************************
+function ZeitInitWert: String;
+//******************************************************************************
+// fehlende Zeit im korrekten Format speichern
+begin
+  case ZeitFormat of
+    zfHundertstel : Result := '  :  :  '+DecTrennZeichen+'  ';
+    zfZehntel     : Result := '  :  :  '+DecTrennZeichen+' ';
+    else            Result := '  :  :  ';
+  end;
+end;
+
+//******************************************************************************
+function GleichZeitInitWert(Format:TZeitFormat; S:String): Boolean;
+//******************************************************************************
+// unabhängig von aktuellem ZeitFormat und DecTrennZeichen
+begin
+  case Format of
+    zfSek     : Result :=  S = '  :  :  ';
+    zfZehntel : Result := (S = '  :  :  . ')  or (S = '  :  :  , ');
+    else        Result := (S = '  :  :  .  ') or (S = '  :  :  ,  ');
+  end;
+end;
+
+//******************************************************************************
+function ZeitFormatOk(const S:String; ZtFormat:TZeitFormat): Boolean;
+//******************************************************************************
+// Format und Inhalt prüfen für Abbruch von Einlesen
+// '  :  :  ' zulässig, kann von TriaZeit erzeugt werden
+// '.' und ',' als Trennzeichen zulassen
+begin
+  Result := false;
+  case ZtFormat of
+    zfHundertstel : Result := (Length(S) = 11) and (S[3] = ':') and (S[6] = ':') and
+                              ((S[9]='.')or(S[9]=',')) and
+                              (GleichZeitInitWert(zfHundertstel,S) or (UhrZeitWert100(S) >= 0));
+    zfZehntel     : Result := (Length(S) = 10) and (S[3] = ':') and (S[6] = ':') and
+                              ((S[9]='.')or(S[9]=',')) and
+                              (GleichZeitInitWert(zfZehntel,S) or (UhrZeitWertDec(S) >= 0));
+    zfSek         : Result := (Length(S) = 8) and (S[3] = ':') and (S[6] = ':') and
+                              (GleichZeitInitWert(zfSek,S) or (UhrZeitWertSek(S) >= 0));
+  end;
+end;
+
+//******************************************************************************
+function UhrZeitWert100(const Zeit:String): Integer;
+//******************************************************************************
+// Result ist Zeit in Hunderstel, unabhängig von Option DecZeiten
+var hh,mm,ss,dd : Integer;
+begin
+  // Format prüfen und umwandeln:  hh:mm:ss.dd
+  if (Length(Zeit)<>11) or (Zeit[3]<>':') or (Zeit[6]<>':') or
+     (Zeit[9]<>'.')and(Zeit[9]<>',') or
+     not TryDecStrToInt(Copy(Zeit, 1,2),hh) or (hh<0) or (hh>=24) or
+     not TryDecStrToInt(Copy(Zeit, 4,2),mm) or (mm<0) or (mm>=60) or
+     not TryDecStrToInt(Copy(Zeit, 7,2),ss) or (ss<0) or (ss>=60) or
+     not TryDecStrToInt(Copy(Zeit,10,2),dd) or (dd<0) then Result := -1
+  else
+    Result := dd + ss*100 + mm*6000 + hh*360000;
+end;
+
+//******************************************************************************
+function UhrZeitWertDec(const Zeit:String): Integer;
+//******************************************************************************
+// Result ist Zeit in 1/100 Sekunden
+var hh,mm,ss,d : Integer;
+begin
+  // Format prüfen und umwandeln:  hh:mm:ss.d
+  if (Length(Zeit)<>10) or (Zeit[3]<>':') or (Zeit[6]<>':') or
+     (Zeit[9]<>'.')and(Zeit[9]<>',') or
+     not TryDecStrToInt(Copy(Zeit, 1,2),hh) or (hh<0) or (hh>=24) or
+     not TryDecStrToInt(Copy(Zeit, 4,2),mm) or (mm<0) or (mm>=60) or
+     not TryDecStrToInt(Copy(Zeit, 7,2),ss) or (ss<0) or (ss>=60) or
+     not TryDecStrToInt(Copy(Zeit, 10,1),d) or (d<0) then Result := -1
+  else
+    Result := (d + ss*10 + mm*600 + hh*36000) * 10;
+end;
+
+//******************************************************************************
+function UhrZeitWertSek(const Zeit:String): Integer;
+//******************************************************************************
+// Benutzt beim Zeiten Einlesen und TriaZeit
+// Format Zeit:  hh:mm:ss
+// Result ist Zeit in 1/100 Sek
+var hh,mm,ss : Integer;
+begin
+  // Format prüfen und umwandeln:  hh:mm:ss
+  if (Length(Zeit)<>8) or (Zeit[3]<>':') or (Zeit[6]<>':') or
+     not TryDecStrToInt(Copy(Zeit, 1,2),hh) or (hh<0) or (hh>=24) or
+     not TryDecStrToInt(Copy(Zeit, 4,2),mm) or (mm<0) or (mm>=60) or
+     not TryDecStrToInt(Copy(Zeit, 7,2),ss) or (ss<0) or (ss>=60) then Result := -1
+  else
+    Result := (ss + mm*60 + hh*3600) * 100;
+end;
+
+//******************************************************************************
+function MinZeitWert(const Zeit:String): Integer;
+//******************************************************************************
+// Result ist Zeit in 1/100 Sekunden, benutzt in ImpDlg
+// Format: [00:]mm:ss   (hh=0)
+var hh,mm,ss : Integer;
+begin
+  Result := -1;
+
+  // Format prüfen und umwandeln
+  if Length(Zeit) = 8 then // 00:mm:ss
+    if (Zeit[3]<>':') or (Zeit[6]<>':') or
+       not TryDecStrToInt(Copy(Zeit, 1,2),hh) or (hh<>0) or  // hh=0 zulassen
+       not TryDecStrToInt(Copy(Zeit, 4,2),mm) or (mm<0) or (mm>=60) or
+       not TryDecStrToInt(Copy(Zeit, 7,2),ss) or (ss<0) or (ss>=60) then Exit
+    else
+  else // mm:ss
+    if (Length(Zeit)<>5) or (Zeit[3]<>':') or
+       not TryDecStrToInt(Copy(Zeit, 1,2),mm) or (mm<0) or (mm>=60) or
+       not TryDecStrToInt(Copy(Zeit, 4,2),ss) or (ss<0) or (ss>=60) then Exit;
+
+  Result := (ss + mm*60) * 100;
+end;
+
+//******************************************************************************
+function UhrZeitWert(const Zeit:String): Integer;
+//******************************************************************************
+// Result ist Zeit in 1/100 Sekunden
+begin
+  case ZeitFormat of
+    zfHundertstel: Result := UhrZeitWert100(Zeit);
+    zfZehntel:     Result := UhrZeitWertDec(Zeit);
+    else {zfSek}   Result := UhrZeitWertSek(Zeit);
+  end;
+end;
+
+//******************************************************************************
+function UhrZeitWertMin(const Zeit:String): Integer;
+//******************************************************************************
+// Result ist Zeit in 1/100 Sekunden
+// Format Zeit:  hh:mm, nur verwendet für alte Meldezeit in Textformat
+var hh,mm : Integer;
+begin
+  // Format prüfen und umwandeln:  hh:mm
+  if (Length(Zeit)<>5) or (Zeit[3]<>':') or
+     not TryDecStrToInt(Copy(Zeit, 1,2),hh) or (hh<0) or (hh>=24) or
+     not TryDecStrToInt(Copy(Zeit, 4,2),mm) or (mm<0) or (mm>=60) then Result := -1
+  else
+    Result := (mm*60 + hh*3600) * 100;
+end;
+
+//******************************************************************************
+function DatumWert(const Datum:String): Integer;
+//******************************************************************************
+// Result ist Jahr-Monat-Tag
+var S: String;
+begin
+  S := TrimLeft(Datum);
+  if Length(S) = 9 then S := '0' + S;
+  if Length(S) = 10 then
+    Result := StrToIntDef(Copy(S,7,4)+Copy(S,4,2)+Copy(S,1,2),0)
+  else // <> 10
+    Result := 0;
+end;
+
+//******************************************************************************
+function DatumStr(const Datum:String): String;
+//******************************************************************************
+// Trennzeichen ignorieren
+begin
+  Result := TrimLeft(Datum); // Blank entfernen
+  if Length(Result) = 9 then Result := '0' + Result;
+  if DatumWert(Result) > 0 then
+    Result := Copy(Result,1,2)+'.'+Copy(Result,4,2)+'.'+Copy(Result,7,4)
+  else
+    Result := '  .  .    ';
+end;
+
+//******************************************************************************
+function EffZeitStr(Zeit:Integer): String;
+//******************************************************************************
+// Zeit in 1/100 Sek
+// führende Nullen nicht dargestellt
+// Zehntel je nach Option dargestellt
+// Zeit < 0 oder >= 1.000:00:00.00 als cnZeitFehler ('xx:xx:xx') dargestellt
+// Zeit = 0 als '-'
+var hh,mm,ss,dd,d,Rest : Integer;
+begin
+  if (Zeit > 0) and (Zeit < cnZeitStrUeberlauf) then // gültige ZeitStr
+  begin
+    hh   := Zeit DIV 360000;  // hh < 1.000
+    Rest := Zeit MOD 360000;  // rest < 360000
+    mm   := Rest DIV 6000;    // mm < 60
+    Rest := Rest MOD 6000;    // rest < 6000
+    ss   := Rest DIV 100;     // ss < 60
+    dd   := Rest MOD 100;     // dd < 100
+    d    := dd   DIV 10;      //  d < 10
+    case ZeitFormat of
+      zfSek:
+        if hh=0 then
+          if mm=0 then Result := Format('%u',[ss])
+                  else Result := Format('%u:%.2u',[mm,ss])
+        else           Result := Format('%u:%.2u:%.2u',[hh,mm,ss]);
+      zfZehntel:
+        if hh=0 then
+          if mm=0 then Result := Format('%u'+DecTrennZeichen+'%u',[ss,d])
+                  else Result := Format('%u:%.2u'+DecTrennZeichen+'%u',[mm,ss,d])
+        else           Result := Format('%u:%.2u:%.2u'+DecTrennZeichen+'%u',[hh,mm,ss,d]);
+      zfHundertstel:
+        if hh=0 then
+          if mm=0 then Result := Format('%u'+DecTrennZeichen+'%.2u',[ss,dd])
+                  else Result := Format('%u:%.2u'+DecTrennZeichen+'%.2u',[mm,ss,dd])
+        else           Result := Format('%u:%.2u:%.2u'+DecTrennZeichen+'%.2u',[hh,mm,ss,dd]);
+    end;
+  end
+  else
+  if Zeit = 0 then Result := '-'
+  else Result := cnZeitFehlerStr;
+end;
+
+//******************************************************************************
+function EffZeitSekStr(Zeit:Integer): String;
+//******************************************************************************
+// Zeit in Sek für SerWrtg-ZeitSumme
+// führende Nullen nicht dargestellt
+// Zeit < 0 oder >= 1.000:00:00 als cnZeitFehler ('xx:xx:xx') dargestellt
+// Zeit = 0 als '-'
+var hh,mm,ss,Rest : Integer;
+begin
+  if (Zeit > 0) and (Zeit < cnZeitStrUeberlauf DIV 100) then // gültige ZeitStr
+  begin
+    hh   := Zeit DIV 3600;  // hh < 1.000
+    Rest := Zeit MOD 3600;  // rest < 3600
+    mm   := Rest DIV 60;    // mm < 60
+    ss   := Rest MOD 60;    // ss < 60
+
+    if hh=0 then
+      if mm=0 then Result := Format('%u',[ss])
+              else Result := Format('%u:%.2u',[mm,ss])
+    else           Result := Format('%u:%.2u:%.2u',[hh,mm,ss]);
+  end else
+  if Zeit = 0 then Result := '-'
+  else Result := cnZeitFehlerStr;
+end;
+
+//******************************************************************************
+function ExpZeitStr(Zeit:Integer): String;
+//******************************************************************************
+// Zeit in 1/100 Sek für Export
+// führende Nullen dargestellt,
+// Zehntel je nach Option dargestellt
+// Zeit <=0 oder >= 1.000:00:00.00 als '' dargestellt
+var hh,mm,ss,dd,d, Rest : Integer;
+begin
+  if (Zeit > 0) and (Zeit < cnZeitStrUeberlauf) then // gültige ZeitStr
+  begin
+    hh   := Zeit DIV 360000; // hh < 1.000
+    Rest := Zeit MOD 360000;
+    mm   := Rest DIV 6000;
+    Rest := Rest MOD 6000;
+    ss   := Rest DIV 100;
+    dd   := Rest MOD 100;
+    d    := dd   DIV 10;
+    case ZeitFormat of
+      zfSek:
+        Result := Format('%.2u:%.2u:%.2u',[hh,mm,ss]); // .(prec): führende Nullen
+      zfZehntel:
+        Result := Format('%.2u:%.2u:%.2u'+DecTrennZeichen+'%u',[hh,mm,ss,d]);
+      zfHundertstel:
+        Result := Format('%.2u:%.2u:%.2u'+DecTrennZeichen+'%.2u',[hh,mm,ss,dd]);
+    end;
+  end else
+    Result := '';
+end;
+
+//******************************************************************************
+function ExpZeitSekStr(Zeit:Integer): String;
+//******************************************************************************
+// Zeit in Sek für Export für SerWrtg-ZeitSumme
+// führende Nullen dargestellt,
+// Zeit <=0 oder >= 1.000:00:00 als '' dargestellt
+var hh,mm,ss, Rest : Integer;
+begin
+  if (Zeit > 0) and (Zeit < cnZeitStrUeberlauf DIV 100) then // gültige ZeitStr
+  begin
+    hh   := Zeit DIV 3600; // hh < 1.000
+    Rest := Zeit MOD 3600;
+    mm   := Rest DIV 60;
+    ss   := Rest MOD 60;
+    Result := Format('%.2u:%.2u:%.2u',[hh,mm,ss]); // .(prec): führende Nullen
+  end else
+    Result := '';
+end;
+
+//******************************************************************************
+function UhrZeitStr(ZtFormat:TZeitFormat; Zeit:Integer): String;
+//******************************************************************************
+// Zeit in 1/100 Sek
+// führende Nullen dargestellt,
+// Zehntel je nach Option dargestellt
+// Zeit < 0 und >= 24:00:00 als '' dargestellt
+var hh,mm,ss,dd,d, Rest : Integer;
+begin
+  if (Zeit >= 0) and (Zeit < cnZeit24_00) then  // gültige Uhrzeit
+  begin
+    hh   := Zeit DIV 360000; (* hh < 24 *)
+    Rest := Zeit MOD 360000;
+    mm   := Rest DIV 6000;
+    Rest := Rest MOD 6000;
+    ss   := Rest DIV 100;
+    dd   := Rest MOD 100;
+    d    := dd   DIV 10;
+    case ZtFormat of
+      zfSek:
+        Result := Format('%.2u:%.2u:%.2u',[hh,mm,ss]); // .(prec): führende Nullen
+      zfZehntel:
+        Result := Format('%.2u:%.2u:%.2u'+DecTrennZeichen+'%u',[hh,mm,ss,d]);
+      zfHundertstel:
+        Result := Format('%.2u:%.2u:%.2u'+DecTrennZeichen+'%.2u',[hh,mm,ss,dd]);
+    end;
+  end
+  else Result := '';
+end;
+
+//******************************************************************************
+function UhrZeitStr(Zeit:Integer): String;
+//******************************************************************************
+// Zeit in 1/100 Sek
+// führende Nullen dargestellt,
+// Zehntel je nach Option dargestellt
+// Zeit < 0 und >= 24:00:00 als '' dargestellt
+var hh,mm,ss,dd,d, Rest : Integer;
+begin
+  if (Zeit >= 0) and (Zeit < cnZeit24_00) then  // gültige Uhrzeit
+  begin
+    hh   := Zeit DIV 360000; (* hh < 24 *)
+    Rest := Zeit MOD 360000;
+    mm   := Rest DIV 6000;
+    Rest := Rest MOD 6000;
+    ss   := Rest DIV 100;
+    dd   := Rest MOD 100;
+    d    := dd   DIV 10;
+    case ZeitFormat of
+      zfSek:
+        Result := Format('%.2u:%.2u:%.2u',[hh,mm,ss]); // .(prec): führende Nullen
+      zfZehntel:
+        Result := Format('%.2u:%.2u:%.2u'+DecTrennZeichen+'%u',[hh,mm,ss,d]);
+      zfHundertstel:
+        Result := Format('%.2u:%.2u:%.2u'+DecTrennZeichen+'%.2u',[hh,mm,ss,dd]);
+    end;
+  end
+  else Result := '';
+end;
+
+//******************************************************************************
+function UhrZeitStrODec(Zeit:Integer): String;
+//******************************************************************************
+// Zeit in 1/100 Sek
+// führende Nullen dargestellt
+// Zehntel nicht dargestellt
+// Zeit 0 als 'hh:mm:ss' dargestellt
+// Zeit <0 und >= 24:00:00 als '' dargestellt
+var mm,hh,ss : Integer;
+    Rest  : Integer;
+begin
+  if (Zeit >= 0) and (Zeit < cnZeit24_00) then  // gültige Uhrzeit
+  begin
+    hh   := Zeit DIV 360000; (* hh < 24 *)
+    Rest := Zeit MOD 360000;
+    mm   := Rest DIV 6000;
+    Rest := Rest MOD 6000;
+    ss   := Rest DIV 100;
+    Result := Format('%.2u:%.2u:%.2u',[hh,mm,ss]); // .(prec): führende Nullen
+  end
+  else Result := '';
+end;
+
+//******************************************************************************
+function MinZeitStr(Zeit:Integer): String;
+//******************************************************************************
+// Zeit in 1/100 Sek
+// führende Nullen dargestellt
+// Zeit 0 als 'mm:ss' dargestellt
+// Zeit <0 und >=36000 (60:00) als '' dargestellt
+var mm,ss,Rest : Integer;
+begin
+  if (Zeit >= 0) and (Zeit < cnZeit_1Std) then // gültige Minzeit
+  begin
+    mm   := Zeit DIV 6000;
+    Rest := Zeit MOD 6000;
+    ss   := Rest DIV 100;
+    Result := Format('%.2u:%.2u',[mm,ss]);
+  end
+  else Result := '';
+end;
+
+//******************************************************************************
+function ZeitEinhStr(Zeit:Integer): String;
+//******************************************************************************
+// Zeit in Hundertstel
+begin
+  if (Zeit > 0) and (Zeit < cnZeitStrUeberlauf) then // gültige ZeitStr
+    if Zeit >= cnZeit_1Std then Result := 'Std.'
+    else
+      if Zeit >= cnZeit_1Min then Result := 'Min.'
+      else Result := 'Sek.'
+  else Result := '-';
+end;
+
+//******************************************************************************
+function EuroStr(Zahl:Integer): String;
+//******************************************************************************
+// Wert Zahl in Cents
+var euro,cent : Integer;
+begin
+  if Zahl > 0 then
+  begin
+    euro := Zahl DIV 100;
+    cent := Zahl MOD 100;
+    Result := Format('%d,%.2u',[euro,cent]);
+  end
+  else Result := '';
+end;
+
+//******************************************************************************
+function EuroWert(const S:String): Integer;
+//******************************************************************************
+// max 999,99 EUR
+var L,euro,cent : Integer;
+begin
+  L := Length(S);
+  if L=0 then Result := 0
+  else
+  if (Pos('.',S) = 0) and (Pos(',',S) = 0) then // keine Dezimalen
+    if (L>3) or not TryDecStrToInt(S,euro) or (euro<0) then Result := -1
+    else Result := 100*euro
+  else // Dezimalzahl
+  if (L<3) or (S[L-2]<>'.')and(S[L-2]<>',') or (L>6) or
+     not TryDecStrToInt(Copy(S,L-1,2),cent) or (cent<0) or
+     not TryDecStrToInt(Copy(S,1,L-3),euro) or (euro<0) then Result := -1
+  else
+    Result := cent + 100*euro;
+end;
+
+//******************************************************************************
+function KmStr(Zahl:Integer): String;
+//******************************************************************************
+// Wert Zahl in meter,
+var km,m : Integer;
+begin
+  if Zahl > 0 then
+  begin
+    km := Zahl DIV 1000;
+    m  := Zahl MOD 1000;
+    Result := Format('%u,%.3u',[km,m]);
+  end
+  else Result := '';
+end;
+
+//******************************************************************************
+function RemoveExtension(var Name:String): String;
+//******************************************************************************
+var i,L,LExt : Integer;
+    S : String;
+begin
+  Result := '';
+  S := Name;
+  L := Length(Name);
+  LExt := 0;
+  for i:=L downto 1 do
+    if S[i] = '.' then
+    begin
+      LExt := L - i;
+      Break;
+    end;
+  if LExt > 0 then
+  begin
+    Result := Copy(S,L-LExt,LExt+1);
+    Name   := Copy(S,1,L-LExt-1);
+  end;
+end;
+
+//******************************************************************************
+function UhrZeitRunden(Zt:Integer): Integer;
+//******************************************************************************
+// Zt, Result < cnZeit24_00 = gültige Uhrzeit
+begin
+  if Zt >= 0 then // Runden
+    case ZeitFormat of
+      zfSek: // Zeit auf Sek runden
+      begin
+        Result := Zt + 50;
+        if Result >= cnZeit24_00 then Result := Result - cnZeit24_00;
+        Result := (Result DIV 100) * 100;
+      end;
+      zfZehntel: // Zeit auf 1/10 Sek Runden
+      begin
+        Result := Zt + 5;
+        if Result >= cnZeit24_00 then Result := Result - cnZeit24_00;
+        Result := (Result DIV 10) * 10;
+      end;
+      else // zfHundertstel: Zeit nicht runden
+        Result := Zt;
+    end
+  else
+    Result := -1;
+end;
+
+//******************************************************************************
+function ZeitRundenMitUeberlauf(Zt:Integer): Integer;
+//******************************************************************************
+begin
+  if Zt >= 0 then // Runden
+    case ZeitFormat of
+      zfSek: // Zeit auf Sek runden
+      begin
+        Result := Zt + 50;
+        //if Result >= cnZeit24_00 then Result := Result - cnZeit24_00;
+        Result := (Result DIV 100) * 100;
+      end;
+      zfZehntel: // Zeit auf 1/10 Sek Runden
+      begin
+        Result := Zt + 5;
+        //if Result >= cnZeit24_00 then Result := Result - cnZeit24_00;
+        Result := (Result DIV 10) * 10;
+      end;
+      else // zfHundertstel: Zeit nicht runden
+        Result := Zt;
+    end
+  else
+    Result := -1;
+end;
+
+//******************************************************************************
+function FormatStr(Format:TZeitFormat): String;
+//******************************************************************************
+begin
+  case Format of
+    zfSek         : Result := 'Sekunden';
+    zfZehntel     : Result := 'Zehntel-Sekunden';
+    zfHundertstel : Result := 'Hundertstel-Sekunden';
+  end;
+end;
+
+//******************************************************************************
+function TryDecStrToInt( const S:String; out Value:Integer): Boolean;
+//******************************************************************************
+begin
+   Result := ( pos( '$', S ) = 0 ) and TryStrToInt( S, Value ) and (Value >= 0);
+end;
+
+//******************************************************************************
+function FileInUse(const FileName: string): Boolean;
+//******************************************************************************
+var
+  hFileRes: HFILE;
+begin
+  Result := False;
+  if not FileExists(FileName) then Exit;
+  hFileRes := CreateFile(PChar(FileName),
+                         GENERIC_READ or GENERIC_WRITE,
+                         0,
+                         nil,
+                         OPEN_EXISTING,
+                         FILE_ATTRIBUTE_NORMAL,
+                         0);
+  Result := (hFileRes = INVALID_HANDLE_VALUE);
+  if not Result then
+    CloseHandle(hFileRes);
+end;
+
+//******************************************************************************
+function RfidTrimValid(const Code:String): Boolean;
+//******************************************************************************
+begin
+  Result := (Length(Trim(Code)) = Length(Code)); // keine Blanks und Steuerzeichen am Anfang und Ende
+end;
+
+//******************************************************************************
+function RfidLengthValid(const Code:String): Boolean;
+//******************************************************************************
+begin
+  Result := (Length(Code) = RfidZeichen);
+end;
+
+//******************************************************************************
+function RfidHexValid(const Code:String): Boolean;
+//******************************************************************************
+var i: Integer;
+begin
+  Result := false;
+  for i:=1 to Length(Code) do
+    if not CharInSet(Code[i],['0'..'9','a'..'f','A'..'F']) then Exit;
+  Result := true;
+end;
+
+//******************************************************************************
+function RfidCodeValid(const Code:String): Boolean;
+//******************************************************************************
+begin
+  Result := RfidTrimValid(Code) and RfidLengthValid(Code) and (not RfidHex or RfidHexValid(Code));
+end;
+
+
+end.

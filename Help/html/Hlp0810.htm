@@ -1,0 +1,109 @@
+<html>
+<head>
+<Title>Zeitnahme-Zeiten Einlesen</Title>
+<link rel="stylesheet" type="text/css" href="TriaHilfe.css">
+<meta name="author" content="Gerhard Selten">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+<body bgcolor="#FFFFFF" text="#000000">
+<Object type="application/x-oleobject" classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e">
+	<param name="Keyword" value="Zeiten einlesen">
+</OBJECT>
+<h1>Zeitnahme - Zeiten Einlesen</h1>
+<p>
+Mit dem nachfolgend dargestellten Dialog können die Daten aus der im Feld "Dateiname" eingetragenen Zeiterfassungsdatei eingelesen werden. Die Reihenfolge der Einträge in der Datei ist dabei beliebig.</p><br>
+<p>
+  <img src="img/zeit1.gif" alt="Einlesen" width="420" height="585" border="0"></p><br>
+<p>
+Der Dateityp wird vorgegeben. Neben TriaZeit können die Dateien verschiedener Transpondersysteme gewählt werden. Bei diesen Typen ist das Dateiformat fest vorgegeben.
+Zusätzlich gibt es unter "Sonstige" die Möglichkeit das Format für eine beliebige Text- oder CSV-Datei im Bereich "Dateiformat" flexibel zu definieren.<br> 
+Dabei kann u.a. angegeben werden, in welchen Spalten sich Startnummer (oder RFID-Code im RFID-Modus) und Zeit befinden. Startnummern werden mit bis zu 4 Ziffern und RFID-Codes bis zu einer maximalen Zeichenlänge von 24 eingelesen.</p>
+<p>
+Das Einlesen  kann einzeln pro Wettkampf oder, wenn alle Abschnitte gleich definiert sind, auch für alle Wettkämpfe gemeinsam geschehen.</p>
+<p>
+Die Daten können den für den Wettkampf definierten Abschnitten beliebig zugeordnet werden. Wenn für Abschnitt 1 einen Einzelstart definiert wurde, können auch die Startzeiten eingelesen werden.<br>
+Die Zeiterfassungsdaten der einzelnen Abschnitte können in beliebiger Reihenfolge eingelesen werden. Verschiedene Abschnitte können in einer Datei kombiniert oder auch auf mehreren Dateien aufgeteilt werden.</p>
+<p>
+Beim Einlesen werden die Zeiten eines Teilnehmers den Runden und Abschnitten in zeitlicher Reihenfolge zugeordnet. Um eine korrekte Zuordnung auch bei Zeitnahme über Mitternacht zu gewährleisten, werden die Zeiten dabei auf der Startzeit des ersten Abschnitts bezogen.<br>
+Wenn mehrere Abschnitte in einer Datei gemeinsam eingelesen werden, ist zu beachten, dass die Runden- und Abschnittszeiten der vorangegangenen Abschnitte für eine korrekte Zuordnung vorher vollständig erfasst sein müssen.<br>
+Und bei einer Zeitnahme über Mitternacht ist eine korrekte Zuordnung nur gewährleistet, wenn die Startzeit vor dem Einlesen definiert ist. Beim üblichen Massenstart ist dies automatisch der Fall, weil die Startzeit in der Startgruppe fest vorgegeben ist, Beim Einzelstart der Teilnehmer müssen die Startzeiten aber vorher eingelesen werden.</p>
+<p>
+Wenn jeder einzelne Abschnitt in einer eigenen Datei von den übrigen Abschnitten getrennt eingelesen wird, ist die Zuordnung eindeutig und von der Reihenfolge beim Einlesen unabhängig.</p>
+<p> 
+Es kann eingestellt werden, ob die bisher für den gewählten Wettkampf und die gewählten Abschnitte eingelesene Zeiten erhalten bleiben oder ob diese beim Einlesen alle gelöscht und mit den neuen Zeiten überschrieben werden.</p>
+<p>
+Vor dem Einlesen werden die Daten überprüft. Einträge mit unbekannten, fehlenden oder ungültigen Startnummern, RFID-Codes oder Zeiten sowie identische Einträge werden ignoriert. Gleiches gilt auch für Einträge, die bereits vorher eingelesen wurden.<br>
+Die Stoppzeiten können in Sekunden, Zehntelsekunden oder Hundertstelsekunden in der Datei gespeichert sein. Je nach eingestellter Option (siehe <a href="Hlp1100.htm">Optionen</a>) werden die Zeiten umgewandelt. Bei der Umwandlung in ein ungenaueres Zeitformat werden die Zeiten gegebenenfalls angepasst, um die Reihenfolge zu erhalten.<br>
+Die ursprünglichen Daten werden zusätzlich in unveränderter Form gespeichert, damit eine spätere Änderung der Zeitformat-Option jederzeit möglich ist.</p>
+<p>
+Bei manchen Transpondersystemen kann es vorkommen, dass Teilnehmer in kurzen Zeitabständen mehrfach erfasst werden. Diese Doppeleinträge können optional ausgefiltert werden. Das Zeitfenster kann dabei variabel definiert werden (siehe <a href="Hlp1100.htm">Optionen</a>).</p>
+<p>
+Bei der Zeitnahme wird in der Regel die aktuelle Uhrzeit verwendet. Es ist aber auch möglich die Uhrzeit 00:00:00 im <a href="Hlp0610.htm">Startgruppen-Dialog</a> als Startzeit zu definieren und dann eine ab dem Startzeitpunkt laufende Uhr für die Zeitnahme zu verwenden. In jedem Fall ist darauf zu achten, dass die Zeiten am Start und bei den verschiedenen Abschnitten synchron gemessen werden. Gegebenfalls sollte auch die Startzeit im Startgruppen-Dialog der tatsächlichen Zeit angepasst werden.</p>
+<br>
+<p>Folgende Dateitypen werden unterstützt:</p>
+<ul>
+<li>
+<b>TriaZeit</b><br>
+Das Zusatzprogramm TriaZeit wurde bereits im <a href="Hlp800.htm">vorigen Kapitel</a> beschrieben. Dieser Dateityp ist sowohl im Startnummer- als auch im RFID-Modus verfügbar.
+<br>
+TriaZeit liefert die Daten in einer einfachen Textdatei, die an der Erweiterung <b>.trz</b> erkennbar ist und die auch mit einem üblichen Textbearbeitungs- oder Tabellenkalkulationsprogramm wie Microsoft Word oder Microsoft Excel erzeugt und bearbeitet werden kann. Jede Zeile enthält entweder eine 4-stellige Startnummer oder einen variabel definierbaren RFID-Code und eine Uhrzeit in der Form "hh:mm:ss",  "hh:mm:ss.d" oder "hh:mm:ss.dd" entsprechend dem eingestellten Zeitformat, mit einem Tabstopp als Trennzeichen. Die Reihenfolge der Einträge in der Datei spielt beim Einlesen keine Rolle.<br></li><br>
+<li>
+<b>Tria_P</b><br>
+Dieses Freeware Programm von Karl Meyer dient zur Zeiterfassung mit einem PALM-PDA. Das Datenformat ist identisch mit den Dateien, die mit TriaZeit erzeugt werden, aber nur im Startnummer-Modus verfügbar.<br> 
+Das Programm und nähere Infos gibt es auf <a href="http://www.meyer-velen.de/" target="_blank">www.meyer-velen.de</a><br>.</li><br>
+<li>
+<b>TC Backnang</b><br>
+Das auf Transpondern basierende elektronische Zeiterfassungs-System des Triathlon Clubs Backnang liefert pro Abschnitt eine dBase-Datei (<b>.dbf</b>) mit auf Hundertstelsekunden genau gemessenen Uhrzeiten. Die Einträge sind nach der Uhrzeit sortiert.<br>
+Dieser Dateityp ist nur im Startnummer-Modus verfügbar.<br> 
+Nähere Infos zum Zeiterfassungssystem gibt es auf <a href="http://www.triaclubbacknang.de/" target="_blank">www.triaclubbacknang.de</a>.<br></li><br>
+<li>
+<b>ZERF</b><br>
+Mit dem audio- und videobasierten Zeiterfassungsprogramm ZERF von Gerd Hansen werden die Zieleinläufe mit Web-Cam und Mikrofon am PC aufgezeichnet und die Uhrzeiten per Knopfdruck gespeichert. Die Startnummern können von Hand eingegeben und einem Bild zugeordnet werden.<br>
+Die Ergebnisse werden in einer Textdatei mit der Erweiterung <b>.zrf</b> zum Einlesen in Tria bereitgestellt. Das Dateiformat entspricht dem TriaZeit-Format mit einem zusätzlichen Textstring als Link zum Ziel-Foto. Dieser Link wird in Tria im Kommentar-Datenfeld des Teilnehmers gespeichert.<br>
+Dieser Dateityp ist nur im Startnummer-Modus verfügbar.<br>
+Nähere Infos zum Zeiterfassungssystem gibt es auf <a href="http://www.zerf-sport.de/" target="_blank">www.zerf-sport.de</a>.<br></li><br>
+<li>
+<b>GiS</b><br>
+Mit dem Transpondersystem der Firma GiS (Gesellschaft für Informatik und Steuerungstechnik mbH) können die erfassten Daten in eine Textdatei mit der Erweiterung <b>.gtz</b> gespeichert werden. Die Uhrzeiten werden in dieser Datei in Hundertstelsekunden angegeben.<br>
+Dieser Dateityp ist nur im Startnummer-Modus verfügbar.<br> 
+Nähere Infos zum Zeiterfassungssystem gibt es auf <a href="http://www.gis-net.de/" target="_blank">www.gis-net.de</a>.<br></li><br>
+<li>
+<b>Sportronic</b><br>
+Für das Transpondersystem der Firma Sportronic gilt das Gleiche wie vorher beschrieben, nur wird hier ein anderes Dateiformat und <b>.txt</b> als Dateierweiterung verwendet.<br>
+Dieser Dateityp ist nur im Startnummer-Modus verfügbar.<br>
+Nähere Infos zum Zeiterfassungssystem gibt es auf <a href="http://www.sportronic-gbr.de/" target="_blank">www.sportronic-gbr.de</a>.<br></li>
+<br>
+<li>
+<b>DAG-System</b><br>
+Das gilt ebenfalls für das Transpondersystem der Firma DAG-System. Hier wird <b>.dag</b> als Dateierweiterung verwendet.<br>
+Dieser Dateityp ist nur im Startnummer-Modus verfügbar.<br>
+Nähere Infos zum Zeiterfassungssystem gibt es auf  <a href="http://www.dag-system.com/" target="_blank">www.dag-system.com</a>.<br></li>
+<br>
+<li>
+<b>Mandigo</b><br>
+Das gilt ebenfalls für das Transpondersystem der Firma Mandigo. Hier wird <b>.txt</b> als Dateierweiterung verwendet.<br>
+Dieser Dateityp ist nur im Startnummer-Modus verfügbar.<br>
+Nähere Infos zum Zeiterfassungssystem gibt es auf <a href="http://www.mandigo.de/" target="_blank">www.mandigo.de</a>.</li>
+<br>
+<li>
+<b>Sonstige</b><br>
+Sowohl im Startnummer- als auch im RFID-Modus kann das Format für eine beliebige Text- oder CSV-Datei im Dialog variabel definiert werden.</li>
+</ul>
+<br>
+<p>
+Wie vorher beschrieben, werden die Zeiterfassungsdaten werden beim Einlesen in Tria grundsätzlich auf Fehler geprüft (z.B. doppelte oder unbekannte Startnummern). Es werden nur gültige Einträge eingelesen, und dies auch nur für Teilnehmer, die für den markierten Wettkampf eingeteilt wurden. Die übrigen Einträge werden ignoriert.</p>
+<p> 
+Im Anschluss an dem Einlese-Vorgang wird ein Report eingeblendet, in dem die übernommene und nicht übernommene Einträge aufgelistet werden. Ein Beispiel ist unten dargestellt.</p><br>
+<p>
+  <img src="img/zeit2.gif" alt="Report" width="630" height="491" border="0"></p><br>
+<p>
+Diese Daten können auf Wunsch als Textdatei gespeichert werden.</p>
+<p>
+Nach dem Schließen dieses Dialogs werden alle Wertungen automatisch neu berechnet.</p>
+<br>
+<p style="font-weight:bold">Siehe auch:</p>
+<table width="100%" border="0" cellpadding="0" cellspacing="0">
+  <tr><td height="25">&nbsp;&nbsp;&nbsp;<img src="img/next_pas.gif" alt="" height="10" width="15" border="0"><a href="Hlp0800.htm">Zeitnahme Übersicht</a></td></tr>
+</table>
+</body>
+</html>

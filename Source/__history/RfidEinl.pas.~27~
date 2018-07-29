@@ -1,0 +1,363 @@
+unit RfidEinl;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  StrUtils, Dialogs,
+  AllgConst,AllgObj,AllgFunc,VeranObj;
+
+procedure RfidEinlesen;
+
+implementation
+
+uses DateiDlg,TriaMain,TlnObj;
+
+//******************************************************************************
+procedure RfidEinlesen;
+//******************************************************************************
+var Zeile,
+    SnrStr,RfidStr,
+    Dir,DatName      : String;
+    TrennChar        : Char;
+    i,ZeilenLaenge,
+    TrennPos,
+    ZeileNr,AnZahl,
+    SnrInt,
+    FilterIndx       : Integer;
+    RfidBufListe     : TStringList;
+    IOFehler,Voll,
+    SnrLinks         : Boolean;
+    RfidDatei        : Textfile;
+    Tln              : TTlnObj;
+begin
+  DatName  := '';
+  Dir      := '';
+  IOFehler := false;
+  Voll     := false;
+  AnZahl   := 0;
+
+  Dir := SysUtils.ExtractFileDir(TriDatei.Path);
+  FilterIndx := 0;
+  if not OpenFileDialog('txt', //const DefExt: string
+                        'Text-Dateien (*.txt)|*.txt|Alle Dateien (*.*)|*.*',//Filter: string
+                          Dir, //InitialDir: string
+                          FilterIndx, // Type Txt Dateien
+                          'RFID-Codes Importieren',//Title: string
+                          DatName) then //var FileName: string
+      Exit; // Abbruch, ohne weitere Änderngen
+
+  try
+    (*$I-*)
+    AssignFile(RfidDatei,DatName);
+    SetLineBreakStyle(RfidDatei,tlbsCRLF); // CR + LF
+    Reset(RfidDatei);
+    if IoResult<>0 then begin IOFehler := true; Exit; end;
+
+    ZeileNr  := 0;
+    TrennPos := 0;
+    SnrLinks := false;
+
+    while not Eof(RfidDatei) do
+    begin
+      if ZeileNr = cnTlnMax then
+      begin
+        Voll := true;
+        Exit;
+      end;
+
+      ReadLn(RfidDatei,Zeile);
+      if IoResult<>0 then begin IOFehler := true; Exit; end;
+      Zeile := Trim(Zeile);
+      ZeilenLaenge := Length(Zeile);
+      if ZeilenLaenge <> 4 + 1 + RfidZeichen then // war möglicherweise Header, nächste Zeile
+      begin
+        ReadLn(RfidDatei,Zeile);
+        if IoResult<>0 then begin IOFehler := true; Exit; end;
+        Zeile := Trim(Zeile);
+        ZeilenLaenge := Length(Zeile);
+      end;
+      if ZeilenLaenge <> 4 + 1 + RfidZeichen then Exit;
+
+      if ZeileNr = 0 then
+      begin
+        TrennChar := ';';
+        TrennPos := Pos(TrennChar,Zeile);
+        if TrennPos = 0 then
+        begin
+          TrennChar := ',';
+          TrennPos := Pos(TrennChar,Zeile);
+        end;
+        if TrennPos = 0 then
+        begin
+          TrennChar := #09;
+          TrennPos := Pos(TrennChar,Zeile);
+        end;
+        if TrennPos = 0 then Exit;
+
+        if TrennPos = 5 then
+          SnrLinks := true
+        else
+        if TrennPos <> ZeilenLaenge - 4 then
+          Exit;
+      end;
+
+      // Zeile einlesen
+      Inc(ZeileNr);
+      if SnrLinks then
+      begin
+        SnrStr  := Copy(Zeile,1,4);
+        RfidStr := Copy(Zeile,TrennPos+1,RfidZeichen);
+      end else
+      begin
+        SnrStr  := Copy(Zeile,TrennPos+1,4);
+        RfidStr := Copy(Zeile,1,RfidZeichen);
+      end;
+      if not TryStrToInt(SnrStr,SnrInt) or (SnrInt <= 0) then // Snr ungültig
+        Exit;
+
+      // prüfe Zeile
+      Tln := Veranstaltung.TlnColl.TlnMitSnr(SnrInt);
+      if Tln <> nil then // Snr vorhanden
+      begin
+        if Tln.RfidCode <> RfidStr then
+        begin
+          if Veranstaltung.TlnColl.TlnMitRfid(RfidStr) <> nil then // RfidCode doppel
+
+
+
+        end else
+          Continue; // RfidCode schon eingelesen, nächste Zeile
+      end else
+        Continue; // Tln nicht vorhanden, nächste Zeile
+
+
+
+
+
+
+
+    end;
+
+
+  finally
+    CloseFile(RfidDatei);
+    IoResult;
+    (*$I+*)
+
+    if Anzahl = 0 then // Fehler beim Laden der Datei
+    begin
+      if IOFehler then
+        TriaMessage('Fehler beim Lesen der Datei  "'+SysUtils.ExtractFileName(DatName)+'".'+#13+
+                    'Es wurden keine RFID-Codes importiert.',
+                     mtInformation,[mbOk])
+      else
+      if Voll then
+        TriaMessage('Maximale Anzahl von 9.999 Zeilen überschritten.'+#13+
+                    'Es wurden keine Startnummern importiert.',
+                     mtInformation,[mbOk])
+      else // kein Überlauf, kein IOFehler
+         TriaMessage('Die Datei  "'+SysUtils.ExtractFileName(DatName)+'"  ist keine gültige StartListe-Datei.'+#13+
+                      'Es wurden keine Startnummern importiert.',
+                       mtInformation,[mbOk]);
+      StartlisteDateiName := '';
+      SpalteTln := false;
+    end else // DateiKorrekt, Daten übernehmen
+    begin
+      for i:=0 to SnrNameBufListe.Count-1 do
+        with TNameObj(SnrNameBufListe.Objects[i]) do
+        begin
+          Buf := TNameObj.Create(Name);
+          SnrNameListe.AddObject(SnrNameBufListe[i],Buf);
+        end;
+      (*if Pfad = '' then // nicht TztConfig
+        TriaMessage('Es wurden  '+IntToStr(SnrNameListe.Count)+'  Startnummern importiert.',
+                     mtInformation,[mbOk]);*)
+      StartlisteDateiName := DatName;
+      SpalteTln := true;
+    end;
+    FreeAndNil(SnrNameBufListe);
+    TztHauptDlg.UpdateLayout;
+    TztHauptDlg.UpdateStatusBar;
+  end;
+
+
+
+  end;
+
+
+
+
+end;
+
+
+end.
+
+{//******************************************************************************
+procedure StartlisteDateiLaden(Pfad:String);
+//******************************************************************************
+// nur bei TztConfig Pfad angegeben, dann keine Meldungen
+// wenn erfolgreich: StartlisteDateiName und SpalteTln setzen
+// flexibles Zeilenformat: n[nnn];name
+// Restliche Zeilen ignorieren
+//
+
+(*
+Startliste Format Tria:
+mehrere Listen möglich:
+erstellt mit Tria - 11.4.0 am 07.12.2014 um 15:25:43 Uhr
+
+  Baden-Württembergische Meisterschaften
+
+
+  Triathlon - Beispiel  am  24.05.2012
+  Startliste
+
+  Snr;Name, Vorname;Verein/Ort;Land;Jg;Ak;Startzeit;Kommentar
+  1;Biehler, Eric;SV Schramberg;;1981;M30;15:00:00;
+  ...
+  160;XXX, XXX;Tri Team Heuchelberg;;1970;M40;15:00:00;
+
+
+  2. Liga - Zaberfeld  am  24.05.2012
+  Startliste
+
+  Snr;Name, Vorname;Verein/Ort;Land;Jg;Ak;Startzeit;Kommentar
+  200;Bauz, Hubert;SF Tria Kayh;;1970;M40;15:25:00;
+*)
+
+var Zeile,
+    SnrStr,NameStr,
+    Dir,DatName      : String;
+    i,n,ZeilenLaenge : Integer;
+    Buf              : TNameObj;
+    SnrNameBufListe  : TStringList;
+    IOFehler,Voll    : Boolean;
+    StartlisteDatei  : Textfile;
+begin
+  DatName  := '';
+  Dir      := '';
+  IOFehler := false;
+  Voll     := false;
+
+  if Pfad = '' then // neue StartlisteDateiName abfragen, Fehler melden
+  begin
+    if (SnrNameListe.Count > 0) and // Liste wurde bereits importiert
+       (TriaMessage('Beim Import werden die vorher importierten Startnummern gelöscht.',
+                     mtConfirmation,[mbCancel,mbOk]) <> mrOk) then
+      Exit; // Abbruch, ohne weitere Änderngen
+    if TztStartListe.Visible then TztStartListe.Hide; // nicht TztConfig,sonst Anstürz
+
+    Dir := SysUtils.ExtractFileDir(TztDatName);
+    if StartlisteDateiName <> '' then // StartlisteDateiName voreinstellen
+      if SysUtils.DirectoryExists(SysUtils.ExtractFileDir(StartlisteDateiName)) then
+      begin
+        Dir := SysUtils.ExtractFileDir(StartlisteDateiName);
+        if SysUtils.FileExists(StartlisteDateiName) then
+          DatName := SysUtils.ExtractFileName(StartlisteDateiName);
+      end;
+
+    if not OpenFileDialog('txt', //const DefExt: string
+                          'Text-Dateien (*.txt)|*.txt|Alle Dateien (*.*)|*.*',//Filter: string
+                          Dir, //InitialDir: string
+                          0, // Type Txt Dateien
+                          'Startliste-Datei Importieren',//Title: string
+                          DatName) then //var FileName: string
+      Exit; // Abbruch, ohne weitere Änderngen
+
+  end else // Pfad laden, keine Fehlermeldungen (von TztConfig benutzt)
+    DatName := Pfad;
+
+  // Datei DatName als StartlisteDatei einlesen
+  SnrNameBufListe := TStringList.Create; // zuerst in Buffer einlesen,
+  with SnrNameBufListe do
+  begin
+    CaseSensitive := false;
+    Duplicates    := dupIgnore;
+    OwnsObjects   := true;
+    Sorted        := true;
+  end;
+  SnrNameListe.Clear; // TztStartListe nicht sichtbar
+
+  try
+    (*$I-*)
+    AssignFile(StartlisteDatei,DatName);
+    SetLineBreakStyle(StartlisteDatei,tlbsCRLF); // nur beim Schreiben von Bedeutung
+    Reset(StartlisteDatei);
+    if IoResult<>0 then begin IOFehler := true; Exit; end;
+    while not Eof(StartlisteDatei) do
+    begin
+      ReadLn(StartlisteDatei,Zeile);
+      if IoResult<>0 then begin IOFehler := true; Exit; end;
+      Zeile := Trim(Zeile);
+      ZeilenLaenge := Length(Zeile);
+      SnrStr := '';
+      NameStr := '';
+      i := Pos(';',Zeile);
+      if (i > 1) and (i <= 5) then
+      begin
+        SnrStr := LeftStr(Zeile,i-1);
+        if TryDecStrToInt(SnrStr,n) and (n > 0) then // Snr gültig
+        begin
+          SnrStr  := AddLeadZero(SnrStr,4);
+          NameStr := RightStr(Zeile,ZeilenLaenge-i);
+          i := Pos(';',NameStr);
+          if i > 1 then
+            NameStr := LeftStr(NameStr,i-1);
+          NameStr := LeftStr(Trim(NameStr),25); // Max. 25 Zeichen für Name
+          if Length(NameStr) > 0 then // Snr und Name gültig
+          begin
+            if SnrNameBufListe.Count = cnTlnMax then
+            begin
+              Voll := true;
+              Exit;
+            end;
+            Buf := TNameObj.Create(NameStr);
+            SnrNameBufListe.AddObject(SnrStr,Buf);
+          end;
+        end;
+      end;
+    end;
+
+  finally
+    CloseFile(StartlisteDatei);
+    IoResult;
+    (*$I+*)
+    if SnrNameBufListe.Count = 0 then // Fehler beim Laden der Datei
+    begin
+      if Pfad = '' then // nicht TztConfig
+        if IOFehler then
+          TriaMessage('Fehler beim Lesen der Datei  "'+SysUtils.ExtractFileName(DatName)+'".'+#13+
+                      'Es wurden keine Startnummern importiert.',
+                       mtInformation,[mbOk])
+        else
+        if Voll then
+          TriaMessage('Maximale Anzahl von 9.999 Startnummern überschritten.'+#13+
+                      'Es wurden keine Startnummern importiert.',
+                       mtInformation,[mbOk])
+        else // kein Überlauf, kein IOFehler
+          TriaMessage('Die Datei  "'+SysUtils.ExtractFileName(DatName)+'"  ist keine gültige StartListe-Datei.'+#13+
+                      'Es wurden keine Startnummern importiert.',
+                       mtInformation,[mbOk]);
+      StartlisteDateiName := '';
+      SpalteTln := false;
+    end else // DateiKorrekt, Daten übernehmen
+    begin
+      for i:=0 to SnrNameBufListe.Count-1 do
+        with TNameObj(SnrNameBufListe.Objects[i]) do
+        begin
+          Buf := TNameObj.Create(Name);
+          SnrNameListe.AddObject(SnrNameBufListe[i],Buf);
+        end;
+      (*if Pfad = '' then // nicht TztConfig
+        TriaMessage('Es wurden  '+IntToStr(SnrNameListe.Count)+'  Startnummern importiert.',
+                     mtInformation,[mbOk]);*)
+      StartlisteDateiName := DatName;
+      SpalteTln := true;
+    end;
+    FreeAndNil(SnrNameBufListe);
+    TztHauptDlg.UpdateLayout;
+    TztHauptDlg.UpdateStatusBar;
+  end;
+
+end;}

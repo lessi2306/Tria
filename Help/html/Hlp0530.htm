@@ -1,0 +1,79 @@
+<html>
+<head>
+<Title>Wettkämpfe-Wertung</Title>
+<link rel="stylesheet" type="text/css" href="TriaHilfe.css">
+<meta name="author" content="Gerhard Selten">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+<body bgcolor="#FFFFFF" text="#000000">
+<Object type="application/x-oleobject" classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e">
+	<param name="Keyword" value="Wertungen">
+	<param name="Keyword" value="Wertungsart">
+	<param name="Keyword" value="Standardwertung">
+	<param name="Keyword" value="Einzelwertung">
+	<param name="Keyword" value="Rundenrennen">
+	<param name="Keyword" value="Stundenrennen">
+	<param name="Keyword" value="Einfach-Staffelwertung">
+	<param name="Keyword" value="Einfach-Teamwertung">
+	<param name="Keyword" value="Mannschaft-Staffelwertung">
+	<param name="Keyword" value="Mannschaft-Teamwertung">
+	<param name="Keyword" value="Mannschaftswertung">
+	<param name="Keyword" value="Einzel-Wettkampf">
+	<param name="Keyword" value="Staffel-Wettkampf">
+	<param name="Keyword" value="Team-Wettkampf">
+	<param name="Keyword" value="Mixed">
+</OBJECT>
+<h1>Wettkämpfe - Wertung</h1>
+<p>
+Im deisem Bereich können verschiedene Optionen für die Wertung von Teilnehmern und Mannschaften gewählt werden. Weitere Einzelheiten dazu werden auf den Registerkarten <a href="Hlp0540.htm">Teilnehmer</a> und <a href="Hlp0550.htm">Mannschaften</a> definiert.</p><br>
+<p>
+<img src="img/wettk2.gif" alt="Wertungen" width="483" height="520" border="0"></p>
+<br>  
+<h3>&bull; Standardwertung</h3>
+<p>
+Hierbei werden eine Einzelwertung der Teilnehmer und optional auch eine Mannschaftswertung durchgeführt. Letzteres wird auf der Registerkarte <a href="Hlp0550.htm">Mannschaften</a> festgelegt.<br>
+Bei der Einzelwertung werden die Platzierungen der Teilnehmer auf Basis der Gesamtzeit ermittelt. Diese entspricht der Summe aller für die auf der Registerkarte <a href="Hlp0510.htm">Allgemein</a> unter "Wettkampfabschnitte" definierten Disziplinen benötigten Zeiten. Zusätzlich werden auch die Platzierungen für jeden einzelnen Wettkampfabschnitt berechnet. Für die Gesamtwertung sind nur die Zeiten des letzten Abschnitts erforderlich. Eine Abschnittszeit wird nur berücksichtigt, wenn die Zeiten aller für den Abschnitt definierten Runden erfasst wurden.<br>
+Jede dieser Wertungen wird grundsätzlich sowohl für alle Teilnehmer gemeinsam, als auch getrennt nach Geschlecht, Altersklasse und Sonderklasse (siehe <a href="Hlp1300.htm">Wertungsklassen</a>) durchgeführt.</p>
+<p>
+Zur Mannschaftswertung werden alle Teilnehmer mit gleichem Vereins- oder Ortsnamen je nach Geschlecht und Altersklasse automatisch in Mannschaften zusammengefasst. Auf der Registerkarte <a href="Hlp0550.htm">Mannschaften</a>  können verschiedene Wertungsoptionen eingestellt werden.<br>
+Auch die Standard-Mannschaftswertung erfolgt grundsätzlich sowohl über alle Teilnehmer als auch getrennt nach Geschlecht und Altersklasse. Neben Männer- und Frauen-Mannschaften können auch Mixed-Mannschaften gewertet werden. Sonderklassen sind für Mannschaften nicht definiert.</p>
+<h3>&bull; Rundenrennen</h3>
+<p>
+Bei dieser Wertungsart werden alle Teilnehmer gewertet, die mindestens eine Runde beendet haben. Gewertet wird nach Rundenzahl und Endzeit. Die Runden werden in einer zusätzlichen Spalte auf der Ergebnisliste dargestellt.<br>
+Die Anzahl Runden ist beliebig, es kann aber nur einen Wettkampfabschnitt definiert werden. Es werden dieselben Klassen gewertet wie bei der vorher beschriebenen Standardwertung, dies gilt sowohl für die Einzel- als auch für die Mannschaftswertung.</p>
+<h3>&bull; Stundenrennen</h3>
+<p>
+Bei dieser Wertungsart wird nur die zurückgelegte Strecke gewertet. Berechnet wird die Gesamtstrecke aus Rundenzahl und Reststrecke. Dazu kann pro Wettkampf die Länge einer Runde und individuell pro Teilnehmer eine Reststrecke definiert werden.<br>
+Die Zeitnahme dient lediglich dazu die Anzahl Runden zu bestimmen. Die Zeit selber hat bei der Wertung keine Bedeutung. Es ist auch eine Wertung ganz ohne Zeitnahme möglich, wenn nur die Reststrecken eingetragen werden.<br>
+Die Anzahl Runden ist wie bei Rundenrennen beliebig und es kann auch nur einen Wettkampfabschnitt definiert werden. Es werden dieselben Klassen gewertet wie bei der vorher beschriebenen Standardwertung, dies gilt sowohl für die Einzel- als auch für die Mannschaftswertung.</p>
+<h3>&bull; Einfach-Staffelwertung</h3>
+<p>
+Bei dieser Wertungsart kann für jeden definierten Wettkampfabschnitt einen unterschiedlichen Teilnehmer definiert werden. Maximal sind hier also acht Staffelteilnehmer möglich.<br>
+Obwohl eigentlich eine Mannschaftswertung, wird diese Wertung als Einzelwertung des ersten Staffelteilnehmers durchgeführt. Nur dieser wird für den Wettkampf als Teilnehmer angemeldet und mit Startnummer und Startzeit eingeteilt. Die Namen der übrigen Staffelteilnehmer werden dem ersten Teilnehmer im Teilnehmerdialog zugeordnet (siehe <a href="Hlp0715.htm">Staffel/Team</a>). Alle Teilnehmer einer Staffel verwenden somit auch dieselbe Startnummer.<br> 
+Die Start- und Ergebnislisten für Teilnehmer zeigen in diesem Fall nicht nur die Daten des ersten Teilnehmers sondern die Namen aller Staffelteilnehmer. Geschlecht und Alter gelten für die Staffel insgesamt. Für die Staffel kann hier zusätzlich als Geschlecht "Mixed" angegeben werden. Sie wird dann  als Mixed-Staffel getrennt von Männer- und Frauen-Staffeln gewertet.<br>
+Eine zusätzliche Mannschaftswertung wird nicht durchgeführt.<br>
+Bei Serienveranstaltungen ist die Einfach-Staffelwertung nicht möglich.</p>
+<h3>&bull; Einfach-Teamwertung</h3>
+<p>
+Ähnlich der vorher beschriebenen Wertungsart, können bis zu acht Teilnehmer als Team definiert werden, aber es ist nur ein Wettkampfabschnitt möglich. Alle Teamteilnehmer starten und finishen gemeinsam.<br>
+Auch diese Wertung wird als Einzelwertung eines Teilnehmers durchgeführt und nur dieser wird angemeldet und mit Startnummer und Startzeit eingeteilt. Die übrigen Teamteilnehmer (siehe <a href="Hlp0715.htm">Staffel/Team</a>) verwenden dieselbe Startnummer und erhalten dieselbe Zeit.<br>
+Die Start- und Ergebnislisten für Teilnehmer zeigen auch in diesem Fall die Namen aller Teamteilnehmer. Geschlecht und Alter gelten für das Team insgesamt. Auch hier kann zusätzlich das Geschlecht "Mixed" angegeben werden.<br>
+Die Wertung erfolgt sowohl für alle Teams gemeinsam als auch getrennt für Männer-, Frauen- und Mixed-Teams. Die maximale Teamgröße wird auf der Registerkarte <a href="Hlp0550.htm">Mannschaften</a> individuell festgelegt.<br>
+Eine zusätzliche Mannschaftswertung wird nicht durchgeführt.<br>
+Bei Serienveranstaltungen ist die Einfach-Teamwertung nicht möglich.</p>
+<h3>&bull; Mannschaft-Staffelwertung</h3>
+<p>
+Auch bei dieser Wertungsart starten die Teilnehmer einer Mannschaft einzeln nacheinander. Jeder Teilnehmer bestreitet hierbei aber alle definierten Wettkampfabschnitte (1 bis 8). Die Staffelwertung erfolgt hier als Mannschaftswertung. Für die Wertung werden die Gesamtzeiten der einzelnen Staffelteilnehmer addiert. Die Anzahl der Staffelteilnehmer wird auf der Registerkarte <a href="Hlp0550.htm">Mannschaften</a> als Mannschaftsgröße eingestellt.<br>
+Jeder Staffelteilnehmer muss einzeln aber unter dem gleichen Mannschaftsnamen angemeldet und in der gleichen Startgruppe eingeteilt werden. Sie erhalten dabei also auch unterschiedliche Startnummern. Die Mannschaft-Staffelwertung erfolgt grundsätzlich über alle Teilnehmer. Wertungen nach Geschlecht und Altersklasse sind nicht vorgesehen.<br>
+Zusätzlich wird auch eine Einzelwertung der Teilnehmer durchgeführt.</p>
+<h3>&bull; Mannschaft-Teamwertung</h3>
+<p>
+In diesem Fall starten die Teilnehmer einer Mannschaft alle gemeinsam. Nur die Zeit des letzten Teilnehmers wird für die Teamwertung berücksichtigt. Auch hier werden die Teamteilnehmer einzeln und mit gleichem Mannschaftsnamen angemeldet und in der gleichen Startgruppe eingeteilt. Die Anzahl der Teamteilnehmer wird ebenfalls auf der Registerkarte <a href="Hlp0550.htm">Mannschaften</a> definiert.<br>
+Die Wertung erfolgt grundsätzlich über alle Teilnehmer. Zusätzlich wird auch hier noch eine Einzelwertung der Teilnehmer durchgeführt.</p>
+<br>
+<p style="font-weight:bold">Siehe auch:</p>
+<table width="100%" border="0" cellpadding="0" cellspacing="0">
+  <tr><td height="25">&nbsp;&nbsp;&nbsp;<img src="img/next_pas.gif" alt="" height="10" width="15" border="0"><a href="Hlp0500.htm">Wettkämpfe Übersicht</a></td></tr>
+</table>
+</body>
+</html>

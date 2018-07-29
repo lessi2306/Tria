@@ -1,0 +1,737 @@
+unit OptDlg;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  StdCtrls, ComCtrls, ExtCtrls, Math, Mask,
+  AllgConst, AllgComp, AllgFunc;
+
+procedure Optionen;
+//procedure VersionPruefen;
+
+type
+  TOptDialog = class(TForm)
+    OptPageControl: TPageControl;
+    AllgemeinTS: TTabSheet;
+      AutoUpdateCB: TCheckBox;
+      MruDateiCB: TCheckBox;
+      DefaultSexCB: TCheckBox;
+      SexCB: TComboBox;
+      SnrUeberlappCB: TCheckBox;
+    ZeitFormatTS: TTabSheet;
+      ZeitFormatRG: TRadioGroup;
+      TrennZeichenCB: TComboBox;
+      TrennZeichenLabel: TLabel;
+    SpeichernTS: TTabSheet;
+      AutoSpeichernCB: TCheckBox;
+      AutoSpeichernEdit: TTriaMaskEdit;
+      AutoSpeichernUpDown: TTriaUpDown;
+      AutoSpeichernLabel: TLabel;
+      BackupCB: TCheckBox;
+    ZeitErfTS: TTabSheet;
+      ZeitNahmeGB: TGroupBox;
+        SnrRB: TRadioButton;
+          SnrLabel: TLabel;
+          SnrMaxLabel: TLabel;
+          SnrEdit: TTriaEdit;
+        RfidRB: TRadioButton;
+          RfidMaxLabel: TLabel;
+          LaengeEdit: TTriaMaskEdit;
+          LaengeUpDown: TTriaUpDown;
+          RfidLabel: TLabel;
+          HexCB: TCheckBox;
+      ZeitFilterGB: TGroupBox;
+        ZeitFilterCB: TCheckBox;
+        ZeitFilterLabel1: TLabel;
+        ZeitFilterEdit: TMinZeitEdit;
+        ZeitFilterLabel2: TLabel;
+    BerechnenTS: TTabSheet;
+      BerechnenRG: TRadioGroup;
+      BerechnenButton: TButton;
+    VorgabeButton: TButton;
+    HilfeButton: TButton;
+    CancelButton: TButton;
+    OkButton: TButton;
+    procedure ZeitFormatRGClick(Sender: TObject);
+    procedure DefaultSexCBClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure SetzeVorgabeButton(Sender: TObject);
+    procedure BerechnenButtonClick(Sender: TObject);
+    procedure VorgabeButtonClick(Sender: TObject);
+    procedure OkButtonClick(Sender: TObject);
+    procedure CancelButtonClick(Sender: TObject);
+    procedure HilfeButtonClick(Sender: TObject);
+    procedure TrennZeichenLabelClick(Sender: TObject);
+    procedure ZeitFilterEditChange(Sender: TObject);
+    procedure ZeitFilterCBClick(Sender: TObject);
+    procedure ZeitFilterLabelClick(Sender: TObject);
+    procedure AutoSpeichernCBClick(Sender: TObject);
+    procedure AutoSpeichernEditChange(Sender: TObject);
+    procedure ZeitnahmeGBClick(Sender: TObject);
+    procedure OptPageControlChange(Sender: TObject);
+    procedure OptPageControlChanging(Sender: TObject; var AllowChange: Boolean);
+  private
+    TrennZeichenListe : TStringList;
+    HelpFensterAlt    : TWinControl;
+    Updating          : Boolean;
+    DisableButtons    : Boolean;
+    PageAktuell       : TTabSheet;
+    procedure Init;
+    procedure SetPage(Page:TTabSheet);
+    function  OptGeAendert: Boolean;
+    function  EingabeOK(Tab:TTabSheet): Boolean;
+    procedure OptionenSetzen;
+    procedure DefaultSexSetzen(DefaultSexNeu:TSex);
+    procedure ZeitFormatSetzen(ZeitFormatNeu:TZeitFormat);
+    procedure RfidSetzen;
+    procedure UpdateAutoSpeichern;
+    procedure UpdateZeitFilter;
+    function  GetZeitFormat: TZeitFormat;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor  Destroy; override;
+  end;
+
+var
+  OptDialog: TOptDialog;
+
+implementation
+
+uses VeranObj,WettkObj,TlnErg,TriaMain,LstFrm,History,AllgObj,VistaFix;
+
+{$R *.DFM}
+
+(******************************************************************************)
+procedure Optionen;
+(******************************************************************************)
+begin
+  OptDialog := TOptDialog.Create(HauptFenster);
+  try
+    if OptDialog.ShowModal = mrOk then
+      HauptFenster.UpdateAnsicht;
+  finally
+    FreeAndNil(OptDialog);
+  end;
+end;
+
+{(******************************************************************************)
+procedure VersionPruefen;
+(******************************************************************************)
+// siehe http://www.delphi-source.de/tutorials/indy/?page=5
+var VersionNeu,JahrNeu,Nrneu : String;
+begin
+  try
+    HauptFenster.ProgressBarInit('Aktuelle Programmversion wird überprüft',100);
+    HauptFenster.ProgressBarPosition := 50;
+  try
+    VersionNeu := HauptFenster.IdHTTP1.Get('http://www.selten.de/trivers.txt');
+    JahrNeu    := Copy(versionNeu,1,4);
+    NrNeu      := Copy(versionNeu,6,Length(VersionNeu)-5);
+    if (JahrNeu=cnVersionsJahr) and (NrNeu>cnVersionsNummer) or
+       (JahrNeu>cnVersionsJahr) and (Jahrneu<IntToStr(cnJahrMax)) then
+      TriaMessage('Ihre Tria-Programmversion ist veraltet.'+#13+
+                 'Bitte laden Sie die aktuelle Version "'+
+                  JahrNeu+'-'+NrNeu+'" von www.selten.de.',
+                  mtConfirmation, [mbYes, mbNo, mbCancel], 0);
+
+  except
+    // Meldung nur bei Manueller Update
+    (*Showmessage('Internetverbindung zur Prüfung ob eine aktuellere '+
+                 'Programmversion '+#13+
+                 'verfügbar ist konnte nicht erstellt werden.');*)
+  end;
+
+  finally
+    HauptFenster.StatusBarClear;
+  end;
+end;}
+
+{==============================================================================}
+constructor TOptDialog.Create(AOwner: TComponent);
+{==============================================================================}
+begin
+  inherited Create(AOwner);
+  if not HelpDateiVerfuegbar then
+  begin
+    BorderIcons := [biSystemMenu];
+    HilfeButton.Enabled := false;
+  end;
+
+  Updating       := false;
+  DisableButtons := false;
+  AllgemeinTS.TabOrder := 0;
+  BerechnenRG.TabOrder := 0;
+  TrennZeichenListe := TStringList.Create;
+  TrennZeichenListe.Add(opDecTrennZeichen);
+  TrennZeichenListe.Add('.');
+  TrennZeichenCB.Items := TrennZeichenListe;
+  //AutoSpeichernEdit.ClearText := '0';  ==> Geht nicht, weil keine Fehlermeldung
+  ZeitFilterEdit.InitEditMask;
+  AutoSpeichernUpDown.Min := 1;
+  AutoSpeichernUpDown.Max := cnAutoSpeichernTriMax; // in Min (99)
+  LaengeUpDown.Min := cnRfidZeichenMin;
+  LaengeUpDown.Max := cnRfidZeichenMax;
+  CancelButton.Cancel := true;
+  HelpFensterAlt := HelpFenster;
+  HelpFenster := Self;
+  SetzeFonts(Font);
+end;
+
+(*============================================================================*)
+destructor TOptDialog.Destroy;
+(*============================================================================*)
+begin
+  HelpFenster := HelpFensterAlt;
+  TrennZeichenListe.Free;
+  inherited Destroy;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure TOptDialog.Init;
+(*----------------------------------------------------------------------------*)
+begin
+  Updating := true;
+  AutoUpdateCB.Checked := AutoUpdate;
+  MruDateiCB.Checked := MruDateiOeffnen;
+  SnrUeberlappCB.Checked := SnrUeberlapp;
+  if HauptFenster.AutoSpeichernInterval > 0 then AutoSpeichernCB.Checked := true
+                                            else AutoSpeichernCB.Checked := false;
+  UpdateAutoSpeichern;
+  BackupCB.Checked := BackupErstellen;
+  if SofortRechnen   then BerechnenRG.ItemIndex := 0
+                     else BerechnenRG.ItemIndex := 1;
+  if DecTrennZeichen = opDecTrennZeichen then TrennZeichenCB.ItemIndex := 0
+                                         else TrennZeichenCB.ItemIndex := 1;
+  if DefaultSex = cnWeiblich then SexCB.ItemIndex := 1
+                             else SexCB.ItemIndex := 0;
+  DefaultSexSetzen(DefaultSex);
+  ZeitFormatSetzen(ZeitFormat);
+  if RfidModus then RfidRB.Checked := true
+               else SnrRB.Checked := true;
+  RfidSetzen;
+  if ZeitFilter < 0 then ZeitFilterCB.Checked := false
+                    else ZeitFilterCB.Checked := true; // OnClick Event
+  UpdateZeitFilter;
+  Updating := false;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure TOptDialog.SetPage(Page:TTabSheet);
+(*----------------------------------------------------------------------------*)
+begin
+  if Page = PageAktuell then Exit;  (* damit nicht Focussiert wird *)
+  PageAktuell := Page;
+  OptPageControl.ActivePage := PageAktuell;
+  {Taborder bestimmt welcher Focussiert wird}
+  if MruDateiCB.CanFocus then MruDateiCB.SetFocus;           // AllgemeinTS
+  if ZeitFormatRG.CanFocus then ZeitFormatRG.SetFocus;       // ZeitFormatTS
+  if AutoSpeichernCB.CanFocus then AutoSpeichernCB.SetFocus; // SpeichernTS
+  if RfidRB.Checked then                                     // ZeitErfTS
+    if RfidRB.CanFocus then RfidRB.SetFocus
+    else
+  else
+    if SnrRB.CanFocus then SnrRB.SetFocus;
+  if BerechnenRG.CanFocus then BerechnenRG.SetFocus;         // BerechnenTS
+end;
+
+//------------------------------------------------------------------------------
+function TOptDialog.OptGeAendert: Boolean;
+//------------------------------------------------------------------------------
+// nur prüfungsrelevante Parameter
+begin
+  Result := (HauptFenster.AutoSpeichernInterval <> DWord(StrToIntDef(AutoSpeichernEdit.Text,0) * 60000)) or
+            (ZeitFilterCB.Checked <> (ZeitFilter >= 0)) or
+            (ZeitFilter <> ZeitFilterEdit.Wert) or
+            (RfidModus <> RfidRB.Checked) or
+            (RfidZeichen <> StrToIntDef(LaengeEdit.Text,0)) or
+            (RfidHex <> HexCB.Checked);
+end;
+
+//------------------------------------------------------------------------------
+function TOptDialog.EingabeOK(Tab:TTabSheet): Boolean;
+//------------------------------------------------------------------------------
+var i : Integer;
+begin
+  Result := false;
+
+  if ((Tab = nil) or
+     (Tab=SpeichernTS)and(OptPageControl.ActivePage=SpeichernTS)) and
+     AutoSpeichernCB.Checked then
+    if not AutoSpeichernEdit.ValidateEdit then Exit;
+
+  if (Tab = nil) or
+     (Tab=ZeitErfTS)and(OptPageControl.ActivePage=ZeitErfTS) then
+  begin
+    if ZeitFilterCB.Checked then
+    begin
+      if not ZeitFilterEdit.ValidateEdit then Exit;
+      if ZeitFilterEdit.Wert < 0 then // <0 kommt nicht vor
+      begin
+        TriaMessage(Self,'Die Zeitdifferenz fehlt.',mtInformation,[mbOk]);
+        OptPageControl.ActivePage := ZeitErfTS;
+        if ZeitFilterEdit.CanFocus then ZeitFilterEdit.SetFocus;
+        Exit;
+      end;
+    end;
+
+    if RfidRB.Checked then
+      if not LaengeEdit.ValidateEdit then Exit;
+  end;
+
+  if (Tab = nil) and // nur bei Ok-Button, nicht bei Page-Wechsel
+     ((RfidModus <> RfidRB.Checked) or // Rfid geändert
+      (RfidRB.Checked and (RfidZeichen <> StrToIntDef(LaengeEdit.Text,0))) or
+      (RfidRB.Checked and (RfidHex <> HexCB.Checked))) and
+     Veranstaltung.TlnColl.RfidBenutzt then
+    if TriaMessage(Self,'Die RFID-Einstellungen wurden geändert.'+#13+
+                  'Alle bisher eingetragenen RFID-Codes werden gelöscht.',
+                  mtConfirmation,[mbOk,mbCancel]) <> mrOk then
+    begin
+      OptPageControl.ActivePage := ZeitErfTS;
+      if RfidRB.Checked then
+        if RfidRB.CanFocus then RfidRB.SetFocus
+        else
+      else
+        if SnrRB.CanFocus then SnrRB.SetFocus;
+      Exit;
+    end else
+      for i:=0 to Veranstaltung.TlnColl.Count-1 do
+        Veranstaltung.TlnColl[i].RfidCode := '';
+
+  Result := true;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure TOptDialog.OptionenSetzen;
+(*----------------------------------------------------------------------------*)
+var i,Cnt,OrtIx: Integer;
+    Abs: TWkAbschnitt;
+begin
+  AutoUpdate      := AutoUpdateCB.Checked;
+  MruDateiOeffnen := MruDateiCB.Checked;
+  SnrUeberlapp    := SnrUeberlappCB.Checked;
+  with HauptFenster do
+    if AutoSpeichernCB.Checked then
+      AutoSpeichernInterval := StrToIntDef(AutoSpeichernEdit.Text,0) * 60000 // Min => mSek
+    else AutoSpeichernInterval := 0;
+
+  BackupErstellen := BackupCB.Checked;
+  if BerechnenRG.ItemIndex = 0 then SofortRechnen := true
+                               else SofortRechnen := false;
+
+  if DefaultSexCB.Checked then
+    if SexCB.ItemIndex = 0 then DefaultSex := cnMaennlich
+                           else DefaultSex := cnWeiblich
+  else DefaultSex := cnKeinSex;
+
+  if (ZeitFormatRG.ItemIndex > 0) and (TrennZeichenCB.ItemIndex = 1) then
+    DecTrennZeichen := '.'
+  else DecTrennZeichen := opDecTrennZeichen; // default
+
+  if ZeitFilterCB.Checked then ZeitFilter := ZeitFilterEdit.Wert
+                          else ZeitFilter := -1;
+
+  if (RfidModus <> RfidRB.Checked) or
+     (RfidRB.Checked and (RfidZeichen <> StrToIntDef(LaengeEdit.Text,0))) or
+     (RfidRB.Checked and (RfidHex <> HexCB.Checked)) then
+  begin
+    RfidModus := RfidRB.Checked;
+    if RfidModus then
+    begin
+      RfidZeichen := StrToIntDef(LaengeEdit.Text,0);
+      RfidHex := HexCB.Checked;
+    end else
+    begin
+      RfidZeichen := 0;
+      RfidHex := true;
+    end;
+    ZtErfDateiFormat := fzTriaZeit;
+    // nur Update wenn sich was ändert
+    HauptFenster.LstFrame.UpdateColWidths; // Cols am neuen RfidModus anpassen
+  end;
+
+  if GetZeitFormat <> ZeitFormat then  // ZeitFormat geändert
+  begin
+    ZeitFormat := GetZeitFormat;
+    HauptFenster.LstFrame.TriaGrid.StopPaint := true;
+    try
+      with Veranstaltung do
+      begin
+        // alle Startzeiten in Startgruppen runden
+        SGrpColl.ZeitenRunden;
+        // Uhrzeiten für alle Teilnehmer runden
+        Cnt := 0;
+        for OrtIx:=0 to OrtZahl-1 do
+          for i:=0 to WettkColl.Count-1 do
+            Cnt := Cnt + WettkColl[i].OrtAbschnZahl[OrtIx];
+        Cnt := Cnt * 3 * TlnColl.Count;
+        HauptFenster.ProgressBarInit('Zeiten werden gerundet',Cnt);
+        for OrtIx:=0 to OrtZahl-1 do
+        begin
+          if Serie then
+            HauptFenster.ProgressBarText('Zeiten werden gerundet für  ' + OrtColl[OrtIx].Name);
+          for i:=0 to WettkColl.Count-1 do
+            for Abs:=wkAbs1 to TWkAbschnitt(WettkColl[i].OrtAbschnZahl[OrtIx]) do
+              TlnColl.ZeitenRunden(OrtIx,WettkColl[i],Abs);
+        end;
+      end;
+      HauptFenster.LstFrame.UpdateZeitColBreite; // Cols am neuen Zeitformat anpassen
+    finally
+      HauptFenster.StatusBarClear;
+      HauptFenster.LstFrame.TriaGrid.StopPaint := false;
+      BerechneRangAlleWettk;
+      TriDatei.Modified := true;
+    end;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+procedure TOptDialog.DefaultSexSetzen(DefaultSexNeu:TSex);
+//------------------------------------------------------------------------------
+// SexCB ItemIndex wird geändert
+var UpdatingAlt : Boolean;
+begin
+  UpdatingAlt := Updating;
+  Updating := true;
+  case DefaultSexNeu of
+    cnMaennlich,cnWeiblich:
+    begin
+      DefaultSexCB.Checked := true;
+      SexCB.Enabled := true;
+      if DefaultSexNeu = cnMaennlich then SexCB.ItemIndex := 0
+                                     else SexCB.ItemIndex := 1;
+    end
+    else
+    begin
+      DefaultSexCB.Checked := false;
+      SexCB.Enabled := false;
+      SexCB.ItemIndex := -1;
+    end;
+  end;
+  SetzeVorgabeButton(nil);
+  Updating := UpdatingAlt;
+end;
+
+//------------------------------------------------------------------------------
+procedure TOptDialog.ZeitFormatSetzen(ZeitFormatNeu:TZeitFormat);
+//------------------------------------------------------------------------------
+var UpdatingAlt : Boolean;
+begin
+  UpdatingAlt := Updating;
+  Updating := true;
+  case ZeitFormatNeu of
+    zfSek:
+    begin
+      ZeitFormatRG.ItemIndex := 0;
+      TrennZeichenLabel.Enabled := false;
+      TrennZeichenCB.Enabled := false;
+    end;
+    zfZehntel:
+    begin
+      ZeitFormatRG.ItemIndex := 1;
+      TrennZeichenLabel.Enabled := true;
+      TrennZeichenCB.Enabled := true;
+    end;
+    zfHundertstel:
+    begin
+      ZeitFormatRG.ItemIndex := 2;
+      TrennZeichenLabel.Enabled := true;
+      TrennZeichenCB.Enabled := true;
+    end;
+  end;
+  SetzeVorgabeButton(nil);
+  Updating := UpdatingAlt;
+end;
+
+//------------------------------------------------------------------------------
+procedure TOptDialog.RfidSetzen;
+//------------------------------------------------------------------------------
+var UpdatingAlt : Boolean;
+begin
+  UpdatingAlt := Updating;
+  Updating := true;
+  if RfidRB.Checked then
+  begin
+    LaengeEdit.Enabled := true;
+    LaengeEdit.Text := IntToStr(Rfidzeichen);
+    LaengeUpDown.Enabled := true;
+    RfidLabel.Enabled := true;
+    RfidMaxLabel.Enabled := true;
+    HexCB.Enabled := true;
+    HexCB.Checked := RfidHex;
+    if LaengeEdit.CanFocus then LaengeEdit.SetFocus;
+  end else
+  begin
+    LaengeEdit.Enabled := false;
+    LaengeEdit.Text := '';
+    LaengeUpDown.Enabled := false;
+    RfidLabel.Enabled := false;
+    RfidMaxLabel.Enabled := false;
+    HexCB.Enabled := false;
+    HexCB.Checked := false;
+  end;
+
+  SetzeVorgabeButton(nil);
+  Updating := UpdatingAlt;
+end;
+
+//------------------------------------------------------------------------------
+procedure TOptDialog.UpdateAutoSpeichern;
+//------------------------------------------------------------------------------
+var UpdatingAlt : Boolean;
+begin
+  UpdatingAlt := Updating;
+  Updating := true;
+  if AutoSpeichernCB.Checked then
+  begin
+    AutoSpeichernLabel.Enabled  := true;
+    AutoSpeichernEdit.Enabled   := true;
+    AutoSpeichernUpDown.Enabled := true;
+    if HauptFenster.AutoSpeichernInterval > 0 then
+      AutoSpeichernEdit.Text := IntToStr(HauptFenster.AutoSpeichernInterval DIV 60000) // mSek => Min
+    else AutoSpeichernEdit.Text := IntToStr(cnAutoSpeichernTriInitWert); // in Min
+  end else
+  begin
+    AutoSpeichernLabel.Enabled  := false;
+    AutoSpeichernEdit.Enabled   := false;
+    AutoSpeichernUpDown.Enabled := false;
+    AutoSpeichernEdit.Text      := '';
+  end;
+  Updating := UpdatingAlt;
+end;
+
+//------------------------------------------------------------------------------
+procedure TOptDialog.UpdateZeitFilter;
+//------------------------------------------------------------------------------
+var UpdatingAlt : Boolean;
+begin
+  UpdatingAlt := Updating;
+  Updating := true;
+  if ZeitFilterCB.Checked then
+  begin
+    if ZeitFilter < 0 then ZeitFilterEdit.Text := MinZeitStr(opDefaultZeitFilter)
+                      else ZeitFilterEdit.Text := MinZeitStr(ZeitFilter);
+    ZeitFilterEdit.Enabled  := true;
+  end else
+  begin
+    ZeitFilterEdit.Text     := '';
+    ZeitFilterEdit.Enabled  := false;
+  end;
+  SetzeVorgabeButton(nil);
+  Updating := UpdatingAlt;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TOptDialog.ZeitFilterCBClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if not Updating then
+  begin
+    UpdateZeitFilter;
+    if ZeitFilterCB.Checked then
+      if ZeitFilterEdit.CanFocus then ZeitFilterEdit.SetFocus;
+  end;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TOptDialog.ZeitFilterEditChange(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if not Updating then
+  begin
+    if ZeitFilterEdit.EditText = '__:__' then
+      ZeitFilterEdit.Text := MinZeitStr(0);
+      //UpdateZeiten;
+    SetzeVorgabeButton(nil);
+  end;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TOptDialog.ZeitFilterLabelClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if ZeitFilterEdit.CanFocus then ZeitFilterEdit.SetFocus;
+end;
+
+//------------------------------------------------------------------------------
+function TOptDialog.GetZeitFormat: TZeitFormat;
+//------------------------------------------------------------------------------
+begin
+  case ZeitFormatRG.ItemIndex of
+    1  : Result := zfZehntel;
+    2  : Result := zfHundertstel;
+    else Result := zfSek;
+  end;
+end;
+
+// Event Handler
+
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+procedure TOptDialog.FormShow(Sender: TObject);
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+begin
+  Init;
+  SetPage(AllgemeinTS);
+  PageAktuell := OptPageControl.ActivePage;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TOptDialog.DefaultSexCBClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if not Updating then
+    if DefaultSexCB.Checked then DefaultSexSetzen(cnMaennlich)//SexCB.Indx verändert
+                            else DefaultSexSetzen(cnKeinSex);
+end;
+
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+procedure TOptDialog.TrennZeichenLabelClick(Sender: TObject);
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+begin
+  if TrennZeichenCB.CanFocus then TrennZeichenCB.SetFocus;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TOptDialog.ZeitFormatRGClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if not Updating then ZeitFormatSetzen(GetZeitFormat);
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TOptDialog.AutoSpeichernCBClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  UpdateAutoSpeichern;
+  if AutoSpeichernCB.Checked then
+    if AutoSpeichernEdit.CanFocus then AutoSpeichernEdit.SetFocus;
+  if not Updating then SetzeVorgabeButton(nil);
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TOptDialog.AutoSpeichernEditChange(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if not Updating then SetzeVorgabeButton(nil);
+end;
+
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+procedure TOptDialog.SetzeVorgabeButton(Sender: TObject);
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+// Sender nur Dummy, weil in Click-Procedure als Parameter gefordert
+begin
+  if (AutoUpdateCB.Checked = opAutoUpdate) and
+     (MruDateiCB.Checked = opMruDateiOeffnenTri) and
+     (SnrUeberlappCB.Checked = opSnrUeberlapp) and
+     (BackupCB.Checked = opBackupErstellenTri) and
+     (DefaultSexCB.Checked = opDefaultSex) and // SexCB unwichtig weil disabled
+     (ZeitFormatRG.ItemIndex = 0) and // TrennzeichenCB unwichtig weil disabled
+      ZeitFilterEdit.ZeitGleich(MinZeitStr(opDefaultZeitFilter)) and
+     (BerechnenRG.ItemIndex = 0) and  // SofortRechnen := true
+     SnrRB.Checked and
+     not AutoSpeichernCB.Checked
+    then VorgabeButton.Enabled := false
+    else VorgabeButton.Enabled := true;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TOptDialog.ZeitnahmeGBClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if not Updating then RfidSetzen;
+end;
+
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+procedure TOptDialog.BerechnenButtonClick(Sender: TObject);
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+var i : Integer;
+begin
+  // verhindern, dass während Ausgabe ein 2. Mal Ok gedruckt wird
+  if not DisableButtons then
+  try
+    DisableButtons := true;
+    for i:=0 to Veranstaltung.WettkColl.Count-1 do
+      Veranstaltung.WettkColl[i].KlassenModified := true; // alles neu berechnen
+    BerechneRangAlleWettk;
+  finally
+    DisableButtons := false;
+  end;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TOptDialog.OptPageControlChanging(Sender: TObject; var AllowChange: Boolean);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// vor change ausgeführt
+begin
+  if Updating or not OptGeAendert or EingabeOK(OptPageControl.ActivePage) then
+    AllowChange := true
+  else AllowChange := false;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TOptDialog.OptPageControlChange(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// nach change ausgeführt
+begin
+  SetPage(OptPageControl.ActivePage);
+end;
+
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+procedure TOptDialog.VorgabeButtonClick(Sender: TObject);
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+begin
+  if not DisableButtons then
+  try
+    DisableButtons := true;
+    AutoUpdateCB.Checked     := opAutoUpdate;
+    MruDateiCB.Checked       := opMruDateiOeffnenTri;
+    SnrUeberlappCB.Checked   := opSnrUeberlapp;
+    AutoSpeichernCB.Checked  := false; // ==> Event
+    BackupCB.Checked         := opBackupErstellenTri;
+    DefaultSexCB.Checked     := opDefaultSex;
+    if opDefaultSex then SexCB.ItemIndex := 0
+                    else SexCB.ItemIndex := -1;
+    ZeitFormatRG.ItemIndex   := 0;
+    TrennZeichenCB.ItemIndex := 0;
+    SnrRB.Checked            := true;
+    ZeitFilterCB.Checked     := opDefaultZeitFilter >= 0;
+    ZeitFilterEdit.Text      := MinZeitStr(opDefaultZeitFilter);
+    BerechnenRG.ItemIndex    := 0;
+  finally
+    DisableButtons := false;
+  end;
+end;
+
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+procedure TOptDialog.CancelButtonClick(Sender: TObject);
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+begin
+  ModalResult := mrCancel;
+end;
+
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+procedure TOptDialog.OkButtonClick(Sender: TObject);
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+begin
+  // verhindern, dass während Ausgabe ein 2. Mal Ok gedruckt wird
+  if not DisableButtons then
+  try
+    DisableButtons := true;
+    if not EingabeOk(nil) then Exit;
+    OptionenSetzen;
+    ModalResult := mrOk;
+  finally
+    DisableButtons := false;
+  end;
+end;
+
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+procedure TOptDialog.HilfeButtonClick(Sender: TObject);
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+begin
+  Application.HelpContext(2900);  // Optionen
+end;
+
+
+end.

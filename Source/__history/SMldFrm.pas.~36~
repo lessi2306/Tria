@@ -1,0 +1,811 @@
+unit SMldFrm;
+
+interface
+
+uses 
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  StdCtrls, ExtCtrls, Grids, ToolWin, ComCtrls, StrUtils,
+  AllgConst,AllgFunc,AkObj,WettkObj,SGrpObj,SMldObj,TlnObj,MannsObj,VeranObj,
+  DateiDlg,AllgComp,AllgObj, Buttons;
+
+type
+  TSMldFrame = class(TFrame)
+  published
+    BtnPanel: TPanel;
+      biHelpBtn: TBitBtn;
+      biSystemBtn: TBitBtn;
+    SMldFrmPanel: TPanel;
+    SMldGrid: TTriaGrid;
+    SMldGB: TGroupBox;
+      SMldHeaderLabel: TLabel;
+      SMldHeaderPanel: TPanel;
+      SMldNameLabel: TLabel;
+      SMldVNameLabel: TLabel;
+      SMldVNameEdit: TTriaEdit;
+      SMldNameEdit: TTriaEdit;
+      SMldVereinLabel: TLabel;
+      SMldVereinCB: TComboBox;
+      SMldMannschLabel: TLabel;
+      SMldMannschCB: TComboBox;
+      SMldEMailLabel: TLabel;
+      SMldEMailEdit: TTriaEdit;
+      SMldStrasseLabel: TLabel;
+      SMldStrasseEdit: TTriaEdit;
+      SMLdHausNrEdit: TTriaEdit;
+      SMldHausNrLabel: TLabel;
+      SMldPLZLabel: TLabel;
+      SMldPLZEdit: TTriaEdit;
+      SMldOrtLabel: TLabel;
+      SMldOrtEdit: TTriaEdit;
+    SMldAendButton: TButton;
+    SMldNeuButton: TButton;
+    SMldLoeschButton: TButton;
+    AlleSMldLoeschButton: TButton;
+    HilfeButton: TButton;
+    SMldCloseButton: TButton;
+    SMldSortGB: TGroupBox;
+      NameSortRB: TRadioButton;
+      VereinSortRB: TRadioButton;
+  protected
+    procedure CustomAlignPosition(Control: TControl;
+                            var NewLeft,NewTop,NewWidth,NewHeight: Integer;
+                            var AlignRect:TRect; AlignInfo:TAlignInfo); override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    procedure   Oeffnen;
+    function    Schliessen: Boolean;
+    procedure   SetSMldButtons;
+  private
+    HelpFensterAlt : TWinControl;
+    FSMldSortMode  : TSortMode;
+    VereinListe,
+    MschListe      : TStringList;
+    procedure SetSMldDaten;
+    function  SMldAendUebernehmen: Boolean;
+    function  SMldSelected: TSMldObj;
+    function  SMldNeu: Boolean;
+    function  SMldLoeschen(Mode:TSMldLoeschen): Boolean;
+    function  SMldAendern: Boolean;
+    function  GetVerein: String;
+    function  GetMannschName: String;
+    function  SMldGeAendert: Boolean;
+    function  EingabeOK: Boolean;
+
+  published
+    procedure SMldEditChange(Sender: TObject);
+    procedure SMldSortRGClick(Sender: TObject);
+    procedure SMldNeuButtonClick(Sender: TObject);
+    procedure SMldAendButtonClick(Sender: TObject);
+    procedure SMldLoeschButtonClick(Sender: TObject);
+    procedure AlleSMldLoeschButtonClick(Sender: TObject);
+    procedure SMldGridClick(Sender: TObject);
+    procedure SMldNameLabelClick(Sender: TObject);
+    procedure SMldVNameLabelClick(Sender: TObject);
+    procedure SMldVereinlabelClick(Sender: TObject);
+    procedure SMldMannschLabelClick(Sender: TObject);
+    procedure SMldEMailLabelClick(Sender: TObject);
+    procedure SMldStrasseLabelClick(Sender: TObject);
+    procedure SMldHausNrLabelClick(Sender: TObject);
+    procedure SMldPLZLabelClick(Sender: TObject);
+    procedure SMldOrtLabelClick(Sender: TObject);
+    procedure SMldGridDrawCell(Sender: TObject; ACol, ARow: Integer;
+                               Rect: TRect; State: TGridDrawState);
+    procedure SMldCloseButtonClick(Sender: TObject);
+    procedure HilfeButtonClick(Sender: TObject);
+    procedure biHelpBtnClick(Sender: TObject);
+  end;
+
+var SMldNeuEingabe : Boolean;
+    SMldUpdating   : Boolean;
+
+implementation
+
+{$R *.dfm}
+
+uses TriaMain, LstFrm, CmdProc,VistaFix;
+
+// public Methoden
+
+(*============================================================================*)
+constructor TSMldFrame.Create(AOwner: TComponent);
+(*============================================================================*)
+// Create wird von HauptFenster.Create automatisch aufgerufen
+begin
+  inherited Create(AOwner);
+
+  Align := alTop;
+  //SMldHeaderPanel.Color := $00965229;
+  //SMldHeaderPanel.Color := $00934B20;
+  //SMldHeaderPanel.Color := $00935B24;
+  SMldGrid.Canvas.Font := SMldGrid.Font;
+  SMldGrid.DefaultRowHeight := SMldGrid.Canvas.TextHeight('Tg')+1;
+  SMldGrid.FixedRows := 1;
+  SMldGrid.FixedCols := 0;
+  //SMldGrid.ColWidths[0] :=Canvas.TextWidth(' Xxxxxxxxxxxxxxx, Xxxxxxxxxx ');
+  //SMldGrid.ColWidths[1] :=Canvas.TextWidth(' XXXXXXXxxxxxxxxxxxxx ');
+  SMldGrid.ColWidths[0] := SMldGrid.ClientWidth DIV 2;
+  SMldGrid.ColWidths[1] := SMldGrid.ClientWidth - SMldGrid.ColWidths[0] - 1;
+  NameSortRB.Left := 8;
+  VereinSortRB.Left := 8 + SMldGrid.ColWidths[0];
+  SMldNeuEingabe := false;
+  SMldUpdating   := false;
+  SetzeFonts(SMldHeaderLabel.Font);
+
+  Hide;
+end;
+
+(*============================================================================*)
+procedure TSMldFrame.Oeffnen;
+(*============================================================================*)
+// Init bei Clicken auf Sammelmeldung aufgerufen
+var PaintAlt : Boolean;
+begin
+  //HauptFenster.SammelMeldungItem.Checked := true;
+  // SMldFrame.Oeffnen in LstFrame.GridInit
+
+  PaintAlt := HauptFenster.LstFrame.TriaGrid.StopPaint;
+  if Veranstaltung.SMldColl.Count = 0 then
+  begin
+    Veranstaltung.SMldColl.AddItem(TSMldObj.Create(
+                                   Veranstaltung,Veranstaltung.SMldColl,oaAdd));
+    SMldNeuEingabe := true;
+  end else SMldNeuEingabe := false;
+
+  FSMldSortMode := smSMldName;
+  NameSortRB.Checked := true;
+  Veranstaltung.SMldColl.Sortieren(FSMldSortMode,smOhneTlnColl);
+  // StopPaint bevor SortSMld geändert wird,
+  HauptFenster.LstFrame.TriaGrid.StopPaint := true;
+  try
+    // SortSMld setzen vor SMldGrid.Init
+    // SMldGrid.ItemIndex := 0 (default)
+    HauptFenster.SortSMld := Veranstaltung.SMldColl.SortItems[0];
+    SMldGrid.Init(Veranstaltung.SMldColl,smSortiert,ssVertical,nil);
+
+    VereinListe := TStringList.Create;
+    MschListe   := TStringList.Create;
+    //SMldVereinCB.Sorted  := false;
+    //SMldMannschCB.Sorted := false;
+
+    SetSMldDaten;
+    Visible := true;
+    SMldHeaderPanel.Realign;
+    if SMldNeuEingabe then SMldNameEdit.SetFocus
+                      else SMldGrid.SetFocus;
+    HelpFensterAlt := HelpFenster;
+    HelpFenster := Self;
+  finally
+    HauptFenster.LstFrame.TriaGrid.StopPaint := PaintAlt;
+  end;
+end;
+
+(*============================================================================*)
+function TSMldFrame.Schliessen: Boolean;
+(*============================================================================*)
+var PaintAlt : Boolean;
+begin
+  PaintAlt := HauptFenster.LstFrame.TriaGrid.StopPaint;
+  if not Visible then
+  begin
+    Result := true;
+    Exit;
+  end else Result := false;
+  if not SMldAendUebernehmen then Exit;
+  HauptFenster.LstFrame.TriaGrid.StopPaint := true;
+  try
+    Visible := false;
+    // neue SMld ohne Eingaben wird gelöscht
+    if SMldNeuEingabe then SMldGrid.ClearItem(SMldGrid.FocusedItem);
+    // TriaGrid.Collection wird ungültig, wenn SMld gelöscht wird
+    HauptFenster.LstFrame.TriaGrid.Collection := nil;
+    HauptFenster.SortSMld := nil;
+    VereinListe.Free;
+    MschListe.Free;
+    HelpFenster := HelpFensterAlt;
+    Result := true;
+  finally
+    HauptFenster.LstFrame.TriaGrid.StopPaint := PaintAlt;
+  end;
+end;
+
+// Protected Methoden
+
+(*----------------------------------------------------------------------------*)
+procedure TSMldFrame.CustomAlignPosition(Control: TControl;
+                              var NewLeft,NewTop,NewWidth,NewHeight: Integer;
+                              var AlignRect:TRect; AlignInfo:TAlignInfo);
+(*----------------------------------------------------------------------------*)
+begin
+  if Control = SMldHeaderPanel then
+    NewWidth := ClientWidth - 4
+  else if Control = BtnPanel then
+    NewLeft := ClientWidth - BtnPanel.Width - 2;
+end;
+
+// private Methoden
+(*----------------------------------------------------------------------------*)
+function TSMldFrame.SMldSelected: TSMldObj;
+(*----------------------------------------------------------------------------*)
+begin
+  Result := TSMldObj(SMldGrid.FocusedItem);
+end;
+
+(*----------------------------------------------------------------------------*)
+function TSMldFrame.SMldNeu: Boolean;
+(*----------------------------------------------------------------------------*)
+var SMld : TSMldObj;
+begin
+  Result := false;
+  with HauptFenster do
+  begin
+    // Check ob geänderte Daten übernommen werden
+    if SMldGeAendert then
+      if SMldNeuEingabe then
+        if not SMldAendern then Exit
+        else
+      else
+      case TriaMessage('Die Daten des Sammelmelders wurden geändert.'+#13+
+                       'Änderungen übernehmen?',
+                        mtConfirmation,[mbYes,mbNo,mbCancel]) of
+        mrYes : if not SMldAendern then Exit;
+        mrNo  : ;
+        else    Exit;
+      end;
+
+    if Veranstaltung.SMldColl.Count >= cnSMldMax then
+    begin
+      TriaMessage('Die maximale Anzahl Sammelmelder von '+IntToStr(cnSMldMax)+
+                  'wurde bereits erreicht.',mtInformation,[mbOk]);
+      Exit;
+    end;
+
+    SMld := TSMldObj.Create(Veranstaltung,Veranstaltung.SMldColl,oaAdd);
+    SMldGrid.AddItem(SMld);
+    SMldGrid.Refresh; // Refresh in TriaGrid.AddItem entfernt !!!!!!!!!!!!!
+    SMldNeuEingabe := true;
+    SMldGrid.FocusedItem := SMld;
+    //TriDatei.Modified := true; // erst beim Ändern setzen
+    SetSMldDaten; (* SortSMld gesetzt *)
+    Result := true;
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+function TSMldFrame.SMldAendern: Boolean;
+(*----------------------------------------------------------------------------*)
+var PaintAlt : Boolean;
+begin
+  Result := false;
+  with HauptFenster do
+  begin
+    PaintAlt := LstFrame.TriaGrid.StopPaint;
+    if (SortSMld=nil) or not EingabeOk then Exit;
+    LstFrame.TriaGrid.StopPaint := true;
+    try
+      SortSMld.Init(Trim(SMldNameEdit.Text),Trim(SMldVNameEdit.Text),
+                    SMldStrasseEdit.Text,SMldHausNrEdit.Text,
+                    SMldPLZEdit.Text,SMldOrtEdit.Text,GetVerein,GetMannschName,
+                    Trim(SMldEMailEdit.Text));
+      SMldNeuEingabe := false;
+      SMldGrid.CollectionUpdate;
+      SMldGrid.Refresh;
+      SMldGrid.FocusedItem := SortSMld;
+      TriDatei.Modified := true;// vor SetSMldDaten, damit Speicher-Button gesetzt wird
+      SetSMldDaten;
+      Result := true;
+    finally
+      LstFrame.TriaGrid.StopPaint := PaintAlt;
+    end;
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+function TSMldFrame.SMldLoeschen(Mode:TSMldLoeschen): Boolean;
+(*----------------------------------------------------------------------------*)
+// Mode:TSMldLoeschen = smEinzel,smAlle
+var PaintAlt : Boolean;
+    i : Integer;
+begin
+  Result := false;
+  with HauptFenster do
+  begin
+    PaintAlt := LstFrame.TriaGrid.StopPaint;
+    if SortSMld = nil then Exit;
+    if Mode = smAlle then
+      if TriaMessage('Wirklich alle Sammelmelder entfernen?'+#13+
+                     'Gemeldete Teilnehmer bleiben erhalten.',
+                     mtConfirmation,[mbYes,mbNo]) <> mrYes then Exit
+      else
+    else // smEinzel
+      if not SMldNeuEingabe and Veranstaltung.SMldColl.Belegt(SortSMld) then
+        if TriaMessage('Sammelmelder '+(SortSMld.VNameName)+' entfernen?'+#13+
+                       'Gemeldete Teilnehmer bleiben erhalten.',
+                        mtConfirmation,[mbOk,mbCancel]) <> mrOk then Exit
+        else
+      else if not SMldNeuEingabe and
+        (TriaMessage('Sammelmelder '+(SortSMld.VNameName)+' entfernen?',
+                      mtConfirmation,[mbOk,mbCancel]) <> mrOk) then Exit;
+
+    // vor Löschen zuerst StopPaint
+    LstFrame.TriaGrid.StopPaint := true;
+    try
+      if Mode = smAlle then
+      begin
+        if (SMldGrid.ItemCount > 1) or not SMldNeuEingabe then
+          TriDatei.Modified := true;
+        for i:=SMldGrid.ItemCount-1 downto 0 do
+          SMldGrid.ClearItem(SMldGrid[i]);
+      end else
+      begin
+        SMldGrid.ClearItem(SortSMld);   (* SMldAktuell löschen *)
+        if not SMldNeuEingabe then TriDatei.Modified := true;
+        SMldNeuEingabe := false;
+      end;
+
+      if SMldGrid.ItemCount = 0 then
+      begin
+        SMldGrid.AddItem(TSMldObj.Create(Veranstaltung,Veranstaltung.SMldColl,oaAdd));
+        SMldNeuEingabe := true;
+      end;
+      SMldGrid.CollectionUpdate;
+      SMldGrid.Refresh;
+      SetSMldDaten;
+      Result := true;
+    finally
+      LstFrame.TriaGrid.StopPaint := PaintAlt;
+    end;
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure TSMldFrame.SetSMldButtons;
+(*----------------------------------------------------------------------------*)
+begin
+  with HauptFenster do
+  begin
+    if (SMldGrid.ItemCount > 2) or
+       (SMldGrid.ItemCount = 2) and (not SMldNeuEingabe or SMldGeAendert) then
+      AlleSMldLoeschButton.Enabled := true
+    else
+      AlleSMldLoeschButton.Enabled := false;
+
+    if SMldNeuEingabe then
+      if not SMldGeAendert then
+      begin
+        SMldNeuButton.Enabled := false;
+        SMldAendButton.Enabled := false;
+        SMldAendButton.Default := false;
+        if SMldGrid.ItemCount=1 then SMldLoeschButton.Enabled := false
+                                else SMldLoeschButton.Enabled := true;
+      end else
+      begin
+        SMldNeuButton.Enabled := false;
+        SMldAendButton.Enabled := true;
+        SMldAendButton.Default := true;
+        SMldLoeschButton.Enabled := true;
+      end
+    else
+      if not SMldGeAendert then
+      begin
+        SMldNeuButton.Enabled := true;
+        SMldAendButton.Enabled := false;
+        SMldAendButton.Default := false;
+        SMldLoeschButton.Enabled := true;
+      //SMldAendButton.Default := false;
+      end else
+      begin
+        SMldNeuButton.Enabled := true;
+        SMldAendButton.Enabled := true;
+        SMldAendButton.Default := true;
+        SMldLoeschButton.Enabled := true;
+      //SMldAendButton.Default := true;
+      end;
+  end;
+  SetzeCommands; // Menübuttons gesetzt ohne Focus zu ändern.
+  HauptFenster.Refresh; // komplettes Fenster Repaint
+end;
+
+(*----------------------------------------------------------------------------*)
+function TSMldFrame.SMldAendUebernehmen: Boolean;
+(*----------------------------------------------------------------------------*)
+// wird beim Schliessen benutzt
+// Checken ob geänderte SMld-Daten übernommen werden sollen
+// SMldDialog wird danach nicht geschlossen, SMldColl.Count muss >0 sein
+// benutzt beim SMLdDlg-externen Command - FocusedItem unverändert
+begin
+  Result := false;
+  with HauptFenster do
+  begin
+    if SMldGeAendert then
+      case TriaMessage('Die Daten des Sammelmelders wurden geändert.'+#13+
+                       'Änderungen übernehmen?',
+                        mtConfirmation,[mbYes,mbNo,mbCancel]) of
+        mrYes : if not SMldAendern then Exit;
+        mrNo  : ;
+        else    Exit;
+      end;
+  end;
+  Result := true;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure TSMldFrame.SetSMldDaten;
+(*----------------------------------------------------------------------------*)
+var i        : Integer;
+    PaintAlt : Boolean;
+begin
+  with HauptFenster do
+  begin
+    PaintAlt := LstFrame.TriaGrid.StopPaint;
+    LstFrame.TriaGrid.StopPaint := true;
+    try
+      SortSMld := SMldSelected;
+      if SortSMld = nil then Exit; // sollte nicht vorkommen
+      SMldUpdating := true;
+
+      SMldNameEdit.Text    := Trim(SortSMld.Name);
+      SMldVNameEdit.Text   := Trim(SortSMld.VName);
+      SMldStrasseEdit.Text := SortSMld.Strasse;
+      SMldHausNrEdit.Text  := SortSMld.HausNr;
+      SMldPLZEdit.Text     := SortSMld.PLZ;
+      SMldOrtEdit.Text     := SortSMld.Ort;
+      SMldEMailEdit.Text   := Trim(SortSMld.EMail);
+
+      VereinListe.Clear;
+      VereinListe.Append(cnKein);
+      for i:=0 to Veranstaltung.SMldColl.Count-1 do
+        VereinListe.Append(Veranstaltung.SMldColl[i].Verein);
+      VereinListe.CustomSort(StringListSortCompare);
+
+{begin
+  sl := TStringList.Create;
+  try
+    // listbox1.Sorted := False;
+    sl.Assign(listbox1.Items);
+    sl.CustomSort(CompareInt);
+    listbox1.Items.Assign(sl);
+  finally
+    sl.Free;
+  end;
+end; }
+
+
+
+      SMldVereinCB.Items.Clear;
+      SMldVereinCB.Items.Append(cnKein);
+      for i:=0 to Veranstaltung.SMldColl.Count-1 do
+        SMldVereinCB.Items.Append(Veranstaltung.SMldColl[i].Verein);
+      if (SortSMld.Verein<>'') and (Veranstaltung.SMldColl.Count>0) then
+        SMldVereinCB.ItemIndex := SMldVereinCB.Items.IndexOf(SortSMld.Verein)+1
+      else SMldVereinCB.ItemIndex := 0;
+
+      SMldMannschCB.Items.Clear;
+      SMldMannschCB.Items.Append(cnKein);
+      for i:=0 to Veranstaltung.SMldColl.Count-1 do
+        SMldMannschCB.Items.Append(Veranstaltung.SMldColl[i].MannschName);
+      if (SortSMld.MannschName<>'') and (Veranstaltung.SMldColl.Count>0) then
+        SMldMannschCB.ItemIndex := SMldMannschCB.Items.IndexOf(SortSMld.MannschName)+1
+      else SMldMannschCB.ItemIndex := 0;
+
+      // nur nach dem Öffnen
+      // StopPaint muss hier zurückgesetzt werden und ToolButtons upgedated
+      if SMldFrame.Visible then LstFrame.UpdateAnsicht;
+      //UpdateAnsicht;  nicht OK, weil wegen Commandtrailer wird Focus geändert
+    finally
+      HauptFenster.LstFrame.TriaGrid.StopPaint := PaintAlt;
+    end;
+  end;
+  SetSMldButtons;
+  SMldUpdating := false;
+end;
+
+//------------------------------------------------------------------------------
+function TSMldFrame.GetVerein: String;
+//------------------------------------------------------------------------------
+begin
+  with SMldVereinCB do
+    if Text = cnKein then Result := ''
+                     else Result := Trim(Text);
+end;
+
+(*----------------------------------------------------------------------------*)
+function TSMldFrame.GetMannschName: String;
+(*----------------------------------------------------------------------------*)
+begin
+  with SMldMannschCB do
+    if Text = cnKein then Result := ''
+                     else Result := Trim(Text);
+end;
+
+(*----------------------------------------------------------------------------*)
+function  TSMldFrame.SMldGeAendert: Boolean;
+(*----------------------------------------------------------------------------*)
+begin
+  with HauptFenster do
+    if SortSMld = nil then Result := false
+    else
+      Result := not StrGleich(SMldNameEdit.Text,SortSMld.Name) or
+                not StrGleich(SMldVNameEdit.Text,SortSMld.VName) or
+                not StrGleich(SMldEMailEdit.Text,SortSMld.EMail) or
+                (SMldStrasseEdit.Text <> SortSMld.Strasse) or
+                (SMldHausNrEdit.Text <> SortSMld.HausNr) or
+                (SMldPLZEdit.Text <> SortSMld.PLZ) or
+                (SMldOrtEdit.Text <> SortSMld.Ort) or
+                not StrGleich(GetMannschName,SortSMld.Verein);
+end;
+
+(*----------------------------------------------------------------------------*)
+function TSMldFrame.EingabeOK: Boolean;
+(*----------------------------------------------------------------------------*)
+begin
+  Result := false;
+  with HauptFenster do
+  begin
+    if StrGleich(SMldNameEdit.Text,'') then
+    begin
+      TriaMessage('Name des Sammelelders fehlt.',mtInformation,[mbOk]);
+      SMldNameEdit.SetFocus;
+      Exit;
+    end else
+    if StrGleich(SMldVNameEdit.Text,'') then
+    begin
+      TriaMessage('Vorname des Sammelmelders fehlt.',mtInformation,[mbOk]);
+      SMldVNameEdit.SetFocus;
+      Exit;
+    end else
+    if ContainsStr(SMldVereinCB.Text,'~') then
+    begin
+      TriaMessage('Das Zeichen "~" darf nicht im Vereinssnamen verwendet werden.',
+                  mtInformation,[mbOk]);
+      SMldVereinCB.SetFocus;
+      Exit;
+    end else
+    if ContainsStr(SMldMannschCB.Text,'~') then
+    begin
+      TriaMessage('Das Zeichen "~" darf nicht im Mannschaftsnamen verwendet werden.',
+                  mtInformation,[mbOk]);
+      SMldMannschCB.SetFocus;
+      Exit;
+    end else
+    if (Veranstaltung.SMldColl.GetSMld(SMldNameEdit.Text,SMldVNameEdit.Text,
+                                       GetVerein,GetMannschName) <> nil) and
+       (SMldNeuEingabe or
+        (Veranstaltung.SMldColl.GetSMld(SMldNameEdit.Text,SMldVNameEdit.Text,
+                                        GetVerein,GetMannschName) <> SortSMld)) then
+    begin
+      TriaMessage('Sammelmelder ist bereits vorhanden.',mtInformation,[mbOk]);
+      if SMldNameEdit.CanFocus then SMldNameEdit.SetFocus;
+    end else Result := true;
+  end;
+end;
+
+// published Methoden (Event Handler)
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.SMldGridClick(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+var SMld : TSMldObj;
+begin
+  (* Exit beim Setzen von FocusedItem oder ItemIndex *)
+  with HauptFenster do
+  begin
+    if not SMldGrid.EnableOnClick then Exit
+    else SMldGrid.EnableOnClick := false;
+    try
+      SMld := SMldSelected;
+      if (SMld = nil) or (SortSMld = nil) then Exit;
+
+      if SMldGeAendert then
+      begin
+        SMldGrid.Scrollbars := ssNone; // weiterscrollen verhindern, Folgefehler!
+        case TriaMessage('Daten des Sammelmelders wurden geändert.'+#13+
+                         'Änderungen übernehmen?',
+                          mtConfirmation,[mbYes,mbNo,mbCancel]) of
+          mrYes : if SMldAendern then SetSMldDaten
+                                 else SMldGrid.FocusedItem := SortSMld;
+          mrNo  : if (SMld<>SortSMld) and SMldNeuEingabe then SMldLoeschen(smEinzel)
+                  else SetSMldDaten;
+          else    SMldGrid.FocusedItem := SortSMld;
+        end;
+      end else
+      if (SMld<>SortSMld) and SMldNeuEingabe then SMldLoeschen(smEinzel)
+      else SetSMldDaten; (* hier wird auch SortSMld neu gesetzt *)
+
+    finally
+      SMldGrid.Scrollbars := ssVertical;
+      SMldGrid.EnableOnClick := true;
+    end;
+  end;
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.SMldNeuButtonClick(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+begin
+  if SMldNeu then
+  begin
+    if SMldNameEdit.Canfocus then SMldNameEdit.SetFocus;
+    SMldGrid.Refresh;
+  end;
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.SMldAendButtonClick(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+begin
+  if SMldAendern then
+  begin
+    if SMldGrid.Canfocus then SMldGrid.SetFocus;
+    SMldGrid.Refresh;
+  end;
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.SMldLoeschButtonClick(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+begin
+  if SMldLoeschen(smEinzel) then
+  begin
+    if SMldNeuEingabe then if SMldNameEdit.CanFocus then SMldNameEdit.SetFocus
+                                                    else
+    else if SMldGrid.CanFocus then if SMldgrid.CanFocus then SMldGrid.SetFocus;
+    SMldGrid.Refresh;
+  end;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSMldFrame.AlleSMldLoeschButtonClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if SMldLoeschen(smAlle) then
+  begin
+    if SMldNeuEingabe then if SMldNameEdit.CanFocus then SMldNameEdit.SetFocus
+                                                    else
+    else if SMldGrid.CanFocus then SMldGrid.SetFocus;
+    SMldGrid.Refresh;
+  end;
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.SMldSortRGClick(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+begin
+  with HauptFenster do
+    // nur Aktion wenn Index geändert
+    if NameSortRB.Checked and (FSMldSortMode<>smSMldName) or
+       VereinSortRB.Checked and (FSMldSortMode<>smSMldVerein) then
+    begin
+      if VereinSortRB.Checked then FSMldSortMode := smSMldVerein
+                              else FSMldSortMode := smSMldName;
+      Veranstaltung.SMldColl.Sortieren(FSMldSortMode,smOhneTlnColl);
+      SMldGrid.CollectionUpdate;
+      SMldGrid.Refresh;
+      if SMldGrid.ItemCount>0 then SMldGrid.ItemIndex := 0;
+      if SMldGrid.Canfocus then SMldGrid.SetFocus;
+      SetSMldDaten;
+    end;
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.SMldEditChange(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+begin
+  if not SMldUpdating then SetSMldButtons;
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.SMldNameLabelClick(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+begin
+  if SMldNameEdit.CanFocus then SMldNameEdit.SetFocus;
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.SMldVNameLabelClick(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+begin
+  if SMldVNameEdit.CanFocus then SMldVNameEdit.SetFocus;
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.SMldVereinlabelClick(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+begin
+  if SMldVereinCB.CanFocus then SMldVereinCB.SetFocus;
+end;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+procedure TSMldFrame.SMldMannschLabelClick(Sender: TObject);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+begin
+  if SMldMannschCB.CanFocus then SMldMannschCB.SetFocus;
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.SMldEMailLabelClick(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+begin
+  if SMldEMailEdit.CanFocus then SMldEMailEdit.SetFocus;
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.SMldStrasseLabelClick(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+begin
+  if SMldStrasseEdit.CanFocus then SMldStrasseEdit.SetFocus;
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.SMldOrtLabelClick(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+begin
+  if SMldOrtEdit.CanFocus then SMldOrtEdit.SetFocus;
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.SMldCloseButtonClick(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+begin
+  if Schliessen then HauptFenster.AnmEinzelActionExecute(Sender);
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.SMldGridDrawCell(Sender: TObject; ACol, ARow: Integer;
+                                      Rect: TRect; State: TGridDrawState);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+var Text : String;
+    SMld : TSMldObj;
+begin
+  Text := '';  // dummy leerzeile bei itemcount=0
+  with SMldGrid do
+  begin
+    if Collection <> nil then
+      if ARow=0 then (* Überschrift *)
+        case ACol of
+          0:  Text := 'Name, Vorname';
+          1:  Text := 'Verein, Mannschaft';
+        end
+      else if ARow < ItemCount  + 1 then (* FixedRows = 1 *)
+      begin
+        SMld := TSMldObj(Collection.SortItems[ARow-1]);
+        if (SMld<>nil) (*and not SMldNeuEingabe*) then //Refresh währen NeuEingabe
+          case ACol of                               //bei anderen Dlg'n noch ändern
+            0: if SMld.Name <> '' then Text := SMld.NameVName;
+            1: Text := SMld.Verein +', ' + SMld.MannschName;
+          end;
+      end;
+    DrawCellText(Rect,Text,taLeftJustify);
+  end;
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.HilfeButtonClick(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+begin
+  Application.HelpContext(1500);  // Vereinsmeldung
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.biHelpBtnClick(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+begin
+  SMldHeaderPanel.SetFocus; // Focus weg von biHelpBtn
+  // MausZeiger für Help Text Popup setzen
+  DefWindowProc(handle, WM_SYSCOMMAND, SC_CONTEXTHELP, 0);
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.SMldHausNrLabelClick(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+begin
+  if SMldHausNrEdit.CanFocus then SMldHausNrEdit.SetFocus;
+end;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+procedure TSMldFrame.SMldPLZLabelClick(Sender: TObject);
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+begin
+  if SMldPLZEdit.CanFocus then SMldPLZEdit.SetFocus;
+end;
+
+end.

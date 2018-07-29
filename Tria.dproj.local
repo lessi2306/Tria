@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899.12.30 00:00:00.000.724,D:\Tria\Projekte-XE2\Tria-Projekt\RfidEinlDlg.dfm=D:\Tria\Projekte-XE2\Tria-Projekt\Source\RfidEinlDlg.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.724,D:\Tria\Projekte-XE2\Tria-Projekt\RfidEinlDlg.pas=D:\Tria\Projekte-XE2\Tria-Projekt\Source\RfidEinlDlg.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.594,D:\Tria\Projekte-XE2\Tria-Projekt\Unit1.dfm=D:\Tria\Projekte-XE2\Tria-Projekt\RfidEinlDlg.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.163,D:\Tria\Projekte-XE2\Tria-Projekt\Unit1.dfm=D:\Tria\Projekte-XE2\Tria-Projekt\Source\DruckerDlg.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.806,D:\Tria\Projekte-XE2\Tria-Projekt\Unit1.dfm=D:\Tria\Projekte-XE2\Tria-Projekt\Source\RfidEinlDlg.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.281,D:\Tria\Projekte-XE2\Tria-Projekt\Source\SerDrDlg.pas=</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.750,D:\Tria\Projekte-XE2\Tria-Projekt\Source\RfidEinl.pas=</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.060,D:\Tria\Projekte-XE2\Tria-Projekt\Source\ZtFmtDlg.pas=</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.778,=D:\Tria\Projekte-XE2\Tria-Projekt\Source\DruckerDlg.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.669,D:\Tria\Projekte-XE2\Tria-Projekt\Source\DruckerDlg.pas=</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.198,D:\Tria\Projekte-XE2\Tria-Projekt\Source\DruckerDlg.pas=</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.473,=D:\Tria\Projekte-XE2\Tria-Projekt\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.163,D:\Tria\Projekte-XE2\Tria-Projekt\Unit1.pas=D:\Tria\Projekte-XE2\Tria-Projekt\Source\DruckerDlg.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.710,D:\Tria\Projekte-XE2\Tria-Projekt\Unit1.pas=D:\Tria\Projekte-XE2\Tria-Projekt\Source\RfidEinl.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.594,D:\Tria\Projekte-XE2\Tria-Projekt\Unit1.pas=D:\Tria\Projekte-XE2\Tria-Projekt\RfidEinlDlg.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.577,D:\Tria\Projekte-XE2\Tria-Projekt\Source\SerienDr.pas=</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.406,=D:\Tria\Projekte-XE2\Tria-Projekt\Source\SerienDr.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.806,D:\Tria\Projekte-XE2\Tria-Projekt\Unit1.pas=D:\Tria\Projekte-XE2\Tria-Projekt\Source\RfidEinlDlg.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.857,=D:\Tria\Projekte-XE2\Tria-Projekt\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.504,=D:\Tria\Projekte-XE2\Tria-Projekt\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.126,D:\Tria\Projekte-XE2\Tria-Projekt\Unit1.pas=D:\Tria\Projekte-XE2\Tria-Projekt\Source\SerienDr.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.979,=D:\Tria\Projekte-XE2\Tria-Projekt\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.731,=D:\Tria\Projekte-XE2\Tria-Projekt\Unit1.pas</Transaction>
+  </Transactions>
+</BorlandProject>
